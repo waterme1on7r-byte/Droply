@@ -1,6 +1,6 @@
 {
-  "name": "Droply",
-  "version": "1.0.0",
+  "name": "droply",
+  "version": "2.3.0",
   "description": "Arkadaşlarına internet üzerinden anında dosya gönder",
   "main": "main.js",
   "author": "Droply",
@@ -13,7 +13,8 @@
     "files": ["main.js", "preload.js", "index.html", "config.js"],
     "win": { "target": "nsis" },
     "nsis": { "oneClick": true, "perMachine": false, "createDesktopShortcut": true, "runAfterFinish": true },
-    "mac": { "target": "dmg" },
+    "mac": { "target": [{ "target": "dmg", "arch": ["universal"] }], "category": "public.app-category.utilities" },
+    "dmg": { "title": "Droply" },
     "linux": { "target": "AppImage" }
   }
 }

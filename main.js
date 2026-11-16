@@ -37,11 +37,17 @@ ipcMain.on('save-close', (_, tid) => {
 ipcMain.on('show-file', (_, p) => shell.showItemInFolder(p));
 
 app.whenReady().then(() => {
+  // Eski 'Yolla' sürümünden profili taşı
+  try {
+    const prev = path.join(app.getPath('appData'), 'Yolla', 'profile.json');
+    if (!fs.existsSync(pf()) && fs.existsSync(prev)) fs.copyFileSync(prev, pf());
+  } catch {}
   try { profile = { ...profile, ...JSON.parse(fs.readFileSync(pf(), 'utf8')) }; } catch {}
   saveProfile();
   win = new BrowserWindow({
-    width: 900, height: 620, minWidth: 720, minHeight: 480, backgroundColor: '#0f1115', show: false,
-    autoHideMenuBar: true, title: 'Yolla',
+    width: 780, height: 740, minWidth: 640, minHeight: 560, backgroundColor: '#0f1b2e', show: false, titleBarStyle: 'hidden',
+    ...(process.platform === 'darwin' ? { trafficLightPosition: { x: 16, y: 13 } } : { titleBarOverlay: { color: '#0e1523', symbolColor: '#9aa7bd', height: 40 } }),
+    autoHideMenuBar: true, title: 'Droply',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true }
   });
   win.loadFile('index.html');

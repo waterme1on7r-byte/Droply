@@ -1,76 +1,142 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Droply</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Condensed:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>
-:root{--bg:#0f1115;--panel:#161a21;--card:#1d222b;--line:#262c37;--text:#e8eaee;--mute:#8b93a1;--accent:#6c8cff;--ok:#4ade80;--err:#f87171}
+:root{--bg:#0e1523;--win:#0f1b2e;--bar:#0e1523;--card:#151f30;--card2:#1b2840;--line:rgba(130,170,255,.12);--text:#f1f5fb;--mute:#9aa7bd;--gold:#f5d97e;--accent:#3b82f6;--accent2:#2563eb;--ok:#7ee8c1;--err:#f87171;--mono:'IBM Plex Mono','Cascadia Mono',Consolas,'SF Mono',Menlo,monospace;--cond:'IBM Plex Sans Condensed','Bahnschrift','Avenir Next Condensed','Arial Narrow',sans-serif}
 *{box-sizing:border-box;margin:0}
-body{font-family:system-ui,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:hidden}
-aside{width:280px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
-.me{display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--line);cursor:pointer}
-.me small{color:var(--mute);display:block;font-size:12px}
-h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding:16px 16px 8px}
-#list{flex:1;overflow:auto;padding:0 8px 8px}
-.peer{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:10px;cursor:pointer}
-.peer:hover,.peer.sel{background:var(--card)}.peer.sel{outline:1px solid var(--accent)}
-.empty{color:var(--mute);font-size:13px;padding:12px 8px;line-height:1.5}
-.av{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#0b0d12;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
-.av img{width:100%;height:100%;object-fit:cover}.av.big{width:96px;height:96px;font-size:36px}
-#status{padding:12px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--mute)}
-#status i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--err);margin-right:8px}
-#status.on i{background:var(--ok)}
-main{flex:1;display:flex;flex-direction:column;padding:24px;gap:16px;min-width:0}
-#drop{flex:1;border:2px dashed var(--line);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--mute);text-align:center;transition:.15s;padding:20px}
-#drop.over{border-color:var(--accent);background:rgba(108,140,255,.08);color:var(--text)}#drop.off{opacity:.5}
-#drop h2{color:var(--text);font-size:20px;font-weight:600}
-button{background:var(--accent);color:#0b0d12;border:0;padding:10px 18px;border-radius:10px;font-weight:600;cursor:pointer;font-size:14px}
-button.ghost{background:var(--card);color:var(--text)}button:disabled{opacity:.4;cursor:default}
-#log{max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:8px}
-.row{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;display:flex;flex-direction:column;gap:6px}
-.row .top{display:flex;justify-content:space-between;gap:12px}.row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .1s}
-.done .bar i{background:var(--ok)}.error .bar i{background:var(--err);width:100%}
-.row a{color:var(--accent);cursor:pointer}
-.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10}
-#setup{background:var(--bg)}#ask{background:rgba(0,0,0,.6)}
-.box{display:flex;flex-direction:column;align-items:center;gap:16px;width:320px;text-align:center}
-#ask .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
+body{font-family:'IBM Plex Sans','Segoe UI Variable','Segoe UI',system-ui,-apple-system,sans-serif;background:radial-gradient(900px 500px at 50% 38%,rgba(30,90,200,.15),transparent 70%),linear-gradient(180deg,#13243f 0%,#0e1a2e 60%);color:var(--text);height:100vh;padding-top:40px;display:flex;overflow:hidden;-webkit-font-smoothing:antialiased;user-select:none}
+input{user-select:text}
+#titlebar{position:fixed;top:0;left:0;right:0;height:40px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;color:#dfe7f5;background:var(--bar);border-bottom:1px solid var(--line);-webkit-app-region:drag;z-index:30}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:8px}
+.rail{width:76px;background:#0d1524;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:18px 0;gap:12px;flex:none}
+.rbtn{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#9aa7bd;background:transparent;border:0;cursor:pointer;position:relative;padding:0;margin:0;transition:.15s}
+.rbtn:hover{background:var(--card);color:var(--text);filter:none}
+.rbtn.active{background:linear-gradient(135deg,#5b5fe0,#7a5bd6);box-shadow:0 8px 20px rgba(100,90,220,.35);cursor:default}
+.rail #railAv{width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:12px;background:#12305a!important;color:#9cc0ff;margin:8px 0}
+#count{position:absolute;top:2px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+main{flex:1;display:flex;flex-direction:column;padding:26px 32px 24px;gap:20px;min-width:0}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+h1{font-family:var(--cond);font-size:26px;font-weight:700;letter-spacing:-.01em;color:var(--gold)}
+.head p{color:var(--mute);font-size:14px;margin-top:8px}
+#status{display:flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;font-size:13px;font-weight:500;border:1px solid rgba(255,255,255,.12);color:var(--mute);background:rgba(255,255,255,.03);white-space:nowrap}
+#status i{width:7px;height:7px;border-radius:50%;background:var(--err)}
+#status.on{color:var(--ok);border-color:rgba(126,232,193,.3);background:rgba(126,232,193,.08)}#status.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.pairwrap{position:relative}
+#pair{display:flex;align-items:center}
+.pcard{flex:1;display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:18px;cursor:pointer;transition:.15s;min-width:0}
+.pcard:hover{border-color:rgba(90,150,255,.5)}
+.pcard>div:last-child{min-width:0}
+.pcard b{font-size:16px;font-weight:700;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gold)}
+.pcard small{color:var(--mute);font-size:13px}
+.link{width:100px;display:flex;align-items:center;justify-content:center;position:relative;color:#cfe0ff;flex:none}
+.link::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:1px dashed rgba(180,200,235,.35)}
+.link span{position:relative;width:56px;height:56px;border-radius:50%;background:#101b2e;border:7px solid #1c2d4a;display:flex;align-items:center;justify-content:center}
+#pair:not(.live) .link{color:var(--mute)}
+.peer{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;border:1px solid transparent;transition:.15s;font-weight:600;color:var(--gold)}
+.peer:hover{background:var(--card2)}.peer.sel{background:rgba(59,130,246,.14);border-color:rgba(90,150,255,.5)}
+.peer::after{content:'';margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(126,232,193,.15)}
+#picker{position:absolute;top:calc(100% + 8px);right:0;width:340px;max-width:100%;max-height:300px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px;z-index:5;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.empty{color:var(--mute);font-size:13px;padding:14px 12px;line-height:1.6;text-align:center;font-weight:400}
+.av{width:50px;height:50px;border-radius:14px;color:var(--gold);font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
+.peer .av{width:40px;height:40px;font-size:15px}
+.av img{width:100%;height:100%;object-fit:cover}.av.big{width:104px;height:104px;border-radius:30px;font-size:40px;cursor:pointer;box-shadow:0 0 0 4px rgba(59,130,246,.22)}
+#drop{position:relative;flex:1;min-height:170px;border:1.2px dashed rgba(100,170,255,.65);border-radius:18px;background:radial-gradient(ellipse at 50% 60%,rgba(30,100,220,.24),transparent 72%),rgba(20,40,80,.28);box-shadow:inset 0 0 0 4px rgba(100,170,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--mute);text-align:center;transition:.2s;padding:24px;cursor:pointer}
+#drop:hover:not(.off){background:radial-gradient(ellipse at 50% 60%,rgba(30,100,220,.32),transparent 72%),rgba(20,40,80,.35)}
+#drop.over{border-color:#7fb4ff;background:radial-gradient(ellipse at 50% 60%,rgba(40,120,240,.4),transparent 75%),rgba(20,50,100,.4);color:var(--text)}
+#drop.off{opacity:.55;cursor:default}
+.ico{color:#9cc4ff;margin-bottom:8px;display:flex}
+#drop h2{color:#fff;font-size:17px;font-weight:700}
+#drop p{font-size:14px;margin-top:8px}
+button{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;padding:11px 22px;border-radius:12px;font-weight:600;cursor:pointer;font-size:14px;font-family:inherit;transition:.15s}
+button:hover{filter:brightness(1.1)}button.ghost{background:var(--card2);border:1px solid var(--line);color:var(--text)}
+#log{max-height:230px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.rt{display:flex;align-items:center;gap:16px}
+.ri{width:50px;height:50px;border-radius:14px;background:#22314d;color:#b9cdf0;display:flex;align-items:center;justify-content:center;flex:none}
+.rx{flex:1;min-width:0}
+.nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;font-size:15px;color:var(--gold)}
+.sub{color:var(--mute);font-size:13px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-weight:700;font-size:17px;white-space:nowrap;color:#e8f0ff}
+.bar{height:8px;background:rgba(255,255,255,.07);border-radius:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#1a5cff,#2f8cff);width:0;transition:width .15s;border-radius:8px}
+.enc{display:flex;justify-content:space-between;font-size:13px;color:var(--mute)}
+.enc span:first-child{font-family:var(--mono);font-size:12px}
+.done .bar i{background:var(--ok)}.done .st{color:var(--ok)}
+.error .bar i{background:var(--err);width:100%}.error .st{color:var(--err)}.error .enc{display:none}
+.row a{color:#9cc4ff;cursor:pointer;font-weight:500;font-size:13px}
+#tl,#br{position:fixed;display:flex;flex-direction:column;gap:10px;z-index:40}
+#tl{left:14px;top:52px}#br{right:18px;bottom:18px}
+.tcard{display:flex;gap:14px;align-items:center;padding:14px 24px 14px 16px;background:rgba(21,31,49,.96);border:1px solid rgba(130,170,255,.16);border-radius:16px;backdrop-filter:blur(12px);box-shadow:0 14px 44px rgba(0,0,0,.55);animation:tin .25s ease;transition:.35s}
+.tcard.out{opacity:0;transform:translateY(8px)}
+.tcard b{font-size:15px;font-weight:700;display:block;color:var(--gold)}.tcard small{color:var(--mute);font-size:14px}
+.tic{width:38px;height:38px;border-radius:50%;border:1.6px solid var(--ok);color:var(--ok);display:flex;align-items:center;justify-content:center;flex:none}
+.tcard.lock .tic{border:0;color:#bcd0ff}
+@keyframes tin{from{opacity:0;transform:translateY(10px)}}
+.overlay{position:fixed;inset:40px 0 0 0;display:flex;align-items:center;justify-content:center;z-index:10}
+#setup{background:radial-gradient(700px 450px at 50% 20%,rgba(40,110,230,.2),transparent 65%),var(--win)}
+#ask{background:rgba(4,8,18,.7);backdrop-filter:blur(8px)}
+.box{display:flex;flex-direction:column;align-items:center;gap:16px;width:340px;text-align:center}
+.box h2{font-family:var(--cond);color:var(--gold)}
+.box p{color:var(--mute);font-size:14px;margin-top:-8px}
+#ask .box{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+#ask h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-family:var(--mono)}
+#askTxt{font-size:16px;font-weight:600;line-height:1.4}
 #askFiles{color:var(--mute);font-size:13px;word-break:break-word;max-height:90px;overflow:auto}
 .btns{display:flex;gap:10px}
-input[type=text]{width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);padding:12px;border-radius:10px;font-size:15px;outline:none;text-align:center}
-input[type=text]:focus{border-color:var(--accent)}.hidden{display:none!important}
+input[type=text]{width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);padding:13px 14px;border-radius:12px;font-size:15px;font-family:inherit;outline:none;text-align:center;transition:.15s}
+input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,130,246,.2)}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
+<div id="titlebar">Droply · Transfers</div>
+<div id="tl"></div><div id="br"></div>
+
 <div id="setup" class="overlay hidden"><div class="box">
-  <h2>Droply'ya hoş geldin</h2>
-  <div id="setupAv" class="av big" title="Fotoğraf seç">?</div>
-  <input id="nameInput" type="text" maxlength="24" placeholder="Kullanıcı adın">
-  <button id="saveBtn">Başla</button>
+  <h2 style="font-size:26px;letter-spacing:-.02em">Welcome to Droply</h2>
+  <p>Pick a username. Add a photo if you like.</p>
+  <div id="setupAv" class="av big" title="Choose photo">?</div>
+  <input id="nameInput" type="text" maxlength="24" placeholder="Username">
+  <button id="saveBtn">Get started</button>
   <input id="avFile" type="file" accept="image/*" class="hidden">
 </div></div>
 
 <div id="ask" class="overlay hidden"><div class="box">
-  <h3 style="padding:0">Gelen dosya</h3>
-  <b id="askTxt"></b><div id="askFiles"></div>
-  <div class="btns"><button id="rejBtn" class="ghost">Reddet</button><button id="accBtn">Kabul et</button></div>
+  <h3>Incoming files</h3>
+  <div id="askTxt"></div><div id="askFiles"></div>
+  <div class="btns"><button id="rejBtn" class="ghost">Decline</button><button id="accBtn">Accept</button></div>
 </div></div>
 
-<aside>
-  <div class="me" id="meBox" title="Profili düzenle"><div id="meAv" class="av">?</div><div><b id="meName"></b><small>Profili düzenle</small></div></div>
-  <h3>Çevrimiçi kişiler</h3>
-  <div id="list"></div>
-  <div id="status"><i></i><span>Bağlanıyor…</span></div>
-</aside>
+<nav class="rail">
+  <div class="rbtn active" title="Transfers"><svg width="22" height="22" viewBox="0 0 32 32"><path d="M16 6c3.7 4.9 6.4 8.1 6.4 11.5a6.4 6.4 0 0 1-12.8 0C9.6 14.1 12.3 10.9 16 6z" fill="#fff"/></svg></div>
+  <div id="railAv" class="av" title="Edit profile">?</div>
+  <button class="rbtn" id="peopleBtn" title="People online"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M16 4.8a3.2 3.2 0 0 1 0 6M21 20v-1a5 5 0 0 0-3.5-4.8"/></svg><span id="count">0</span></button>
+  <div style="flex:1"></div>
+  <button class="rbtn" id="gearBtn" title="Settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+</nav>
 
 <main>
-  <div id="drop" class="off">
-    <h2 id="dropTitle">Soldan bir kişi seç</h2>
-    <div>Dosyaları buraya sürükle, <b>Ctrl+V</b> ile yapıştır<br>veya dosya seç</div>
-    <button id="pickBtn" disabled>Dosya seç</button>
-    <input id="fi" type="file" multiple class="hidden">
+  <div class="head">
+    <div><h1>Ready when you are.</h1><p>Pick a person. Drop a file. Done.</p></div>
+    <div id="status"><i></i><span>Connecting…</span></div>
   </div>
+  <div class="pairwrap">
+    <div id="pair">
+      <div class="pcard" id="meBox" title="Edit profile"><div id="meAv" class="av">?</div><div><b id="meName"></b><small>This device</small></div></div>
+      <div class="link"><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span></div>
+      <div class="pcard" id="peerBox"><div id="peerAv" class="av">+</div><div><b id="peerName">Pick a person</b><small id="peerSub">No one online</small></div></div>
+    </div>
+    <div id="picker" class="hidden"><div id="list"></div></div>
+  </div>
+  <div id="drop" class="off" title="Drop, click, or paste (Ctrl/⌘+V)">
+    <div class="ico"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
+    <h2 id="dropTitle">Pick a person first</h2>
+    <p>Or click to choose a file</p>
+  </div>
+  <input id="fi" type="file" multiple class="hidden">
   <div id="log"></div>
 </main>
 
@@ -78,14 +144,17 @@ input[type=text]:focus{border-color:var(--accent)}.hidden{display:none!important
 <script>
 const $ = s => document.querySelector(s);
 const { SERVER_URL, KEY, ICE } = window.CONFIG;
-let me, ws, peers = [], sel = null, pendAv = null;
+let me, ws, peers = [], sel = null, pendAv = null, known = null;
 const sess = {}, asks = [];
-const fmt = b => b > 1e9 ? (b / 1e9).toFixed(2) + ' GB' : b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.ceil(b / 1e3) + ' KB';
+const fmt = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.ceil(b / 1e3) + ' KB';
+const plural = n => n + (n === 1 ? ' file' : ' files');
+const GRADS = ['linear-gradient(135deg,#3b8cff,#2563eb)', 'linear-gradient(135deg,#2f7be0,#4db6c9)', 'linear-gradient(135deg,#5b6cf0,#8b5cf6)', 'linear-gradient(135deg,#0ea5a4,#38bdf8)', 'linear-gradient(135deg,#3b82f6,#6366f1)'];
 
 /* ---------- UI ---------- */
-function avatar(src, name, big) {
+function avatar(src, name, big, self) {
   const d = document.createElement('div'); d.className = 'av' + (big ? ' big' : '');
   d.textContent = (name || '?')[0].toUpperCase();
+  d.style.background = GRADS[self ? 0 : 1 + ((name || '?').charCodeAt(0) + 3) % (GRADS.length - 1)];
   if (src) { const i = new Image(); i.onload = () => { d.textContent = ''; d.appendChild(i); }; i.src = src; }
   return d;
 }
@@ -101,69 +170,110 @@ function resizeImage(file) {
     img.src = URL.createObjectURL(file);
   });
 }
-function renderMe() { $('#meName').textContent = me.name; const n = avatar(me.avatar, me.name); n.id = 'meAv'; $('#meAv').replaceWith(n); }
+function renderMe() {
+  $('#meName').textContent = me.name;
+  const a = avatar(me.avatar, me.name, false, true); a.id = 'meAv'; $('#meAv').replaceWith(a);
+  const r = avatar(me.avatar, me.name, false, true); r.id = 'railAv'; r.title = 'Edit profile'; $('#railAv').replaceWith(r);
+  r.onclick = () => openSetup(true);
+}
 function renderPeers() {
+  $('#count').textContent = peers.length; $('#count').style.display = peers.length ? '' : 'none';
   const l = $('#list'); l.innerHTML = '';
-  if (!peers.length) { l.innerHTML = '<div class="empty">Şu an kimse çevrimiçi değil. Arkadaşların Droply\'yı açtığında burada görünecek.</div>'; return; }
+  if (!peers.length) { l.innerHTML = '<div class="empty">No one is online yet. Friends show up here when they open Droply.</div>'; return; }
   peers.forEach(p => {
     const el = document.createElement('div'); el.className = 'peer' + (p.id === sel ? ' sel' : '');
     el.appendChild(avatar(p.av, p.name));
     const n = document.createElement('div'); n.textContent = p.name; el.appendChild(n);
-    el.onclick = () => { sel = p.id; updateDrop(); renderPeers(); };
+    el.onclick = () => { sel = p.id; updateDrop(); renderPeers(); $('#picker').classList.add('hidden'); };
     l.appendChild(el);
   });
 }
 function updateDrop() {
-  const p = peers.find(x => x.id === sel); if (!p) sel = null;
-  $('#drop').classList.toggle('off', !p); $('#pickBtn').disabled = !p;
-  $('#dropTitle').textContent = p ? `${p.name} kişisine gönder` : 'Soldan bir kişi seç';
+  if (!peers.find(x => x.id === sel)) sel = null;
+  if (!sel && peers.length === 1) sel = peers[0].id;
+  const p = peers.find(x => x.id === sel);
+  $('#drop').classList.toggle('off', !p); $('#pair').classList.toggle('live', !!p);
+  $('#dropTitle').textContent = p ? 'Drop files to send' : 'Pick a person first';
+  $('#peerName').textContent = p ? p.name : 'Pick a person';
+  $('#peerSub').textContent = p ? 'Online' : (peers.length ? peers.length + ' online' : 'No one online');
+  const n = avatar(p && p.av, p ? p.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
 }
-function setStatus(on) { $('#status').classList.toggle('on', on); $('#status span').textContent = on ? 'Sunucuya bağlı' : 'Bağlanıyor…'; }
+function setStatus(on) { $('#status').classList.toggle('on', on); $('#status span').textContent = on ? 'Connected' : 'Connecting…'; }
 function row(id, d) {
   let r = document.getElementById(id);
-  if (!r) { r = document.createElement('div'); r.id = id; r.innerHTML = '<div class="top"><span class="nm"></span><span class="st"></span></div><div class="bar"><i></i></div>'; $('#log').prepend(r); }
+  if (!r) {
+    r = document.createElement('div'); r.id = id;
+    r.innerHTML = '<div class="rt"><div class="ri"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div><div class="rx"><div class="nm"></div><div class="sub"></div></div><div class="st"></div></div><div class="bar"><i></i></div><div class="enc"><span>Encrypted transfer</span><span class="spd"></span></div>';
+    $('#log').prepend(r);
+  }
   r.className = 'row ' + (d.state || '');
   if (d.label) r.querySelector('.nm').textContent = d.label;
+  if (d.sub != null) r.querySelector('.sub').textContent = d.sub;
+  if (d.spd != null) r.querySelector('.spd').textContent = d.spd;
   const st = r.querySelector('.st');
-  if (d.path) { st.textContent = ''; const a = document.createElement('a'); a.textContent = 'Klasörde göster'; a.onclick = () => api.showFile(d.path); st.append(a); }
+  if (d.path) { st.textContent = ''; const a = document.createElement('a'); a.textContent = 'Show in folder'; a.onclick = () => api.showFile(d.path); st.append(a); }
   else st.textContent = d.msg || '';
   if (d.pct != null) r.querySelector('i').style.width = d.pct + '%';
 }
 const toast = msg => row('t' + Math.random(), { label: msg, state: 'error' });
-const prog = (s, sent, total) => row(s.tid, { msg: Math.round(sent / total * 100) + '%', pct: sent / total * 100, state: 'sending' });
+function prog(s, sent, total) {
+  const now = Date.now(); let spd;
+  if (!s.t0) { s.t0 = now; s.b0 = 0; }
+  if (now - s.t0 >= 400) {
+    const v = (sent - s.b0) / ((now - s.t0) / 1000); s.v = s.v ? s.v * .6 + v * .4 : v; s.t0 = now; s.b0 = sent;
+    spd = s.v >= 1e6 ? (s.v / 1e6).toFixed(1) + ' MB/s' : Math.round(s.v / 1e3) + ' KB/s';
+  }
+  row(s.tid, { msg: Math.round(sent / total * 100) + '%', pct: sent / total * 100, state: 'sending', spd });
+}
+function notify(title, sub, lock) {
+  const t = document.createElement('div'); t.className = 'tcard' + (lock ? ' lock' : '');
+  t.innerHTML = '<div class="tic">' + (lock
+    ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>') + '</div><div><b></b><small></small></div>';
+  t.querySelector('b').textContent = title; t.querySelector('small').textContent = sub;
+  $(lock ? '#br' : '#tl').appendChild(t);
+  setTimeout(() => t.classList.add('out'), 3200); setTimeout(() => t.remove(), 3700);
+}
+const notifyEnc = () => notify('End-to-end encrypted', 'Just between you two', true);
+function notifyNew() {
+  const ids = new Set(peers.map(p => p.id));
+  if (known && peers.some(p => !known.has(p.id))) notify('Peer connected', 'Ready to share');
+  known = ids;
+}
 
-/* ---------- Sunucu bağlantısı ---------- */
+/* ---------- Server connection ---------- */
 const send = o => ws && ws.readyState === 1 && ws.send(JSON.stringify(o));
 const hello = () => me.name && send({ t: 'hello', id: me.id, name: me.name, av: me.avatar });
 const sig = (to, data) => send({ t: 'sig', to, data });
 function connect() {
   ws = new WebSocket(`${SERVER_URL}/?key=${encodeURIComponent(KEY)}`);
-  ws.onopen = () => { setStatus(true); hello(); };
+  ws.onopen = () => { setStatus(true); known = null; hello(); };
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
-    if (m.t === 'peers') { peers = m.peers.filter(p => p.id !== me.id).sort((a, b) => a.name.localeCompare(b.name)); renderPeers(); updateDrop(); }
+    if (m.t === 'peers') { peers = m.peers.filter(p => p.id !== me.id).sort((a, b) => a.name.localeCompare(b.name)); updateDrop(); renderPeers(); notifyNew(); }
     else if (m.t === 'sig') onSig(m.from, m.data);
   };
   ws.onclose = () => { setStatus(false); setTimeout(connect, 3000); };
 }
 
-/* ---------- Gönderen taraf ---------- */
+/* ---------- Sender ---------- */
 async function sendFiles(files) {
   const peer = peers.find(p => p.id === sel);
-  if (!peer) return toast('Önce bir kişi seç');
+  if (!peer) return toast('Pick a person first');
   if (!files.length) return;
   const tid = crypto.randomUUID();
   const s = sess[tid] = { tid, peerId: peer.id, files, dir: 'out', q: Promise.resolve(), sent: 0, total: files.reduce((a, f) => a + f.size, 0) || 1 };
   sig(peer.id, { t: 'req', tid, from: me.name, files: files.map(f => ({ name: f.name, size: f.size })) });
-  row(tid, { label: `${files.length} dosya → ${peer.name}`, msg: 'Onay bekleniyor…', state: 'sending', pct: 0 });
-  s.timer = setTimeout(() => !s.pc && fail(s, 'Yanıt gelmedi'), 60000);
+  row(tid, { label: files.length === 1 ? files[0].name : plural(files.length), sub: `Sending to ${peer.name} · ${fmt(s.total)}`, msg: 'Waiting…', state: 'sending', pct: 0 });
+  s.timer = setTimeout(() => !s.pc && fail(s, 'No response'), 60000);
 }
 async function startSender(s) {
+  notifyEnc();
   const pc = makePc(s), ch = pc.createDataChannel('f');
   ch.binaryType = 'arraybuffer'; ch.bufferedAmountLowThreshold = 256 * 1024;
   ch.onopen = () => pump(s, ch);
-  ch.onmessage = e => { if (e.data === 'ok') { s.fin = true; row(s.tid, { msg: 'Gönderildi ✓', pct: 100, state: 'done' }); cleanup(s); } };
-  ch.onclose = () => fail(s, 'Bağlantı koptu');
+  ch.onmessage = e => { if (e.data === 'ok') { s.fin = true; row(s.tid, { msg: 'Sent ✓', pct: 100, state: 'done', spd: '' }); cleanup(s); } };
+  ch.onclose = () => fail(s, 'Connection lost');
   await pc.setLocalDescription(await pc.createOffer());
   sig(s.peerId, { t: 'offer', tid: s.tid, sdp: pc.localDescription });
 }
@@ -180,11 +290,11 @@ async function pump(s, ch) {
       ch.send(JSON.stringify({ t: 'eof' }));
     }
     ch.send(JSON.stringify({ t: 'done' }));
-    row(s.tid, { msg: 'Tamamlanıyor…', pct: 100, state: 'sending' });
-  } catch { fail(s, 'Dosya okunamadı'); }
+    row(s.tid, { msg: 'Finishing…', pct: 100, state: 'sending' });
+  } catch { fail(s, "Couldn't read file"); }
 }
 
-/* ---------- Alıcı taraf ---------- */
+/* ---------- Receiver ---------- */
 function recv(s, ch) {
   ch.binaryType = 'arraybuffer';
   const total = s.files.reduce((a, f) => a + f.size, 0) || 1; let got = 0;
@@ -193,20 +303,20 @@ function recv(s, ch) {
       const m = JSON.parse(e.data);
       if (m.t === 'file') api.saveOpen(s.tid, m.name);
       else if (m.t === 'eof') api.saveClose(s.tid);
-      else if (m.t === 'done') { s.fin = true; ch.send('ok'); row(s.tid, { msg: 'Alındı ✓', pct: 100, state: 'done' }); cleanup(s); }
+      else if (m.t === 'done') { s.fin = true; ch.send('ok'); row(s.tid, { msg: 'Received ✓', pct: 100, state: 'done', spd: '' }); cleanup(s); }
     } else { api.saveChunk(s.tid, new Uint8Array(e.data)); got += e.data.byteLength; prog(s, got, total); }
   };
-  ch.onclose = () => fail(s, 'Bağlantı koptu');
+  ch.onclose = () => fail(s, 'Connection lost');
 }
 function askUser(from, d) {
   asks.push({ from, d });
-  new Notification('Droply', { body: `${d.from} sana ${d.files.length} dosya göndermek istiyor` });
+  new Notification('Droply', { body: `${d.from} wants to send you ${plural(d.files.length)}` });
   if (asks.length === 1) showAsk();
 }
 function showAsk() {
   const a = asks[0]; if (!a) return $('#ask').classList.add('hidden');
   const size = a.d.files.reduce((t, f) => t + f.size, 0);
-  $('#askTxt').textContent = `${a.d.from} sana ${a.d.files.length} dosya (${fmt(size)}) göndermek istiyor`;
+  $('#askTxt').textContent = `${a.d.from} wants to send you ${plural(a.d.files.length)} (${fmt(size)})`;
   $('#askFiles').textContent = a.d.files.map(f => f.name).join(', ');
   $('#ask').classList.remove('hidden');
 }
@@ -214,30 +324,31 @@ function answer(ok) {
   const { from, d } = asks.shift();
   if (ok) {
     sess[d.tid] = { tid: d.tid, peerId: from, dir: 'in', files: d.files, q: Promise.resolve() };
-    row(d.tid, { label: `${d.files.length} dosya ← ${d.from}`, msg: 'Bağlanıyor…', state: 'sending', pct: 0 });
-    sig(from, { t: 'acc', tid: d.tid });
+    const size = d.files.reduce((t, f) => t + f.size, 0);
+    row(d.tid, { label: d.files.length === 1 ? d.files[0].name : plural(d.files.length), sub: `Receiving from ${d.from} · ${fmt(size)}`, msg: 'Connecting…', state: 'sending', pct: 0 });
+    sig(from, { t: 'acc', tid: d.tid }); notifyEnc();
   } else sig(from, { t: 'rej', tid: d.tid });
   showAsk();
 }
 $('#accBtn').onclick = () => answer(true);
 $('#rejBtn').onclick = () => answer(false);
 
-/* ---------- WebRTC ortak ---------- */
+/* ---------- WebRTC ---------- */
 function makePc(s) {
   const pc = new RTCPeerConnection({ iceServers: ICE }); s.pc = pc;
   pc.onicecandidate = e => e.candidate && sig(s.peerId, { t: 'ice', tid: s.tid, c: e.candidate });
-  pc.onconnectionstatechange = () => pc.connectionState === 'failed' && fail(s, 'Bağlantı kurulamadı (ağ engelliyor olabilir)');
+  pc.onconnectionstatechange = () => pc.connectionState === 'failed' && fail(s, "Couldn't connect (network may be blocking it)");
   return pc;
 }
 async function flush(s) { for (const c of s.pend || []) await s.pc.addIceCandidate(c); s.pend = []; }
 function onSig(from, d) {
   if (d.t === 'req') return askUser(from, d);
   const s = sess[d.tid]; if (!s || s.peerId !== from) return;
-  s.q = s.q.then(() => handle(s, d)).catch(() => fail(s, 'Bağlantı hatası'));
+  s.q = s.q.then(() => handle(s, d)).catch(() => fail(s, 'Connection error'));
 }
 async function handle(s, d) {
-  if (d.t === 'rej') return fail(s, 'Reddedildi');
-  if (d.t === 'acc') { clearTimeout(s.timer); row(s.tid, { msg: 'Bağlanıyor…', state: 'sending' }); return startSender(s); }
+  if (d.t === 'rej') return fail(s, 'Declined');
+  if (d.t === 'acc') { clearTimeout(s.timer); row(s.tid, { msg: 'Connecting…', state: 'sending' }); return startSender(s); }
   if (d.t === 'offer') {
     const pc = makePc(s); pc.ondatachannel = e => recv(s, e.channel);
     await pc.setRemoteDescription(d.sdp); await flush(s);
@@ -253,7 +364,7 @@ function fail(s, msg) {
   row(s.tid, { msg, state: 'error' }); clearTimeout(s.timer); s.pc && s.pc.close(); delete sess[s.tid];
 }
 
-/* ---------- Girdi: sürükle-bırak, Ctrl+V, dosya seç ---------- */
+/* ---------- Input: drag & drop, paste, file picker ---------- */
 const drop = $('#drop');
 ['dragenter', 'dragover'].forEach(e => document.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
 document.addEventListener('dragleave', ev => { ev.preventDefault(); if (!ev.relatedTarget) drop.classList.remove('over'); });
@@ -264,14 +375,14 @@ document.addEventListener('drop', ev => {
 });
 document.addEventListener('paste', ev => {
   if (ev.target.tagName === 'INPUT') return;
-  const files = [...(ev.clipboardData.files || [])].map(f => f.name === 'image.png' ? new File([f], `pano-${Date.now()}.png`, { type: f.type }) : f);
+  const files = [...(ev.clipboardData.files || [])].map(f => f.name === 'image.png' ? new File([f], `screenshot-${Date.now()}.png`, { type: f.type }) : f);
   if (files.length) { ev.preventDefault(); sendFiles(files); }
 });
-$('#pickBtn').onclick = () => $('#fi').click();
+drop.onclick = () => sel && $('#fi').click();
 $('#fi').onchange = e => { sendFiles([...e.target.files]); e.target.value = ''; };
 
-/* ---------- Profil ---------- */
-function setupAv(src) { const n = avatar(src, $('#nameInput').value || me.name, true); n.id = 'setupAv'; n.onclick = () => $('#avFile').click(); $('#setupAv').replaceWith(n); }
+/* ---------- Profile ---------- */
+function setupAv(src) { const n = avatar(src, $('#nameInput').value || me.name, true, true); n.id = 'setupAv'; n.onclick = () => $('#avFile').click(); $('#setupAv').replaceWith(n); }
 function openSetup(edit) { $('#setup').classList.remove('hidden'); $('#nameInput').value = edit ? me.name : ''; pendAv = null; setupAv(me.avatar); $('#nameInput').focus(); }
 $('#setupAv').onclick = () => $('#avFile').click();
 $('#avFile').onchange = async e => { if (e.target.files[0]) { pendAv = await resizeImage(e.target.files[0]); setupAv(pendAv); } };
@@ -282,10 +393,13 @@ $('#saveBtn').onclick = async () => {
 };
 $('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveBtn').click(); });
 $('#meBox').onclick = () => openSetup(true);
-api.on('saved', d => row('f' + Math.random(), { label: d.name, path: d.path, state: 'done', pct: 100 }));
-
+$('#gearBtn').onclick = () => openSetup(true);
+const togglePicker = e => { e.stopPropagation(); $('#picker').classList.toggle('hidden'); };
+$('#peerBox').onclick = togglePicker; $('#peopleBtn').onclick = togglePicker;
+document.addEventListener('click', e => { if (!e.target.closest('#picker')) $('#picker').classList.add('hidden'); });
 window.addEventListener('focus', () => { if (!$('#setup').classList.contains('hidden')) $('#nameInput').focus(); });
-$('#setup').addEventListener('mousedown', e => { if (e.target.id === 'nameInput') setTimeout(() => e.target.focus(), 0); });
+api.on('saved', d => row('f' + Math.random(), { label: d.name, sub: 'Saved to Downloads', path: d.path, state: 'done', pct: 100 }));
+
 (async () => {
   me = await api.getProfile();
   if (!me.name) openSetup(false); else renderMe();
