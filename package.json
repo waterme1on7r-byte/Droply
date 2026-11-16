@@ -5,7 +5,7 @@
   "main": "main.js",
   "author": "Droply",
   "license": "MIT",
-  "scripts": { "start": "electron .", "dist": "electron-builder" },
+  "scripts": { "start": "electron .", "dist": "electron-builder --publish never" },
   "devDependencies": { "electron": "^33.0.0", "electron-builder": "^25.0.0" },
   "build": {
     "appId": "com.droply.app",
