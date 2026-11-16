@@ -1,0 +1,19 @@
+{
+  "name": "Droply",
+  "version": "1.0.0",
+  "description": "Arkadaşlarına internet üzerinden anında dosya gönder",
+  "main": "main.js",
+  "author": "Droply",
+  "license": "MIT",
+  "scripts": { "start": "electron .", "dist": "electron-builder" },
+  "devDependencies": { "electron": "^33.0.0", "electron-builder": "^25.0.0" },
+  "build": {
+    "appId": "com.droply.app",
+    "productName": "Droply",
+    "files": ["main.js", "preload.js", "index.html", "config.js"],
+    "win": { "target": "nsis" },
+    "nsis": { "oneClick": true, "perMachine": false, "createDesktopShortcut": true, "runAfterFinish": true },
+    "mac": { "target": "dmg" },
+    "linux": { "target": "AppImage" }
+  }
+}
