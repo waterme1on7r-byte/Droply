@@ -1,20 +1,70 @@
 {
   "name": "droply",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Arkadaşlarına internet üzerinden anında dosya gönder",
   "main": "main.js",
   "author": "Droply",
   "license": "MIT",
-  "scripts": { "start": "electron .", "dist": "electron-builder --publish never" },
-  "devDependencies": { "electron": "^33.0.0", "electron-builder": "^25.0.0" },
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
   "build": {
     "appId": "com.droply.app",
     "productName": "Droply",
-    "files": ["main.js", "preload.js", "index.html", "config.js"],
-    "win": { "target": "nsis" },
-    "nsis": { "oneClick": true, "perMachine": false, "createDesktopShortcut": true, "runAfterFinish": true },
-    "mac": { "target": [{ "target": "dmg", "arch": ["universal"] }], "category": "public.app-category.utilities" },
-    "dmg": { "title": "Droply" },
-    "linux": { "target": "AppImage" }
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "config.js"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "runAfterFinish": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "shortcutName": "Droply",
+      "uninstallDisplayName": "Droply",
+      "include": "build/installer.nsh"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.utilities",
+      "icon": "build/icon.png"
+    },
+    "dmg": {
+      "title": "Droply"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "extraResources": [
+      {
+        "from": "build/icon.ico",
+        "to": "icon.ico"
+      },
+      {
+        "from": "build/icon.png",
+        "to": "icon.png"
+      }
+    ]
   }
 }

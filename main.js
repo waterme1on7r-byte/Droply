@@ -3,6 +3,13 @@ const path = require('path'), fs = require('fs'), crypto = require('crypto');
 
 if (!app.requestSingleInstanceLock()) app.quit();
 
+// Windows: tie the taskbar button/pins to this app (must match build.appId in package.json)
+if (process.platform === 'win32') app.setAppUserModelId('com.droply.app');
+
+// Window/taskbar icon: from resources when packaged, from build/ during development
+const iconFile = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
+const iconPath = () => app.isPackaged ? path.join(process.resourcesPath, iconFile) : path.join(__dirname, 'build', iconFile);
+
 let win, profile = { id: crypto.randomUUID(), name: '', avatar: '' };
 const pf = () => path.join(app.getPath('userData'), 'profile.json');
 const saveProfile = () => fs.writeFileSync(pf(), JSON.stringify(profile));
@@ -47,9 +54,10 @@ app.whenReady().then(() => {
   win = new BrowserWindow({
     width: 780, height: 740, minWidth: 640, minHeight: 560, backgroundColor: '#0f1b2e', show: false, titleBarStyle: 'hidden',
     ...(process.platform === 'darwin' ? { trafficLightPosition: { x: 16, y: 13 } } : { titleBarOverlay: { color: '#0e1523', symbolColor: '#9aa7bd', height: 40 } }),
-    autoHideMenuBar: true, title: 'Droply',
+    autoHideMenuBar: true, title: 'Droply', icon: iconPath(),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true }
   });
+  if (process.platform === 'darwin' && !app.isPackaged) { try { app.dock.setIcon(path.join(__dirname, 'build', 'icon.png')); } catch {} }
   win.loadFile('index.html');
   // Windows'ta klavye odağı pencereye geçmeyebiliyor (özellikle installer'dan otomatik açılınca)
   win.once('ready-to-show', () => { win.show(); win.focus(); win.webContents.focus(); });
