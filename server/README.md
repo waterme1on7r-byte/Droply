@@ -4,7 +4,7 @@ The current desktop app connects automatically. Users share their device codes, 
 
 ## Run and deploy
 
-From server/, run npm ci then npm start. On Render, keep the existing service and URL, select waterme1on7r-byte/Droply on main, set Root Directory to server, Build Command to npm ci and Start Command to npm start. Preserve existing environment variables and the existing Neon database when moving repositories.
+From server/, run npm ci then npm start. On Render, keep the existing service and URL, select waterme1on7r-byte/Droply on main, leave Root Directory empty, set Build Command to npm --prefix server ci and Start Command to npm --prefix server start. Preserve existing environment variables and the existing Neon database when moving repositories.
 
 Environment variables:
 

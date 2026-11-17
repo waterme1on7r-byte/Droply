@@ -12,7 +12,7 @@ Run `npm ci`, `npm start`, `npm test` or `npm run dist` from the repository root
 
 Run `npm ci` then `npm start` from `server/`. See [server/README.md](server/README.md) for environment settings and migration details. From the root, `npm run server:test` runs the server suite after installing server dependencies.
 
-Render source: waterme1on7r-byte/Droply, branch main, root directory server, build command npm ci, start command npm start. Preserve the existing Render environment variables and service URL when changing its repository.
+Render source: waterme1on7r-byte/Droply, branch main, root directory empty, build command `npm --prefix server ci`, start command `npm --prefix server start`. Preserve the existing Render environment variables and service URL when changing its repository.
 
 ## Releases
 
