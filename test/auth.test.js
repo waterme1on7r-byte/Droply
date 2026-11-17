@@ -25,7 +25,7 @@ test('admin authorization, enrollment, socket identity, legacy protection and re
  const peers=once(socket,'message');socket.send(JSON.stringify({t:'hello',id:'spoofed-id',name:'Alice'}));assert.equal(JSON.parse((await peers)[0]).peers[0].id,id);
  const legacy=new WS(wsurl+'/?key=legacy-test');await once(legacy,'open');const denied=once(legacy,'close');legacy.send(JSON.stringify({t:'hello',id,name:'Impersonator'}));assert.equal((await denied)[0],4401);
  const invalid=new WS(wsurl+'/device');await once(invalid,'open');const bad=once(invalid,'close');invalid.send(JSON.stringify({t:'auth',token:'invalid'}));assert.equal((await bad)[0],4401);
- const revoked=once(socket,'close');await post('/admin/revoke',{code},true);assert.equal((await revoked)[0],4401);
+ const denialFrame=once(socket,'message'),revoked=once(socket,'close');await post('/admin/revoke',{code},true);assert.equal(JSON.parse((await denialFrame)[0]).t,'access-denied');assert.equal((await revoked)[0],4401);
 });
 test('migration remains compatible without storage; secure enrollment does not silently use legacy',async t=>{
  const server=createServer({env:{KEY:'legacy-test'}});await new Promise(r=>server.server.listen(0,'127.0.0.1',r));t.after(()=>server.close());const base='http://127.0.0.1:'+server.server.address().port;

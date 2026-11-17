@@ -5,10 +5,12 @@ const {createStore}=require('./auth-store');
 function createServer(options={}){
  const env=options.env||process.env,legacyKey=env.KEY||'',allowLegacy=env.ALLOW_LEGACY==='true'||(!!legacyKey&&env.ALLOW_LEGACY!=='false');
  const store=env.DATABASE_URL?require('./postgres-store').createPostgresStore(env.DATABASE_URL):env.AUTH_STORE_FILE?createStore(env.AUTH_STORE_FILE):null,admin=env.ADMIN_TOKEN||'';
- const users=new Map(),buckets=new Map(),ipConnections=new Map();
+ const sessions=new Map(),users=new Map(),buckets=new Map(),ipConnections=new Map();
  const limit=(key,max,ms)=>{const time=Date.now();let b=buckets.get(key);if(!b||b.until<time){if(buckets.size>=10000)return false;b={count:0,until:time+ms};buckets.set(key,b);}return ++b.count<=max;};
  const equal=(a,b)=>{const aa=Buffer.from(a),bb=Buffer.from(b);return aa.length===bb.length&&crypto.timingSafeEqual(aa,bb);};
  const send=(ws,m)=>{if(ws.readyState===1){if(ws.bufferedAmount>4*1024*1024)return ws.terminate();ws.send(JSON.stringify(m));}};
+ const deny=(ws,message)=>{send(ws,{t:'access-denied',message});ws.close(4401,message);};
+ const disconnect=id=>{for(const ws of sessions.get(id)||[])deny(ws,'Device access revoked or replaced');const legacy=users.get(id)?.ws;if(legacy&&!(sessions.get(id)||new Set()).has(legacy))deny(legacy,'Device access revoked or replaced');};
  const broadcast=()=>{const peers=[...users.values()].map(u=>({id:u.id,name:u.name,av:u.av}));for(const u of users.values())send(u.ws,{t:'peers',peers});};
  const json=(res,status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(value));};
  async function body(req){let data='';for await(const part of req){data+=part;if(Buffer.byteLength(data)>4096)throw Error('Body too large');}return JSON.parse(data||'{}');}
@@ -24,7 +26,7 @@ function createServer(options={}){
     if(!store)return json(res,503,{error:'Persistent auth storage is not configured'});
     if(req.method==='GET'&&route==='/admin/devices')return json(res,200,{devices:await store.devices()});
     if(req.method==='POST'&&route==='/admin/invites'){const d=await body(req);return json(res,201,await store.invite(d.code,d.ttlMs||900000,d.replace));}
-    if(req.method==='POST'&&route==='/admin/revoke'){const d=await body(req),ids=await store.revoke(d.code);for(const id of ids)users.get(id)?.ws.close(4401,'Device access revoked');return json(res,200,{revoked:ids.length});}
+    if(req.method==='POST'&&route==='/admin/revoke'){const d=await body(req),ids=await store.revoke(d.code);for(const id of ids)disconnect(id);return json(res,200,{revoked:ids.length});}
     return json(res,404,{error:'Not found'});
    }
    if(req.method==='POST'&&route==='/auth/enroll'){
@@ -32,7 +34,7 @@ function createServer(options={}){
     if(!store||admin.length<32)return json(res,503,{error:'Ask the administrator to configure secure enrollment.'});
     const d=await body(req),result=await store.enroll(d.invitation,d.id);
     if(!result)return json(res,403,{error:'Invitation is invalid, expired, already used, or belongs to another device.'});
-    users.get(result.id)?.ws.close(4401,'Credential replaced');return json(res,201,result);
+    disconnect(result.id);return json(res,201,result);
    }
    json(res,404,{error:'Not found'});
   }catch{if(!res.headersSent)json(res,400,{error:'Request could not be completed'});else res.end();}
@@ -56,11 +58,11 @@ function createServer(options={}){
    if(Date.now()-window>=1000){window=Date.now();count=0;}if(++count>100)return ws.close(4429,'Too many messages');
    if(ws.readyState!==1)return;
    let m;try{m=JSON.parse(raw);}catch{return ws.close(4400,'Invalid message');}if(!m||typeof m!=='object')return;
-   if(mode==='device'&&!identity){if(m.t!=='auth'||!(identity=await store.authenticate(m.token)))return ws.close(4401,'Device credential invalid or revoked');clearTimeout(timeout);send(ws,{t:'authenticated',id:identity});return;}
+   if(mode==='device'&&!identity){if(m.t!=='auth'||!(identity=await store.authenticate(m.token)))return deny(ws,'Device credential invalid or revoked');if(!sessions.has(identity))sessions.set(identity,new Set());sessions.get(identity).add(ws);clearTimeout(timeout);send(ws,{t:'authenticated',id:identity});return;}
    if(m.t==='hello'){
     const id=mode==='device'?identity:m.id;
     if(typeof id!=='string'||!id||id.length>64||typeof m.name!=='string'||!m.name.trim())return;
-    if(mode==='device'&&!await store.active(id))return ws.close(4401,'Device access revoked');
+    if(mode==='device'&&!await store.active(id))return deny(ws,'Device access revoked');
     if(mode==='legacy'&&store&&await store.registered(id))return ws.close(4401,'Use the enrolled app for this device');
     if(me&&me.id!==id)return ws.close(4400,'Identity cannot change');
     clearTimeout(timeout);const av=typeof m.av==='string'&&m.av.length<60000&&/^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(m.av)?m.av:'';
@@ -70,7 +72,7 @@ function createServer(options={}){
     const to=users.get(m.to);if(to)send(to.ws,{t:'sig',from:me.id,data:m.data});
    }
   }).catch(()=>ws.close(1011,'Authentication service unavailable')); });
-  ws.on('close',()=>{clearTimeout(timeout);ipConnections.set(ip,Math.max(0,(ipConnections.get(ip)||1)-1));if(ipConnections.get(ip)===0)ipConnections.delete(ip);if(me&&users.get(me.id)?.ws===ws){users.delete(me.id);broadcast();}});
+  ws.on('close',()=>{clearTimeout(timeout);if(identity){sessions.get(identity)?.delete(ws);if(sessions.get(identity)?.size===0)sessions.delete(identity);}ipConnections.set(ip,Math.max(0,(ipConnections.get(ip)||1)-1));if(ipConnections.get(ip)===0)ipConnections.delete(ip);if(me&&users.get(me.id)?.ws===ws){users.delete(me.id);broadcast();}});
  });
  const heartbeat=setInterval(()=>{for(const ws of wss.clients){if(!ws.alive){ws.terminate();continue;}ws.alive=false;ws.ping();}for(const[k,b]of buckets)if(b.until<Date.now())buckets.delete(k);},25000);heartbeat.unref();
  return {server:srv,store,users,allowLegacy,close:async()=>{clearInterval(heartbeat);for(const ws of wss.clients)ws.terminate();await new Promise(resolve=>wss.close(resolve));if(srv.listening)await new Promise(resolve=>srv.close(resolve));await store?.close?.();}};
