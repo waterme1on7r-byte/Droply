@@ -7,11 +7,15 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
+    "prestart": "node scripts/check-config.js",
+    "test": "node --test",
+    "check-config": "node scripts/check-config.js",
+    "predist": "node scripts/check-config.js",
     "dist": "electron-builder --publish never"
   },
   "devDependencies": {
-    "electron": "^33.0.0",
-    "electron-builder": "^25.0.0"
+    "electron": "33.4.11",
+    "electron-builder": "25.1.8"
   },
   "build": {
     "appId": "com.droply.app",

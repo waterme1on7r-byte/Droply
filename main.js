@@ -21,6 +21,7 @@ function saveProfile() {
 }
 const okAvatar = a => a === '' || (typeof a === 'string' && a.length < 300000 && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(a));
 
+const MAX_OPEN = 8;
 const open = new Map();        // tid -> { ws, dest, fd }  (files currently being received)
 const savedPaths = new Set();  // files we saved ourselves (the only ones "show in folder" may reveal)
 
@@ -64,6 +65,7 @@ ipcMain.handle('save-profile', (e, p) => {
 ipcMain.on('save-open', (e, tid, name) => {
   if (!fromUI(e) || typeof tid !== 'string') return;
   const prev = open.get(tid); if (prev) { open.delete(tid); removeFile(prev); }
+  if (open.size >= MAX_OPEN) return toUI('save-error', { tid, message: 'Too many files open at once' });
   let made;
   try { made = createUnique(app.getPath('downloads'), safeName(name)); }
   catch (err) { console.error(err); return toUI('save-error', { tid, message: "Couldn't create the file in Downloads" }); }
@@ -82,14 +84,16 @@ ipcMain.on('save-chunk', (e, tid, u8) => {
   if (!fromUI(e)) return;
   const o = open.get(tid); if (!o || !u8) return;
   // Wrap the received bytes instead of copying them a second time
-  o.ws.write(ArrayBuffer.isView(u8) ? Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength) : Buffer.from(u8));
+  const buf = ArrayBuffer.isView(u8) ? Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength) : Buffer.from(u8);
+  // Tell the renderer once the bytes are really written: it relays this to the sender as flow control
+  o.ws.write(buf, err => { if (!err) toUI('save-wrote', { tid, n: buf.length }); });
 });
 ipcMain.on('save-close', (e, tid) => {
   if (!fromUI(e)) return;
   const o = open.get(tid); if (!o) return; open.delete(tid);
   o.ws.once('finish', () => {
     savedPaths.add(o.dest);
-    const info = { name: path.basename(o.dest), path: o.dest };
+    const info = { tid, name: path.basename(o.dest), path: o.dest };
     toUI('saved', info);
     if (Notification.isSupported()) new Notification({ title: 'File received', body: info.name }).show();
   });
@@ -99,6 +103,11 @@ ipcMain.on('save-close', (e, tid) => {
 ipcMain.on('save-abort', (e, tid) => {
   if (!fromUI(e)) return;
   const o = open.get(tid); if (!o) return; open.delete(tid); removeFile(o);
+});
+// Free space in Downloads (null = unknown), so a transfer that can't fit is refused up front
+ipcMain.handle('free-space', async e => {
+  if (!fromUI(e)) return null;
+  try { const st = await fs.promises.statfs(app.getPath('downloads')); return st.bavail * st.bsize; } catch { return null; }
 });
 ipcMain.on('show-file', (e, p) => { if (fromUI(e) && savedPaths.has(p)) shell.showItemInFolder(p); });
 

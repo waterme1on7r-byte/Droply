@@ -148,7 +148,10 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
 <script src="config.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const { SERVER_URL, KEY, ICE } = window.CONFIG;
+const { SERVER_URL, KEY, ICE = [] } = window.CONFIG || {};
+const WIN = 16 * 1024 * 1024;            // max bytes the sender may have in flight that the receiver hasn't written yet
+const STALL_MS = 45000, CONNECT_MS = 30000;
+const MAX_ASKS = 20, MAX_SESS = 10;      // limits on pending requests / simultaneous transfers
 let me, ws, peers = [], sel = null, pendAv = null, known = null;
 const sess = {}, asks = [];
 const fmt = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.ceil(b / 1e3) + ' KB';
@@ -203,18 +206,19 @@ function updateDrop() {
   $('#peerSub').textContent = p ? 'Online' : (peers.length ? peers.length + ' online' : 'No one online');
   const n = avatar(p && p.av, p ? p.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
 }
-function setStatus(on) { $('#status').classList.toggle('on', on); $('#status span').textContent = on ? 'Connected' : 'Connecting…'; }
+function setStatus(on, text) { $('#status').classList.toggle('on', on); $('#status span').textContent = text || (on ? 'Connected' : 'Connecting…'); }
 function row(id, d) {
   let r = document.getElementById(id);
   if (!r) {
     r = document.createElement('div'); r.id = id;
-    r.innerHTML = '<div class="rt"><div class="ri"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div><div class="rx"><div class="nm"></div><div class="sub"></div></div><div class="st"></div><button class="x" title="Cancel transfer" aria-label="Cancel transfer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="bar"><i></i></div><div class="enc"><span>Encrypted transfer</span><span class="spd"></span></div>';
+    r.innerHTML = '<div class="rt"><div class="ri"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div><div class="rx"><div class="nm"></div><div class="sub"></div></div><div class="st"></div><button class="x" title="Cancel transfer" aria-label="Cancel transfer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="bar"><i></i></div><div class="enc"><span>Secure connection</span><span class="spd"></span></div>';
     r.querySelector('.x').onclick = () => cancelTransfer(id);
     $('#log').prepend(r);
   }
-  r.className = 'row ' + (d.state || '');
+  if (d.state != null || !r.className) r.className = 'row ' + (d.state || '');
   if (d.label) r.querySelector('.nm').textContent = d.label;
   if (d.sub != null) r.querySelector('.sub').textContent = d.sub;
+  if (d.code) r.querySelector('.enc span').textContent = 'Encrypted · code ' + d.code;
   if (d.spd != null) r.querySelector('.spd').textContent = d.spd;
   const st = r.querySelector('.st');
   if (d.path) { st.textContent = ''; const a = document.createElement('a'); a.textContent = 'Show in folder'; a.onclick = () => api.showFile(d.path); st.append(a); }
@@ -240,7 +244,7 @@ function notify(title, sub, lock) {
   $(lock ? '#br' : '#tl').appendChild(t);
   setTimeout(() => t.classList.add('out'), 3200); setTimeout(() => t.remove(), 3700);
 }
-const notifyEnc = () => notify('End-to-end encrypted', 'Just between you two', true);
+const notifyEnc = () => notify('Encrypted connection', 'Compare the code to be sure', true);
 function notifyNew() {
   const ids = new Set(peers.map(p => p.id));
   if (known && peers.some(p => !known.has(p.id))) notify('Peer connected', 'Ready to share');
@@ -251,24 +255,30 @@ function notifyNew() {
 const send = o => ws && ws.readyState === 1 && ws.send(JSON.stringify(o));
 const hello = () => me.name && send({ t: 'hello', id: me.id, name: me.name, av: me.avatar });
 const sig = (to, data) => send({ t: 'sig', to, data });
+let retry = 0;
+function reconnectLater() { setTimeout(connect, Math.min(30000, 2000 * 2 ** retry++) + Math.random() * 1000); }
 function connect() {
-  ws = new WebSocket(`${SERVER_URL}/?key=${encodeURIComponent(KEY)}`);
-  ws.onopen = () => { setStatus(true); known = null; hello(); };
+  if (!SERVER_URL) return setStatus(false, 'Not configured');
+  try { ws = new WebSocket(`${SERVER_URL}/?key=${encodeURIComponent(KEY)}`); } catch { setStatus(false); return reconnectLater(); }
+  ws.onopen = () => { retry = 0; setStatus(true); known = null; hello(); };
   ws.onmessage = e => {
     let m; try { m = JSON.parse(e.data); } catch { return; }
-    if (m.t === 'peers') { peers = m.peers.filter(p => p.id !== me.id).sort((a, b) => a.name.localeCompare(b.name)); updateDrop(); renderPeers(); notifyNew(); }
+    if (m.t === 'peers' && Array.isArray(m.peers)) { peers = m.peers.filter(p => p && typeof p.name === 'string' && p.id !== me.id).sort((a, b) => a.name.localeCompare(b.name)); updateDrop(); renderPeers(); notifyNew(); }
     else if (m.t === 'sig') onSig(m.from, m.data);
   };
-  ws.onclose = () => { setStatus(false); setTimeout(connect, 3000); };
+  ws.onerror = () => {};   // onclose always follows
+  // While offline the list would be stale and anything sent would silently vanish, so empty it
+  ws.onclose = () => { setStatus(false); peers = []; known = null; updateDrop(); renderPeers(); reconnectLater(); };
 }
 
 /* ---------- Sender ---------- */
 async function sendFiles(files) {
   const peer = peers.find(p => p.id === sel);
   if (!peer) return toast('Pick a person first');
+  if (!ws || ws.readyState !== 1) return toast('Not connected to the server');
   if (!files.length) return;
   const tid = crypto.randomUUID();
-  const s = sess[tid] = { tid, peerId: peer.id, peerName: peer.name, files, dir: 'out', q: Promise.resolve(), sent: 0, total: files.reduce((a, f) => a + f.size, 0) || 1 };
+  const s = sess[tid] = { tid, peerId: peer.id, peerName: peer.name, files, dir: 'out', q: Promise.resolve(), sent: 0, acked: 0, total: files.reduce((a, f) => a + f.size, 0) || 1 };
   sig(peer.id, { t: 'req', tid, from: me.name, files: files.map(f => ({ name: f.name, size: f.size })) });
   row(tid, { label: files.length === 1 ? files[0].name : plural(files.length), sub: `Sending to ${peer.name} · ${fmt(s.total)}`, msg: 'Waiting…', state: 'sending', pct: 0 });
   s.timer = setTimeout(() => !s.pc && fail(s, 'No response', 'error', 'Request expired'), 60000);
@@ -277,8 +287,14 @@ async function startSender(s) {
   notifyEnc();
   const pc = makePc(s), ch = pc.createDataChannel('f');
   ch.binaryType = 'arraybuffer'; ch.bufferedAmountLowThreshold = 256 * 1024;
-  ch.onopen = () => pump(s, ch);
-  ch.onmessage = e => { if (e.data === 'ok') { s.fin = true; row(s.tid, { msg: 'Sent ✓', pct: 100, state: 'done', spd: '' }); cleanup(s); } };
+  s.timer = setTimeout(() => !s.open && fail(s, 'Could not connect', 'error', 'Connection timed out'), CONNECT_MS);
+  ch.onopen = () => { s.open = true; clearTimeout(s.timer); watch(s); pump(s, ch); };
+  ch.onmessage = e => {
+    if (s.fin || typeof e.data !== 'string') return;
+    if (e.data === 'ok') { s.fin = true; row(s.tid, { msg: 'Sent ✓', pct: 100, state: 'done', spd: '' }); cleanup(s); return; }
+    let m; try { m = JSON.parse(e.data); } catch { return; }
+    if (m && m.t === 'ack' && Number.isFinite(m.n) && m.n > 0) { s.acked = Math.min(s.sent, s.acked + m.n); s.last = Date.now(); s.wake && s.wake(); }
+  };
   // short grace period so a 'cancel' message sent just before the channel closed can arrive first
   ch.onclose = () => setTimeout(() => fail(s, 'Connection lost'), 800);
   await pc.setLocalDescription(await pc.createOffer());
@@ -286,17 +302,19 @@ async function startSender(s) {
 }
 async function pump(s, ch) {
   const C = 65536;
-  const waitLow = () => new Promise(r => { s.wake = r; ch.onbufferedamountlow = r; }); // also released on cancel
+  // Pause while the channel buffer is full, or (new receivers) while too much is unwritten on the other side
+  const blocked = () => ch.bufferedAmount > (1 << 20) || (s.win && s.sent - s.acked > WIN);
+  const waitFree = () => new Promise(r => { s.wake = r; ch.onbufferedamountlow = r; });   // also released by acks / cancel
   try {
     for (const f of s.files) {
       if (s.fin) return;
       ch.send(JSON.stringify({ t: 'file', name: f.name, size: f.size }));
       for (let o = 0; o < f.size; o += C) {
-        if (ch.bufferedAmount > (1 << 20)) await waitLow();
+        while (blocked() && !s.fin) await waitFree();
         if (s.fin) return;
         ch.send(await f.slice(o, o + C).arrayBuffer());
         if (s.fin) return;
-        s.sent += Math.min(C, f.size - o); prog(s, s.sent, s.total);
+        s.last = Date.now(); s.sent += Math.min(C, f.size - o); prog(s, s.sent, s.total);
       }
       ch.send(JSON.stringify({ t: 'eof' }));
     }
@@ -304,17 +322,22 @@ async function pump(s, ch) {
     row(s.tid, { msg: 'Finishing…', pct: 100, state: 'finishing' }); // no cancel button here: everything is already sent
   } catch { fail(s, 'Transfer failed'); }
 }
+// Fails the transfer if nothing moves for a while (peer vanished, network dropped silently…)
+function watch(s) { s.last = Date.now(); s.wd = setInterval(() => { if (Date.now() - s.last > STALL_MS) fail(s, 'Transfer stalled', 'error', 'Connection stalled'); }, 5000); }
 
 /* ---------- Receiver ---------- */
 function recv(s, ch) {
+  s.ch = ch; s.open = true; clearTimeout(s.timer); watch(s);
   ch.binaryType = 'arraybuffer';
   const total = s.files.reduce((a, f) => a + f.size, 0) || 1;
   let got = 0, idx = 0, cur = null; // cur = file currently being received
   const bad = () => fail(s, 'Unexpected data received', 'error', 'Receiver stopped the transfer');
   ch.onmessage = e => {
     if (s.fin) return;
+    s.last = Date.now();
     if (typeof e.data === 'string') {
       let m; try { m = JSON.parse(e.data); } catch { return bad(); }
+      if (!m || typeof m !== 'object') return bad();
       if (m.t === 'file') {
         const exp = s.files[idx++];                       // only accept what the user accepted
         if (cur || !exp || m.size !== exp.size) return bad();
@@ -324,7 +347,7 @@ function recv(s, ch) {
         cur = null; api.saveClose(s.tid);
       } else if (m.t === 'done') {
         if (cur || idx !== s.files.length) return bad();
-        s.fin = true; ch.send('ok'); row(s.tid, { msg: 'Received ✓', pct: 100, state: 'done', spd: '' }); cleanup(s);
+        s.gotDone = true; maybeFinish(s);                 // confirm to the sender only after everything is on disk
       }
     } else {
       if (!cur) return bad();
@@ -334,6 +357,11 @@ function recv(s, ch) {
     }
   };
   ch.onclose = () => setTimeout(() => fail(s, 'Connection lost'), 800);
+}
+function maybeFinish(s) {
+  if (s.fin || !s.gotDone || (s.saved || 0) < s.files.length) return;
+  s.fin = true; try { s.ch.send('ok'); } catch {}
+  row(s.tid, { msg: 'Received ✓', pct: 100, state: 'done', spd: '' }); cleanup(s);
 }
 function askUser(from, d) {
   asks.push({ from, d });
@@ -349,14 +377,19 @@ function showAsk() {
 }
 function answer(ok) {
   const { from, d } = asks.shift();
-  if (ok) {
-    const s = sess[d.tid] = { tid: d.tid, peerId: from, peerName: d.from, dir: 'in', files: d.files, q: Promise.resolve() };
-    s.timer = setTimeout(() => !s.pc && fail(s, 'Sender did not connect', 'error', 'Receiver timed out'), 45000);
-    const size = d.files.reduce((t, f) => t + f.size, 0);
-    row(d.tid, { label: d.files.length === 1 ? d.files[0].name : plural(d.files.length), sub: `Receiving from ${d.from} · ${fmt(size)}`, msg: 'Connecting…', state: 'sending', pct: 0 });
-    sig(from, { t: 'acc', tid: d.tid }); notifyEnc();
-  } else sig(from, { t: 'rej', tid: d.tid });
   showAsk();
+  if (!ok) return sig(from, { t: 'rej', tid: d.tid });
+  accept(from, d);
+}
+async function accept(from, d) {
+  const size = d.files.reduce((t, f) => t + f.size, 0);
+  const s = sess[d.tid] = { tid: d.tid, peerId: from, peerName: d.from, dir: 'in', files: d.files, q: Promise.resolve() };
+  s.timer = setTimeout(() => !s.open && fail(s, 'Sender did not connect', 'error', 'Receiver timed out'), 45000);
+  row(d.tid, { label: d.files.length === 1 ? d.files[0].name : plural(d.files.length), sub: `Receiving from ${d.from} · ${fmt(size)}`, msg: 'Connecting…', state: 'sending', pct: 0 });
+  let free = null; try { free = await api.freeSpace(); } catch {}
+  if (s.fin) return;                                                   // cancelled while we checked
+  if (free != null && size > free - 50e6) return fail(s, 'Not enough disk space', 'error', 'Not enough disk space on the receiving side');
+  sig(from, { t: 'acc', tid: d.tid, v: 2 }); notifyEnc();             // v:2 = I send write-acks, you may use a send window
 }
 $('#accBtn').onclick = () => answer(true);
 $('#rejBtn').onclick = () => answer(false);
@@ -375,6 +408,7 @@ function onSig(from, d) {
   if (!d || typeof d !== 'object') return;
   if (d.t === 'req') {
     if (!validReq(d) || sess[d.tid] || asks.some(a => a.d.tid === d.tid)) return;
+    if (asks.length >= MAX_ASKS || Object.keys(sess).length >= MAX_SESS) return sig(from, { t: 'rej', tid: d.tid });   // too busy
     d.from = d.from.slice(0, 40); return askUser(from, d);
   }
   if (d.t === 'cancel') {
@@ -388,22 +422,36 @@ function onSig(from, d) {
   s.q = s.q.then(() => handle(s, d)).catch(() => fail(s, 'Connection error'));
 }
 async function handle(s, d) {
-  if (d.t === 'rej') return fail(s, 'Declined');
-  if (d.t === 'acc') { clearTimeout(s.timer); row(s.tid, { msg: 'Connecting…', state: 'sending' }); return startSender(s); }
+  if (d.t === 'rej') return s.dir === 'out' && !s.pc ? fail(s, 'Declined') : undefined;
+  if (d.t === 'acc') { if (s.dir !== 'out' || s.pc) return; s.win = d.v >= 2; clearTimeout(s.timer); row(s.tid, { msg: 'Connecting…', state: 'sending' }); return startSender(s); }
   if (d.t === 'offer') {
+    if (s.dir !== 'in' || s.pc) return;
     const pc = makePc(s); pc.ondatachannel = e => recv(s, e.channel);
     await pc.setRemoteDescription(d.sdp); await flush(s);
     await pc.setLocalDescription(await pc.createAnswer());
-    return sig(s.peerId, { t: 'answer', tid: s.tid, sdp: pc.localDescription });
+    sig(s.peerId, { t: 'answer', tid: s.tid, sdp: pc.localDescription }); return showCode(s);
   }
-  if (d.t === 'answer') { await s.pc.setRemoteDescription(d.sdp); return flush(s); }
+  if (d.t === 'answer') { if (s.dir !== 'out' || !s.pc || s.pc.remoteDescription) return; await s.pc.setRemoteDescription(d.sdp); await flush(s); return showCode(s); }
   if (d.t === 'ice') { if (s.pc && s.pc.remoteDescription) await s.pc.addIceCandidate(d.c); else (s.pend = s.pend || []).push(d.c); }
 }
-function cleanup(s) { clearTimeout(s.timer); setTimeout(() => s.pc && s.pc.close(), 1500); delete sess[s.tid]; }
+// Short code derived from both sides' DTLS fingerprints. If the two people read the same code,
+// nobody (including the signaling server) swapped keys in between. It does NOT prove who the peer is.
+async function showCode(s) {
+  try {
+    const fp = d => (/a=fingerprint:\S+ (\S+)/.exec((d && d.sdp) || '') || [])[1];
+    const a = fp(s.pc.localDescription), b = fp(s.pc.remoteDescription);
+    if (!a || !b) return;
+    const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode([a, b].sort().join('|')));
+    if (s.fin) return;
+    const c = String(new DataView(h).getUint32(0) % 1e6).padStart(6, '0');
+    row(s.tid, { code: c.slice(0, 3) + ' ' + c.slice(3) });
+  } catch {}
+}
+function cleanup(s) { clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); setTimeout(() => s.pc && s.pc.close(), 1500); delete sess[s.tid]; }
 // state: 'error' | 'cancelled'. tell: null = don't notify the other side, true = "cancelled by me", string = custom reason
 function fail(s, msg, state = 'error', tell = null) {
   if (s.fin) return; s.fin = true;
-  clearTimeout(s.timer); s.wake && s.wake();
+  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); s.wake && s.wake();
   row(s.tid, { msg, state, spd: '' });
   if (tell !== null) sig(s.peerId, { t: 'cancel', tid: s.tid, reason: tell === true ? undefined : tell });
   if (s.dir === 'in') api.saveAbort(s.tid);   // delete the half-written file
@@ -446,7 +494,12 @@ $('#peerBox').onclick = togglePicker; $('#peopleBtn').onclick = togglePicker;
 document.addEventListener('click', e => { if (!e.target.closest('#picker')) $('#picker').classList.add('hidden'); });
 window.addEventListener('focus', () => { if (!$('#setup').classList.contains('hidden')) $('#nameInput').focus(); });
 api.on('save-error', d => { const s = sess[d.tid]; if (s) fail(s, d.message, 'error', 'Receiver: ' + d.message); else toast(d.message); });
-api.on('saved', d => row('f' + Math.random(), { label: d.name, sub: 'Saved to Downloads', path: d.path, state: 'done', pct: 100 }));
+api.on('save-wrote', d => {            // bytes are on disk -> tell the sender (batched, ~20×/s)
+  const s = sess[d.tid]; if (!s || !s.ch || s.fin) return;
+  s.last = Date.now(); s.ackN = (s.ackN || 0) + d.n;
+  if (!s.ackT) s.ackT = setTimeout(() => { s.ackT = 0; try { if (s.ch.readyState === 'open') s.ch.send(JSON.stringify({ t: 'ack', n: s.ackN })); s.ackN = 0; } catch {} }, 50);
+});
+api.on('saved', d => { const s = sess[d.tid]; if (s) { s.saved = (s.saved || 0) + 1; s.last = Date.now(); maybeFinish(s); } row('f' + Math.random(), { label: d.name, sub: 'Saved to Downloads', path: d.path, state: 'done', pct: 100 }); });
 
 (async () => {
   me = await api.getProfile();
