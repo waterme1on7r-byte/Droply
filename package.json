@@ -1,6 +1,6 @@
 {
   "name": "droply",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "Droply",
   "main": "main.js",
   "author": "Droply",
@@ -85,7 +85,7 @@
       {
         "provider": "github",
         "owner": "waterme1on7r-byte",
-        "repo": "Droply",
+        "repo": "Droply-releases",
         "releaseType": "draft"
       }
     ]

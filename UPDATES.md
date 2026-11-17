@@ -16,7 +16,7 @@ Manual workflow dispatch builds downloadable Actions artifacts without creating 
 
 ## Configuration
 
-Update source: public GitHub Releases at waterme1on7r-byte/Droply. No GitHub token is embedded in clients. The release job uses the workflow's temporary GITHUB_TOKEN with contents:write. Repository Actions must be enabled.
+Update source: public GitHub Releases at waterme1on7r-byte/Droply-releases. No GitHub token is embedded in clients. The source repository stays private. The release job uses the DROPLY_RELEASE_TOKEN Actions secret: a fine-grained token limited to the public Droply-releases repository with Contents read/write. Without this secret, builds still upload Actions artifacts and warn that manual publication is needed. Repository Actions must be enabled.
 
 The existing tracked config.js remains supported. For secret-managed builds, remove it from Git tracking separately and configure DROPLY_SERVER_URL, DROPLY_KEY and optionally DROPLY_ICE_JSON in repository Actions secrets. Values shipped to desktop clients are accessible to their users.
 
@@ -33,3 +33,5 @@ DROPLY 2.6.0 also adds Settings (profile, download destination, per-transfer des
 Dark is the default. Light changes the palette while retaining the app layout. Folder sends require both peers to use 2.6.0 or newer, support up to 1,000 files, and omit empty directories. Each folder batch is isolated in a newly created destination directory. Failed outgoing transfers can restart from the beginning while their source files remain available in the current session. The latest 300 transfer events persist locally; clearing history does not delete received files.
 
 Validation: behavioral tests, browser layout/navigation checks in both themes and minimum window size, actual local WebRTC folder payload/retry checks, and native Electron theme persistence and close-to-tray smoke checks. Windows installer packaging is verified locally. macOS signing and a real installed-version update remain deployment checks.
+
+The first public updater-enabled release is 2.6.1, which corrects the update feed to the public releases repository. Version 2.6.0 was prepared against the private source repository and should be replaced manually if installed.
