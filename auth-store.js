@@ -13,6 +13,12 @@ function createRegistry(initial, persist, now=Date.now) {
  function save(next){persist(next);state=next;}
  function clone(){return JSON.parse(JSON.stringify(state));}
  return {
+  register(id,token){
+   if(typeof id!=='string'||!/^[a-zA-Z0-9-]{16,64}$/.test(id)||typeof token!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(token))return null;
+   const existing=state.devices[id];if(existing)return !existing.revoked&&existing.hash===hash(token)?{id}:null;
+   if(Object.keys(state.devices).length>=10000)throw Error('Device capacity reached');
+   const next=clone();next.devices[id]={hash:hash(token),code:codeFor(id),revoked:false,created:now()};save(next);return {id};
+  },
   invite(code, ttl=900000, replace=false){if(!CODE.test(code))throw Error('A valid target device code is required');if(!Number.isFinite(ttl)||ttl<60000||ttl>86400000)throw Error('Invalid invitation lifetime');const next=clone();for(const[k,v]of Object.entries(next.invites))if(v.expires<=now())delete next.invites[k];if(Object.keys(next.invites).length>=1000)throw Error('Too many pending invitations');const token=crypto.randomBytes(32).toString('base64url');next.invites[hash(token)]={code,expires:now()+ttl,replace:replace===true};save(next);return {invitation:token,expires:now()+ttl,code};},
   enroll(invitation,id){if(typeof invitation!=='string'||invitation.length>128||typeof id!=='string'||!/^[a-zA-Z0-9-]{16,64}$/.test(id))return null;const entry=state.invites[hash(invitation)];if(!entry||entry.expires<=now()||entry.code!==codeFor(id))return null;if(state.devices[id]&&!state.devices[id].revoked&&!entry.replace)return null;if(!state.devices[id]&&Object.keys(state.devices).length>=10000)throw Error('Device capacity reached');const next=clone(),token=crypto.randomBytes(32).toString('base64url');next.devices[id]={hash:hash(token),code:entry.code,revoked:false,created:now()};delete next.invites[hash(invitation)];save(next);return {id,token};},
   authenticate(token){if(typeof token!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(token))return null;const h=hash(token);return Object.keys(state.devices).find(id=>!state.devices[id].revoked&&state.devices[id].hash===h)||null;},

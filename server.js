@@ -19,7 +19,14 @@ function createServer(options={}){
   try{
    if(req.method==='GET'&&route==='/')return json(res,200,{service:'DROPLY signaling',protocol:2});
    if(store?.ready)await store.ready;
-   if(req.method==='GET'&&route==='/auth/status')return json(res,200,{protocol:2,enrollment:!!store&&admin.length>=32});
+   if(req.method==='GET'&&route==='/auth/status')return json(res,200,{protocol:2,enrollment:!!store&&admin.length>=32,automaticRegistration:!!store});
+   if(req.method==='POST'&&route==='/auth/register'){
+    if(!limit('register:'+ip,10,60000)||!limit('register-global',200,3600000))return json(res,429,{error:'Please try again shortly'});
+    if(!store)return json(res,503,{error:'Registration is not ready'});
+    const d=await body(req),result=await store.register(d.id,d.token);
+    if(!result)return json(res,409,{error:'This identity is already registered or unavailable'});
+    return json(res,200,result);
+   }
    if(route.startsWith('/admin/')){
     if(!limit('admin:'+ip,30,60000))return json(res,429,{error:'Try again later'});
     if(admin.length<32||!equal(req.headers.authorization||'','Bearer '+admin))return json(res,401,{error:'Unauthorized'});

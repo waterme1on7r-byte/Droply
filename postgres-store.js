@@ -16,6 +16,6 @@ function createPostgresStore(connectionString,{pool:provided}={}){
   if(next)await client.query('UPDATE droply_auth_state SET state = $1::jsonb WHERE id = 1',[JSON.stringify(next)]);
   await client.query('COMMIT');return value;
  }catch(e){await client.query('ROLLBACK').catch(()=>{});throw e;}finally{client.release();}}
- const api={ready,close:()=>pool.end()};for(const method of ['invite','enroll','authenticate','registered','active','revoke','devices'])api[method]=(...args)=>run(method,args);return api;
+ const api={ready,close:()=>pool.end()};for(const method of ['register','invite','enroll','authenticate','registered','active','revoke','devices'])api[method]=(...args)=>run(method,args);return api;
 }
 module.exports={createPostgresStore};
