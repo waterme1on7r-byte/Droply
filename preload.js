@@ -1,10 +1,12 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const EVENTS = new Set(['saved', 'save-error']); // only these main→renderer channels are exposed
 contextBridge.exposeInMainWorld('api', {
   getProfile: () => ipcRenderer.invoke('get-profile'),
   saveProfile: p => ipcRenderer.invoke('save-profile', p),
   saveOpen: (tid, name) => ipcRenderer.send('save-open', tid, name),
   saveChunk: (tid, u8) => ipcRenderer.send('save-chunk', tid, u8),
   saveClose: tid => ipcRenderer.send('save-close', tid),
+  saveAbort: tid => ipcRenderer.send('save-abort', tid),
   showFile: p => ipcRenderer.send('show-file', p),
-  on: (ch, fn) => ipcRenderer.on(ch, (_, d) => fn(d))
+  on: (ch, fn) => { if (EVENTS.has(ch)) ipcRenderer.on(ch, (_, d) => fn(d)); }
 });

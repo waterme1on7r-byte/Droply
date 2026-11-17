@@ -1,6 +1,6 @@
 {
   "name": "droply",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "Arkadaşlarına internet üzerinden anında dosya gönder",
   "main": "main.js",
   "author": "Droply",
