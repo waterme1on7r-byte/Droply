@@ -10,7 +10,7 @@
 *{box-sizing:border-box;margin:0}
 body{font-family:'IBM Plex Sans','Segoe UI Variable','Segoe UI',system-ui,-apple-system,sans-serif;background:radial-gradient(900px 500px at 50% 38%,rgba(30,90,200,.15),transparent 70%),linear-gradient(180deg,#13243f 0%,#0e1a2e 60%);color:var(--text);height:100vh;padding-top:40px;display:flex;overflow:hidden;-webkit-font-smoothing:antialiased;user-select:none}
 input{user-select:text}
-#titlebar{position:fixed;top:0;left:0;right:0;height:40px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;color:#dfe7f5;background:var(--bar);border-bottom:1px solid var(--line);-webkit-app-region:drag;z-index:30}
+#titlebar{position:fixed;top:0;left:0;right:0;height:40px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;color:#dfe7f5;background:var(--bar);-webkit-app-region:drag;z-index:30}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-corner{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px;border:2px solid transparent;background-clip:padding-box}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.25);background-clip:padding-box;border:2px solid transparent}
 .rail{width:84px;background:#0d1524;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:12px;flex:none;min-height:0}
 .rbtn{width:56px;height:56px;flex:none;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#9aa7bd;background:transparent;border:0;cursor:pointer;position:relative;padding:0;margin:0;transition:.15s}
@@ -137,6 +137,15 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
 #sig{flex:none;margin-top:auto;text-align:center;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.28em;color:var(--mute);opacity:.55;padding-top:2px;transition:.2s}
 #sig:hover{opacity:.9;color:var(--gold)}
 .hidden{display:none!important}
+#addFriend{background:rgba(4,8,18,.7);backdrop-filter:blur(8px);z-index:20}
+#addFriend .box{position:relative;width:min(420px,calc(100vw - 40px));max-height:calc(100vh - 72px);overflow:auto;padding:36px 28px 24px;border:1px solid var(--line);border-radius:22px;background:radial-gradient(320px 180px at 50% 0%,rgba(59,130,246,.2),transparent 75%),var(--card);box-shadow:0 24px 80px rgba(0,0,0,.5);animation:tin .2s ease}
+#addFriend h2{font-size:28px}
+#addFriend .closeX{top:10px;right:10px}
+#addFriend .field label{display:block;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+#addFriend .pk-add{padding:0}
+#addFriend .pk-msg{padding:8px 0 0;min-height:26px;text-align:left}
+#addFriend .codebox code{font-size:13px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 </style>
 </head>
 <body>
@@ -161,11 +170,22 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
 
 <div id="pf" class="overlay hidden"><div class="box" id="pfBox"></div></div>
 
+<div id="addFriend" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="addFriendTitle">
+  <div class="box">
+    <button id="addFriendClose" class="closeX" title="Close" aria-label="Close"></button>
+    <h2 id="addFriendTitle">Add a friend</h2>
+    <p>Share your code or enter a friend's code.</p>
+    <div class="field"><small>Your device code</small><div class="codebox"><code id="shareCode">…</code><button id="shareCopy" class="cp ghost" title="Copy code" aria-label="Copy your device code"></button></div><small class="hint">Share this code so a friend can add you.</small></div>
+    <div class="field"><label for="codeIn">Friend's device code</label><div class="pk-add"><input id="codeIn" type="text" maxlength="32" placeholder="DRP-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false"><button id="addBtn">Add</button></div><div id="addMsg" class="pk-msg" role="status" aria-live="polite"></div></div>
+  </div>
+</div>
+
 <nav class="rail">
   <div class="rbtn active" title="Transfers"><svg width="32" height="32" viewBox="0 0 32 32"><path d="M16 6c3.7 4.9 6.4 8.1 6.4 11.5a6.4 6.4 0 0 1-12.8 0C9.6 14.1 12.3 10.9 16 6z" fill="#fff"/></svg></div>
   <div id="railAv" class="av" title="Edit profile">?</div>
   <div class="rsep"></div>
   <div id="frList"></div>
+  <button class="rbtn" id="addFriendBtn" title="Add friend" aria-label="Add friend" aria-haspopup="dialog"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
   <button class="rbtn" id="peopleBtn" title="Friends"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M16 4.8a3.2 3.2 0 0 1 0 6M21 20v-1a5 5 0 0 0-3.5-4.8"/></svg><span id="count">0</span><span id="reqDot" style="display:none"></span></button>
   <button class="rbtn" id="gearBtn" title="Settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </nav>
@@ -182,8 +202,6 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
       <div class="pcard" id="peerBox"><div id="peerAv" class="av">+</div><div><b id="peerName">Pick a person</b><small id="peerSub">No one online</small></div></div>
     </div>
     <div id="picker" class="hidden">
-      <div class="pk-add"><input id="codeIn" type="text" maxlength="32" placeholder="Friend's code · DRP-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false"><button id="addBtn">Add</button></div>
-      <div id="addMsg" class="pk-msg"></div>
       <div id="reqs"></div>
       <div id="list"></div>
     </div>
@@ -724,9 +742,30 @@ $('#copyBtn').onclick = () => deviceCode(me.id).then(c => copyCode($('#copyBtn')
 $('#pf').addEventListener('click', e => { if (e.target === $('#pf')) closeCard(); });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  if (!$('#pf').classList.contains('hidden')) closeCard();
+  if (!$('#addFriend').classList.contains('hidden')) closeAddFriend();
+  else if (!$('#pf').classList.contains('hidden')) closeCard();
   else if (!$('#setup').classList.contains('hidden') && !$('#setupX').classList.contains('hidden')) closeSetup();
   else $('#picker').classList.add('hidden');
+});
+function closeAddFriend() {
+  $('#addFriend').classList.add('hidden'); $('#addFriendBtn').focus();
+}
+function openAddFriend() {
+  $('#picker').classList.add('hidden'); $('#addMsg').textContent = ''; $('#codeIn').value = '';
+  $('#addFriend').classList.remove('hidden'); $('#codeIn').focus();
+  deviceCode(me.id).then(c => { $('#shareCode').textContent = c; });
+}
+$('#addFriendBtn').onclick = openAddFriend;
+$('#addFriendClose').innerHTML = ICON.xl;
+$('#addFriendClose').onclick = closeAddFriend;
+$('#shareCopy').innerHTML = ICON.copy;
+$('#shareCopy').onclick = () => deviceCode(me.id).then(c => copyCode($('#shareCopy'), c));
+$('#addFriend').addEventListener('click', e => { if (e.target === $('#addFriend')) closeAddFriend(); });
+$('#addFriend').addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return;
+  const first = $('#addFriendClose'), last = $('#addBtn');
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 });
 async function submitCode() {
   const inp = $('#codeIn'), msg = $('#addMsg'); if (!inp.value.trim()) return inp.focus();
