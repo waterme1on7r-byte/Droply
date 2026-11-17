@@ -1,41 +1,25 @@
 # GitHub Releases updates
 
-DROPLY 2.6.0 introduces electron-updater. Install this version manually once on existing devices; versions without the updater cannot discover it automatically.
-
-Installed builds check 15 seconds after page load and every four hours. Profile > Check for updates triggers a manual check. Users approve downloads and restarts. Automatic installation on normal app quit is disabled. Active or pending transfers block update restarts. Failed checks are logged in droply.log.
+The desktop app, server and releases now share the public waterme1on7r-byte/Droply repository. New installers read updates from its GitHub Releases. No GitHub token is embedded in the app. Existing 2.8.1 installations use the previous feed and require one manual upgrade to 2.8.2 or newer.
 
 ## Release a version
 
-1. Increase package.json version and refresh package-lock.json with npm install --package-lock-only.
-2. Commit and push the version change.
-3. Create and push the matching tag, for example git tag v2.6.0 and git push origin v2.6.0.
-4. The Droply build workflow runs tests and builds both platforms. Only after both builds succeed does it create a draft GitHub Release with installers, blockmaps and latest.yml/latest-mac.yml.
-5. Inspect and test the draft installers, then publish the release in GitHub. Drafts are invisible to installed clients. Keep stable releases out of prerelease mode.
+1. Increase package.json and package-lock.json to the same version.
+2. Run desktop and server tests, commit and push main.
+3. Push the matching version tag, for example v2.8.2.
+4. The build workflow tests and packages Windows and universal macOS installers, then creates a draft release using this repository's GITHUB_TOKEN.
+5. Test the installers and publish the draft when ready. Keep installers, blockmaps and latest.yml/latest-mac.yml together. Never reuse an already published version.
 
-Manual workflow dispatch builds downloadable Actions artifacts without creating a release. Never replace an existing release's version: ship a higher version for corrections. Keep metadata and its matching installers together.
+Manual workflow dispatch creates Actions build artifacts without creating a release. Older key-bearing installers stay private and must not be copied into public releases. The former DROPLY_RELEASE_TOKEN is no longer needed.
 
-## Configuration
+## Runtime configuration
 
-Update source: public GitHub Releases at waterme1on7r-byte/Droply-releases. No GitHub token is embedded in clients. The source repository stays private. The release job uses the DROPLY_RELEASE_TOKEN Actions secret: a fine-grained token limited to the public Droply-releases repository with Contents read/write. Without this secret, builds still upload Actions artifacts and warn that manual publication is needed. Repository Actions must be enabled.
+Tracked config.js contains public server and ICE configuration only. npm run check-config rejects shared KEY configuration. Server administrator tokens and database credentials must never be packaged with the desktop app.
 
-The existing tracked config.js remains supported. For secret-managed builds, remove it from Git tracking separately and configure DROPLY_SERVER_URL, DROPLY_KEY and optionally DROPLY_ICE_JSON in repository Actions secrets. Values shipped to desktop clients are accessible to their users.
+macOS automatic installation requires Developer ID signing. Configure CSC_LINK, CSC_KEY_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD and APPLE_TEAM_ID in GitHub Actions for signed/notarized macOS distribution. Without signing, manual installation remains necessary. Windows retains the same appId, product name and user-data location so upgrades preserve identity and settings.
 
-macOS auto-updates require Developer ID signing. Configure CSC_LINK and CSC_KEY_PASSWORD with a macOS signing certificate, plus APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD and APPLE_TEAM_ID for notarization. Both universal DMG and ZIP are generated. Without signing, a macOS build can be produced but automatic installation will not work. Use platform-specific signing configuration if adding a Windows certificate; the shared CSC_LINK here is intended for the existing macOS signing setup and should be scoped to the macOS environment.
+## Update behavior
 
-Windows uses the existing NSIS installation. Preserve appId, productName and user-data location across versions. Signing Windows builds is recommended for trust; do not disable signature verification to bypass a signing mismatch.
+Installed apps check shortly after launch and every four hours. Settings includes a manual check. Users approve downloads and restarts, and active or pending transfers block update restarts. Automatic installation on normal app quit is disabled. Failures are recorded in droply.log.
 
-## Validation and remaining deployment steps
-
-Unit tests cover consent, manual/background checks, failures, development mode and transfer deferral. A real update still needs testing between two installed release versions on Windows and signed macOS builds. The source setup alone does not activate updates in older installations.
-
-DROPLY 2.6.0 also adds Settings (profile, download destination, per-transfer destination prompts, notification preferences and optional sounds, launch at login on installed Windows/macOS, close to tray, appearance, updates/about, troubleshooting), local transfer history, folder paths and in-session retries.
-
-Dark is the default. Light changes the palette while retaining the app layout. Folder sends require both peers to use 2.6.0 or newer, support up to 1,000 files, and omit empty directories. Each folder batch is isolated in a newly created destination directory. Failed outgoing transfers can restart from the beginning while their source files remain available in the current session. The latest 300 transfer events persist locally; clearing history does not delete received files.
-
-Validation: behavioral tests, browser layout/navigation checks in both themes and minimum window size, actual local WebRTC folder payload/retry checks, and native Electron theme persistence and close-to-tray smoke checks. Windows installer packaging is verified locally. macOS signing and a real installed-version update remain deployment checks.
-
-The first public updater-enabled release is 2.6.1, which corrects the update feed to the public releases repository. Version 2.6.0 was prepared against the private source repository and should be replaced manually if installed.
-
-## Publication paused for server access redesign
-
-At the user's request, installers remain private. Release jobs now verify the destination repository is private and use only that repository's GITHUB_TOKEN. The public Droply-releases repository contains documentation only, with no installers. DROPLY_RELEASE_TOKEN is not used by the current workflow. Keep releases as private drafts while replacing the client-bundled signaling key. The configured public updater feed remains dormant until a release can be published without that reusable credential.
+Unit tests cover update consent, failed checks, development mode and transfer deferral. A real update between two installed releases remains a release validation step.
