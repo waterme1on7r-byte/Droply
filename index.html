@@ -11,17 +11,18 @@
 body{font-family:'IBM Plex Sans','Segoe UI Variable','Segoe UI',system-ui,-apple-system,sans-serif;background:radial-gradient(900px 500px at 50% 38%,rgba(30,90,200,.15),transparent 70%),linear-gradient(180deg,#13243f 0%,#0e1a2e 60%);color:var(--text);height:100vh;padding-top:40px;display:flex;overflow:hidden;-webkit-font-smoothing:antialiased;user-select:none}
 input{user-select:text}
 #titlebar{position:fixed;top:0;left:0;right:0;height:40px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;color:#dfe7f5;background:var(--bar);border-bottom:1px solid var(--line);-webkit-app-region:drag;z-index:30}
-::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:8px}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-corner{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px;border:2px solid transparent;background-clip:padding-box}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.25);background-clip:padding-box;border:2px solid transparent}
 .rail{width:76px;background:#0d1524;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:18px 0;gap:12px;flex:none}
 .rbtn{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#9aa7bd;background:transparent;border:0;cursor:pointer;position:relative;padding:0;margin:0;transition:.15s}
 .rbtn:hover{background:var(--card);color:var(--text);filter:none}
 .rbtn.active{background:linear-gradient(135deg,#5b5fe0,#7a5bd6);box-shadow:0 8px 20px rgba(100,90,220,.35);cursor:default}
 .rail #railAv{width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:12px;background:#12305a!important;color:#9cc0ff;margin:8px 0}
 #count{position:absolute;top:2px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
-main{flex:1;display:flex;flex-direction:column;padding:26px 32px 24px;gap:20px;min-width:0}
+main{flex:1;display:flex;flex-direction:column;padding:18px 32px 24px;gap:20px;min-width:0}
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
-h1{font-family:var(--cond);font-size:26px;font-weight:700;letter-spacing:-.01em;color:var(--gold)}
-.head p{color:var(--mute);font-size:14px;margin-top:8px}
+h1{font-family:var(--cond);font-size:34px;line-height:44px;height:44px;font-weight:700;letter-spacing:-.01em;color:var(--gold)}
+.head p{color:var(--mute);font-size:14px;margin-top:6px}
+.head #status{margin-top:5px}
 #status{display:flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;font-size:13px;font-weight:500;border:1px solid rgba(255,255,255,.12);color:var(--mute);background:rgba(255,255,255,.03);white-space:nowrap}
 #status i{width:7px;height:7px;border-radius:50%;background:var(--err)}
 #status.on{color:var(--ok);border-color:rgba(126,232,193,.3);background:rgba(126,232,193,.08)}#status.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}
@@ -53,7 +54,7 @@ h1{font-family:var(--cond);font-size:26px;font-weight:700;letter-spacing:-.01em;
 #drop p{font-size:14px;margin-top:8px}
 button{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;padding:11px 22px;border-radius:12px;font-weight:600;cursor:pointer;font-size:14px;font-family:inherit;transition:.15s}
 button:hover{filter:brightness(1.1)}button.ghost{background:var(--card2);border:1px solid var(--line);color:var(--text)}
-#log{max-height:230px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+#log{max-height:230px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:12px;padding-right:6px;margin-right:-6px;scrollbar-gutter:stable}.row{flex:none}
 .row{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
 .rt{display:flex;align-items:center;gap:16px}
 .ri{width:50px;height:50px;border-radius:14px;background:#22314d;color:#b9cdf0;display:flex;align-items:center;justify-content:center;flex:none}
@@ -93,6 +94,8 @@ button:hover{filter:brightness(1.1)}button.ghost{background:var(--card2);border:
 .btns{display:flex;gap:10px}
 input[type=text]{width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);padding:13px 14px;border-radius:12px;font-size:15px;font-family:inherit;outline:none;text-align:center;transition:.15s}
 input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,130,246,.2)}
+#sig{flex:none;margin-top:auto;text-align:center;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.28em;color:var(--mute);opacity:.55;padding-top:2px;transition:.2s}
+#sig:hover{opacity:.9;color:var(--gold)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -125,7 +128,7 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
 
 <main>
   <div class="head">
-    <div><h1>Ready when you are.</h1><p>Pick a person. Drop a file. Done.</p></div>
+    <div><h1>Droply</h1><p>Pick a person. Drop a file. Done.</p></div>
     <div id="status"><i></i><span>Connecting…</span></div>
   </div>
   <div class="pairwrap">
@@ -143,6 +146,7 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
   </div>
   <input id="fi" type="file" multiple class="hidden">
   <div id="log"></div>
+  <footer id="sig">WTMLJR</footer>
 </main>
 
 <script src="config.js"></script>
