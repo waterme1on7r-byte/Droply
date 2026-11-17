@@ -62,16 +62,12 @@ jobs:
           pattern: Droply-*
           merge-multiple: true
           path: release-assets
-      - name: Create private draft release with all update assets
+      - name: Create draft release with all update assets
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
-          if [ "$(gh repo view --json isPrivate --jq .isPrivate)" != "true" ]; then
-            echo '::error::Installer publication is restricted to the private source repository until server access is redesigned.'
-            exit 1
-          fi
           # Match the safe asset names generated in electron-builder metadata.
           for asset in release-assets/*; do
             safe=$(basename "$asset" | tr ' ' '-')
