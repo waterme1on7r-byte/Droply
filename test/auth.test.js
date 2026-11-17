@@ -32,3 +32,9 @@ test('migration remains compatible without storage; secure enrollment does not s
  assert.equal((await(await fetch(base+'/auth/status')).json()).enrollment,false);
  const sock=new WS(base.replace('http','ws')+'/?key=legacy-test');await once(sock,'open');const peers=once(sock,'message');sock.send(JSON.stringify({t:'hello',id:'old-installation',name:'Old app'}));assert.equal(JSON.parse((await peers)[0]).peers[0].id,'old-installation');sock.close();
 });
+
+test('explicit migration flag preserves an existing unkeyed service; default remains closed',async t=>{
+ const server=createServer({env:{ALLOW_LEGACY:'true'}});await new Promise(r=>server.server.listen(0,'127.0.0.1',r));t.after(()=>server.close());
+ const socket=new WS('ws://127.0.0.1:'+server.server.address().port+'/?key=old-client-value');await once(socket,'open');const peers=once(socket,'message');socket.send(JSON.stringify({t:'hello',id:'old-device',name:'Old'}));assert.equal(JSON.parse((await peers)[0]).peers[0].id,'old-device');socket.close();
+ const closed=createServer({env:{}});assert.equal(closed.allowLegacy,false);await closed.close();
+});

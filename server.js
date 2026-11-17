@@ -3,7 +3,7 @@ const http=require('node:http'),crypto=require('node:crypto');
 const {WebSocketServer}=require('ws');
 const {createStore}=require('./auth-store');
 function createServer(options={}){
- const env=options.env||process.env,legacyKey=env.KEY||'',allowLegacy=!!legacyKey&&env.ALLOW_LEGACY!=='false';
+ const env=options.env||process.env,legacyKey=env.KEY||'',allowLegacy=env.ALLOW_LEGACY==='true'||(!!legacyKey&&env.ALLOW_LEGACY!=='false');
  const store=env.DATABASE_URL?require('./postgres-store').createPostgresStore(env.DATABASE_URL):env.AUTH_STORE_FILE?createStore(env.AUTH_STORE_FILE):null,admin=env.ADMIN_TOKEN||'';
  const users=new Map(),buckets=new Map(),ipConnections=new Map();
  const limit=(key,max,ms)=>{const time=Date.now();let b=buckets.get(key);if(!b||b.until<time){if(buckets.size>=10000)return false;b={count:0,until:time+ms};buckets.set(key,b);}return ++b.count<=max;};
@@ -44,7 +44,7 @@ function createServer(options={}){
   if(!limit('upgrade:'+ip,60,60000)||(ipConnections.get(ip)||0)>=20||wss.clients.size>=1000){socket.end('HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\n\r\n');return;}
   let url;try{url=new URL(req.url,'http://localhost');}catch{return socket.destroy();}
   let mode;if(store&&url.pathname==='/device'&&!url.search)mode='device';
-  else if(allowLegacy&&url.pathname==='/'&&equal(url.searchParams.get('key')||'',legacyKey))mode='legacy';
+  else if(allowLegacy&&url.pathname==='/'&&(!legacyKey||equal(url.searchParams.get('key')||'',legacyKey)))mode='legacy';
   if(!mode){socket.end('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n');return;}
   wss.handleUpgrade(req,socket,head,ws=>wss.emit('connection',ws,{ip,mode}));
  });
