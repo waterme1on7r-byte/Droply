@@ -12,7 +12,7 @@ function loadMain({ profileRaw, downloads } = {}) {
   const electron = {
     app: { requestSingleInstanceLock: () => true, quit() {}, setAppUserModelId() {}, getPath: n => n === 'downloads' ? dl : ud, on() {}, whenReady: () => Promise.resolve(), isPackaged: false },
     BrowserWindow: BW, ipcMain: { on: (c, f) => (h.on[c] = f), handle: (c, f) => (h.handle[c] = f) },
-    Notification: class { static isSupported() { return false; } }, shell: {},
+    Notification: class { static isSupported() { return false; } }, shell: {}, dialog: { showErrorBox() {} },
     session: { defaultSession: { setPermissionRequestHandler() {}, setPermissionCheckHandler() {} } }
   };
   const orig = Module._load;

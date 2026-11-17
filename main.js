@@ -1,9 +1,16 @@
-const { app, BrowserWindow, ipcMain, Notification, shell, session } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, shell, session, dialog } = require('electron');
 const path = require('path'), fs = require('fs'), crypto = require('crypto');
 
 // Second instance: quit right away and don't run any of the setup below
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
+
+// Diagnostics: errors go to <userData>/droply.log (Windows: %APPDATA%\Droply\droply.log)
+function log(...a) {
+  try { fs.appendFileSync(path.join(app.getPath('userData'), 'droply.log'), `${new Date().toISOString()} ${a.map(x => x && x.stack || String(x)).join(' ')}\n`); } catch {}
+}
+process.on('unhandledRejection', e => log('unhandledRejection', e));
+process.on('uncaughtException', e => { log('uncaughtException', e); try { dialog.showErrorBox('Droply error', String(e && e.stack || e)); } catch {} });
 
 // Windows: tie the taskbar button/pins to this app (must match build.appId in package.json)
 if (process.platform === 'win32') app.setAppUserModelId('com.droply.app');
@@ -111,7 +118,7 @@ ipcMain.handle('free-space', async e => {
 });
 ipcMain.on('show-file', (e, p) => { if (fromUI(e) && savedPaths.has(p)) shell.showItemInFolder(p); });
 
-if (gotLock) app.whenReady().then(() => {
+function start() {
   // Eski 'Yolla' sürümünden profili taşı
   try {
     const prev = path.join(app.getPath('appData'), 'Yolla', 'profile.json');
@@ -145,10 +152,22 @@ if (gotLock) app.whenReady().then(() => {
   win.webContents.on('will-navigate', (e, url) => { if (url !== win.webContents.getURL()) e.preventDefault(); });
 
   if (process.platform === 'darwin' && !app.isPackaged) { try { app.dock.setIcon(path.join(__dirname, 'build', 'icon.png')); } catch {} }
-  win.loadFile('index.html');
+  // Show the window as soon as it has painted, but never stay invisible: also show on load failure / crash / after 4 s
+  let shown = false;
+  const show = () => { if (shown || !win || win.isDestroyed()) return; shown = true; win.show(); win.focus(); win.webContents.focus(); };
+  win.once('ready-to-show', show);
+  const t = setTimeout(show, 4000); if (t.unref) t.unref();
+  win.webContents.on('did-fail-load', (_e, code, desc, url, isMain) => { if (isMain) { log('did-fail-load', code, desc, url); show(); } });
+  win.webContents.on('render-process-gone', (_e, d) => { log('render-process-gone', JSON.stringify(d)); show(); });
+  win.webContents.on('preload-error', (_e, file, err) => log('preload-error', file, err));
+  win.loadFile('index.html').catch(err => { log('loadFile failed', err); show(); });
   // Windows'ta klavye odağı pencereye geçmeyebiliyor (özellikle installer'dan otomatik açılınca)
-  win.once('ready-to-show', () => { win.show(); win.focus(); win.webContents.focus(); });
   win.on('focus', () => win.webContents.focus());
+}
+if (gotLock) app.whenReady().then(start).catch(err => {
+  log('startup failed', err);
+  try { dialog.showErrorBox('Droply could not start', String(err && err.stack || err)); } catch {}
+  app.quit();
 });
 app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
 app.on('window-all-closed', () => app.quit());
