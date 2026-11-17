@@ -1,34 +1,10 @@
-# DROPLY 2.6.1
+# DROPLY 2.8.2
 
-## New
-- Settings pane with Profile, Downloads, Notifications, App behavior, Appearance, Updates & About, Transfer history and Troubleshooting.
-- Light theme alongside the existing default Dark theme; both use the same layout.
-- Configurable download location, open-folder action and optional destination prompt per accepted transfer.
-- Notification preferences for friend requests, incoming files and completed transfers, plus optional system sounds.
-- Launch at login in installed Windows/macOS builds and optional close-to-tray behavior.
-- Version information, update checks and update-download progress.
-- Persistent history of the latest 300 transfer events with actions for received files.
-- Folder selection and folder drag-and-drop, preserving nested file paths inside a new transfer directory.
-- Retry failed outgoing transfers from their transfer cards during the current app session.
-- Clearer connection interruption and network failure messages, diagnostic-log access and copyable basic diagnostics.
+- Desktop app, signaling server and future releases now share the public Droply repository.
+- Removed the historical client shared key from the published Git history. Current installers use per-device credentials stored with OS encryption.
+- New installations register automatically. Share your friend code to connect; no invitation is needed.
+- Update downloads for new builds now come from this repository. Existing 2.8.1 installations require one manual upgrade.
+- Transfer cards offer Clear all when multiple items are present, and the empty friends message points to the Add friend button.
+- Existing settings, themes, transfer history, folder transfers and in-session retries are retained.
 
-- Public GitHub Releases update feed, with the source repository kept private.
-
-## Fixes
-- Device codes now have a dedicated Add friend popup opened by the sidebar + button.
-- Removed the title-bar border beneath the Windows controls.
-- Load the app page by its absolute application path.
-
-## Before upgrading
-- Existing versions need one manual installer upgrade to gain the updater.
-- Folder sharing requires DROPLY 2.6.0 or newer on both devices. Up to 1,000 files per batch; empty folders are omitted.
-- Retry starts from the beginning. After restarting DROPLY, select the source files again.
-- macOS automatic update installation requires a signed app.
-- Incoming transfers still require explicit approval.
-
-## Verification
-- 56 behavioral tests pass.
-- Browser checks cover Settings navigation, both themes and the minimum window size.
-- Real local WebRTC tests verify nested-folder content and retry after a declined request.
-- Native Electron checks verify settings persistence and close-to-tray behavior.
-- Windows NSIS packaging succeeds. Cross-device and signed macOS update installation remain release validation steps.
+macOS builds are unsigned until Developer ID credentials are configured; automatic macOS installation requires signing. Never publish older key-bearing installers.
