@@ -1,0 +1,56 @@
+/* Settings uses the same geometry and controls in both palettes. */
+:root{--surface:#151f30;--surface2:#1b2840;--ink:#f1f5fb;--secondary:#9aa7bd;--canvas:#0e1a2e;--rail:#0d1524;--code:#0f1828}
+html[data-theme=light]{color-scheme:light;--bg:#f1f5fb;--win:#f7f9fd;--bar:#f1f5fb;--card:#fff;--card2:#e8eef8;--line:rgba(55,85,130,.18);--text:#1a2940;--mute:#526079;--gold:#795400;--accent:#2563eb;--accent2:#1d4ed8;--ok:#137855;--err:#b92738;--surface:#fff;--surface2:#e8eef8;--ink:#1a2940;--secondary:#526079;--canvas:#f7f9fd;--rail:#edf2f9;--code:#edf2f9}
+html[data-theme=light] body{background:radial-gradient(900px 500px at 50% 38%,rgba(80,140,230,.09),transparent 70%),linear-gradient(180deg,#f6f9ff,#edf3fc)}
+html[data-theme=light] #titlebar{color:var(--text)}
+html[data-theme=light] .rail{background:var(--rail)}
+html[data-theme=light] .rbtn{color:var(--mute)}
+html[data-theme=light] .fr .dot,html[data-theme=light] #count{border-color:var(--rail)}
+html[data-theme=light] .codebox{background:var(--code)}
+html[data-theme=light] .link span{background:var(--card);border-color:var(--card2)}
+html[data-theme=light] #drop h2,html[data-theme=light] .st{color:var(--text)}
+html[data-theme=light] .ri{background:var(--card2);color:var(--mute)}
+html[data-theme=light] .bar{background:var(--card2)}
+html[data-theme=light] .tcard{background:rgba(255,255,255,.97)}
+html[data-theme=light] .row a{color:var(--accent)}
+html[data-theme=light] .frx{background:var(--card2);color:var(--text)}
+html[data-theme=light] .enc,html[data-theme=light] .ico{color:var(--mute)}
+html[data-theme=light] #pf .box,html[data-theme=light] #addFriend .box{background:radial-gradient(260px 160px at 50% 0%,rgba(59,130,246,.08),transparent 75%),var(--card)}
+html[data-theme=light] .done .st{color:var(--ok)}
+html[data-theme=light] .error .st{color:var(--err)}
+#settingsPane{position:fixed;inset:40px 0 0 84px;z-index:8;background:var(--canvas);display:flex;flex-direction:column;color:var(--text)}
+.settings-head{padding:24px 28px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.settings-head h2{font-family:var(--cond);font-size:30px;color:var(--gold)}
+.settings-head .closeX{position:static;flex:none}
+.settings-layout{display:flex;min-height:0;flex:1}
+.settings-nav{width:156px;flex:none;border-right:1px solid var(--line);padding:16px 10px;display:flex;flex-direction:column;gap:5px;overflow:auto}
+.settings-nav button{background:transparent;color:var(--mute);text-align:left;border-radius:10px;padding:12px;font-size:13px;font-weight:500}
+.settings-nav button[aria-selected=true]{background:var(--card2);color:var(--text)}
+.settings-content{flex:1;min-width:0;overflow:auto;padding:24px;overscroll-behavior:contain}
+.settings-content h3{font:700 22px var(--cond);color:var(--gold);margin-bottom:8px}
+.settings-content .intro{font-size:13px;color:var(--mute);line-height:1.6;margin-bottom:22px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 0;border-bottom:1px solid var(--line);font-size:14px}
+.setting-row small{display:block;font-size:12px;line-height:1.5;color:var(--mute);margin-top:5px}
+.setting-row input[type=checkbox]{width:19px;height:19px;flex:none;accent-color:var(--accent);cursor:pointer}
+.setting-row select{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit}
+.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.settings-actions button{font-size:12px;padding:11px 14px}
+#downloadPath{display:block;overflow-wrap:anywhere;color:var(--mute);font:12px/1.7 var(--mono);padding:14px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+#settingsFeedback{font-size:12px;color:var(--mute);min-height:20px;padding:8px 28px;border-top:1px solid var(--line)}
+.settings-code{margin-top:22px}.settings-code .codebox{max-width:350px}
+.history-item{padding:16px 0;border-bottom:1px solid var(--line)}
+.history-item b{display:block;font-size:14px;overflow-wrap:anywhere}
+.history-item small{display:block;color:var(--mute);font-size:12px;line-height:1.7;margin-top:5px}
+.history-item .settings-actions{margin:8px 0 0}
+#updateProgress{width:100%;accent-color:var(--accent);margin:15px 0}
+#connectionDetail,#updateDetail{font-size:13px;color:var(--mute);line-height:1.7;overflow-wrap:anywhere}
+.folder-action{background:transparent;color:var(--mute);font-size:12px;padding:9px 12px;margin-top:6px;border:1px solid var(--line)}
+.retry{background:var(--card2);color:var(--text);font-size:12px;padding:7px 12px;align-self:flex-start}
+@media(max-width:700px){.settings-head{padding:18px}.settings-nav{width:125px;padding:12px 6px}.settings-nav button{padding:11px 8px;font-size:12px}.settings-content{padding:18px}.setting-row{gap:10px}.settings-actions{gap:7px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+html:not([data-theme=light]){color-scheme:dark}
+#drop .folder-action{background:transparent;color:var(--mute);font-size:14px;font-weight:400;padding:4px 2px;text-decoration:underline;text-underline-offset:3px;border-radius:4px}
+#drop .folder-action:hover{color:var(--text)}
+button:disabled,input:disabled{opacity:.55;cursor:default}
+html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}

@@ -1,5 +1,5 @@
 // GitHub feed is embedded by electron-builder; never ship a GitHub token to clients.
-function createUpdater({ app, dialog, getUpdater, isBusy, log = () => {} }) {
+function createUpdater({ app, dialog, getUpdater, isBusy, onStatus = () => {}, log = () => {} }) {
   let updater, running = false, ready = false, prompt = false;
   const message = (message, detail = '', buttons = ['OK']) => dialog.showMessageBox({
     type: 'info', title: 'DROPLY updates', message, detail, buttons,
@@ -25,8 +25,13 @@ function createUpdater({ app, dialog, getUpdater, isBusy, log = () => {} }) {
     updater.allowPrerelease = false;
     updater.allowDowngrade = false;
     updater.logger = { info: (...a) => log('updater', ...a), warn: (...a) => log('updater', ...a), error: (...a) => log('updater', ...a), debug: () => {} };
+    updater.on('checking-for-update', () => onStatus({ text: 'Checking for updates...' }));
+    updater.on('update-not-available', () => onStatus({ text: 'You are up to date.' }));
+    updater.on('update-available', i => onStatus({ text: `Version ${i.version} is available.` }));
+    updater.on('download-progress', p => onStatus({ text: `Downloading update ... ${Math.round(p.percent)}%`, percent: p.percent }));
+    updater.on('error', () => onStatus({ text: 'Update failed. Check your connection and try again.' }));
     updater.on('error', e => log('updater error', e));
-    updater.on('update-downloaded', () => { ready = true; });
+    updater.on('update-downloaded', () => { ready = true; onStatus({ text: 'Update ready to install.', percent: 100 }); });
     return updater;
   }
   async function check(manual = false) {

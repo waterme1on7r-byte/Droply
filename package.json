@@ -25,7 +25,10 @@
       "preload.js",
       "index.html",
       "config.js",
-      "updater.js"
+      "updater.js",
+      "desktop.js",
+      "settings.js",
+      "settings.css"
     ],
     "win": {
       "target": "nsis",

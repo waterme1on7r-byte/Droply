@@ -51,10 +51,10 @@ test('not enough disk space: request is refused and the sender told why', async 
   assert(r.sig.some(m => m.data.t === 'cancel' && /disk space/.test(m.data.reason)));
   assert(!r.sig.some(m => m.data.t === 'acc'), 'must not accept');
 });
-test('enough disk space: request is accepted and advertises write-acks (v2)', async () => {
+test('enough disk space: request is accepted and advertises write-acks and folder paths (v3)', async () => {
   const r = loadRenderer(), { t } = r; r.api.freeSpace = async () => 500e9;
   t.onSig('bob', req('fit', [{ name: 'f', size: 5e6 }])); t.answer(true); await tick();
-  assert(r.sig.some(m => m.data.t === 'acc' && m.data.v === 2));
+  assert(r.sig.some(m => m.data.t === 'acc' && m.data.v === 3));
 });
 test('cancelled while checking disk space: no accept is sent', async () => {
   const r = loadRenderer(), { t } = r; r.api.freeSpace = () => new Promise(res => setTimeout(() => res(500e9), 20));

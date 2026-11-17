@@ -27,3 +27,9 @@ Windows uses the existing NSIS installation. Preserve appId, productName and use
 ## Validation and remaining deployment steps
 
 Unit tests cover consent, manual/background checks, failures, development mode and transfer deferral. A real update still needs testing between two installed release versions on Windows and signed macOS builds. The source setup alone does not activate updates in older installations.
+
+DROPLY 2.6.0 also adds Settings (profile, download destination, per-transfer destination prompts, notification preferences and optional sounds, launch at login on installed Windows/macOS, close to tray, appearance, updates/about, troubleshooting), local transfer history, folder paths and in-session retries.
+
+Dark is the default. Light changes the palette while retaining the app layout. Folder sends require both peers to use 2.6.0 or newer, support up to 1,000 files, and omit empty directories. Each folder batch is isolated in a newly created destination directory. Failed outgoing transfers can restart from the beginning while their source files remain available in the current session. The latest 300 transfer events persist locally; clearing history does not delete received files.
+
+Validation: behavioral tests, browser layout/navigation checks in both themes and minimum window size, actual local WebRTC folder payload/retry checks, and native Electron theme persistence and close-to-tray smoke checks. Windows installer packaging is verified locally. macOS signing and a real installed-version update remain deployment checks.

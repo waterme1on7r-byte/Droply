@@ -5,6 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws: wss:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Droply</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Condensed:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="settings.css">
 <style>
 :root{--bg:#0e1523;--win:#0f1b2e;--bar:#0e1523;--card:#151f30;--card2:#1b2840;--line:rgba(130,170,255,.12);--text:#f1f5fb;--mute:#9aa7bd;--gold:#f5d97e;--accent:#3b82f6;--accent2:#2563eb;--ok:#7ee8c1;--err:#f87171;--mono:'IBM Plex Mono','Cascadia Mono',Consolas,'SF Mono',Menlo,monospace;--cond:'IBM Plex Sans Condensed','Bahnschrift','Avenir Next Condensed','Arial Narrow',sans-serif}
 *{box-sizing:border-box;margin:0}
@@ -210,13 +211,15 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   <div id="drop" class="off" title="Drop, click, or paste (Ctrl/⌘+V)">
     <div class="ico"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
     <h2 id="dropTitle">Pick a person first</h2>
-    <p>Or click to choose a file</p>
+    <p>Or click to choose a file <span aria-hidden="true">...</span> <button id="folderBtn" class="folder-action">Choose a folder</button></p>
   </div>
   <input id="fi" type="file" multiple class="hidden">
+  <input id="folderInput" type="file" webkitdirectory multiple class="hidden">
   <div id="log"></div>
   <footer id="sig">WTMLJR</footer>
 </main>
 
+<script src="settings.js"></script>
 <script src="config.js"></script>
 <script>
 const $ = s => document.querySelector(s);
@@ -224,6 +227,9 @@ const { SERVER_URL, KEY, ICE = [] } = window.CONFIG || {};
 const WIN = 16 * 1024 * 1024;            // max bytes the sender may have in flight that the receiver hasn't written yet
 const STALL_MS = 45000, CONNECT_MS = 30000;
 const MAX_ASKS = 20, MAX_SESS = 10;      // limits on pending requests / simultaneous transfers
+let preferences = { friendNotifications: true, incomingNotifications: true, completedNotifications: true, sounds: false };
+const retries = new Map();
+const fileName = f => f.webkitRelativePath || f.droplyPath || f.name;
 let me, ws, peers = [], sel = null, pendAv = null, known = null;   // peers = friends that are online right now
 let friends = [], pendIn = [], pendOut = [], gone = [], raw = [];  // raw = everyone the server lists as online
 const MAX_FRIENDS = 200, MAX_REQ = 50;
@@ -324,7 +330,8 @@ function updateDrop() {
   $('#peerSub').textContent = p ? 'Online' : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
   const n = avatar(shown && shown.av, shown ? shown.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
 }
-function setStatus(on, text) { $('#status').classList.toggle('on', on); $('#status span').textContent = text || (on ? 'Connected' : 'Connecting…'); }
+function setStatus(on, text) {
+  if (typeof connectionText !== 'undefined') { connectionText = on ? 'Connected to the signaling server. Friends appear when both devices are online.' : (text || 'Connecting to the signaling server...'); const detail = $('#connectionDetail'); if (detail) detail.textContent = connectionText; } $('#status').classList.toggle('on', on); $('#status span').textContent = text || (on ? 'Connected' : 'Connecting…'); }
 function row(id, d) {
   let r = document.getElementById(id);
   if (!r) {
@@ -354,6 +361,7 @@ function prog(s, sent, total) {
   row(s.tid, { msg: Math.round(sent / total * 100) + '%', pct: sent / total * 100, state: 'sending', spd });
 }
 function notify(title, sub, lock) {
+  if (title === 'Friend request') api.notify?.('friend', sub);
   const t = document.createElement('div'); t.className = 'tcard' + (lock ? ' lock' : '');
   t.innerHTML = '<div class="tic">' + (lock
     ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
@@ -386,7 +394,7 @@ function connect() {
   };
   ws.onerror = () => {};   // onclose always follows
   // While offline the list would be stale and anything sent would silently vanish, so empty it
-  ws.onclose = () => { setStatus(false); known = null; sentFr.clear(); setOnline([]); reconnectLater(); };
+  ws.onclose = () => { setStatus(false, 'Offline ... reconnecting...'); known = null; sentFr.clear(); setOnline([]); reconnectLater(); };
 }
 
 /* ---------- Friends ---------- */
@@ -527,9 +535,10 @@ async function sendFiles(files) {
   if (!peer) return toast(isFriend(sel) ? 'Your friend is offline' : 'Pick a person first');
   if (!ws || ws.readyState !== 1) return toast('Not connected to the server');
   if (!files.length) return;
+  if (files.length > 1000) return toast('Choose up to 1,000 files per transfer');
   const tid = crypto.randomUUID();
   const s = sess[tid] = { tid, peerId: peer.id, peerName: peer.name, files, dir: 'out', q: Promise.resolve(), sent: 0, acked: 0, total: files.reduce((a, f) => a + f.size, 0) || 1 };
-  sig(peer.id, { t: 'req', tid, from: me.name, files: files.map(f => ({ name: f.name, size: f.size })) });
+  sig(peer.id, { t: 'req', tid, from: me.name, files: files.map(f => ({ name: fileName(f), size: f.size })) });
   row(tid, { label: files.length === 1 ? files[0].name : plural(files.length), sub: `Sending to ${peer.name} · ${fmt(s.total)}`, msg: 'Waiting…', state: 'sending', pct: 0 });
   s.timer = setTimeout(() => !s.pc && fail(s, 'No response', 'error', 'Request expired'), 60000);
 }
@@ -558,7 +567,7 @@ async function pump(s, ch) {
   try {
     for (const f of s.files) {
       if (s.fin) return;
-      ch.send(JSON.stringify({ t: 'file', name: f.name, size: f.size }));
+      ch.send(JSON.stringify({ t: 'file', name: fileName(f), size: f.size }));
       for (let o = 0; o < f.size; o += C) {
         while (blocked() && !s.fin) await waitFree();
         if (s.fin) return;
@@ -615,7 +624,7 @@ function maybeFinish(s) {
 }
 function askUser(from, d) {
   asks.push({ from, d });
-  try { new Notification('Droply', { body: `${d.from} wants to send you ${plural(d.files.length)}` }); } catch {}
+  api.notify?.('incoming', `${d.from} wants to send you ${plural(d.files.length)}`);
   if (asks.length === 1) showAsk();
 }
 function showAsk() {
@@ -636,10 +645,15 @@ async function accept(from, d) {
   const s = sess[d.tid] = { tid: d.tid, peerId: from, peerName: d.from, dir: 'in', files: d.files, q: Promise.resolve() };
   s.timer = setTimeout(() => !s.open && fail(s, 'Sender did not connect', 'error', 'Receiver timed out'), 45000);
   row(d.tid, { label: d.files.length === 1 ? d.files[0].name : plural(d.files.length), sub: `Receiving from ${d.from} · ${fmt(size)}`, msg: 'Connecting…', state: 'sending', pct: 0 });
-  let free = null; try { free = await api.freeSpace(); } catch {}
+  if (api.prepareReceive) {
+    try { if (!await api.prepareReceive(d.tid, d.files.map(f => f.name))) return fail(s, 'Save cancelled', 'cancelled', true); }
+    catch { return fail(s, 'Could not prepare save folder', 'error', 'Receiver could not open destination'); }
+    if (s.fin) { api.finishReceive?.(s.tid); return; }
+  }
+  let free = null; try { free = await api.freeSpace(d.tid); } catch {}
   if (s.fin) return;                                                   // cancelled while we checked
   if (free != null && size > free - 50e6) return fail(s, 'Not enough disk space', 'error', 'Not enough disk space on the receiving side');
-  sig(from, { t: 'acc', tid: d.tid, v: 2 }); notifyEnc();             // v:2 = I send write-acks, you may use a send window
+  sig(from, { t: 'acc', tid: d.tid, v: 3 }); notifyEnc();             // v:2 = I send write-acks, you may use a send window
 }
 $('#accBtn').onclick = () => answer(true);
 $('#rejBtn').onclick = () => answer(false);
@@ -648,7 +662,11 @@ $('#rejBtn').onclick = () => answer(false);
 function makePc(s) {
   const pc = new RTCPeerConnection({ iceServers: ICE }); s.pc = pc;
   pc.onicecandidate = e => e.candidate && sig(s.peerId, { t: 'ice', tid: s.tid, c: e.candidate });
-  pc.onconnectionstatechange = () => pc.connectionState === 'failed' && fail(s, "Couldn't connect (network may be blocking it)");
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === 'failed') fail(s, 'Network connection failed. Check VPN/firewall or relay configuration.');
+    else if (!s.fin && pc.connectionState === 'disconnected') row(s.tid, { msg: 'Connection interrupted ... waiting to reconnect', state: 'sending' });
+    else if (!s.fin && pc.connectionState === 'connecting') row(s.tid, { msg: 'Establishing encrypted connection...', state: 'sending' });
+  };
   return pc;
 }
 async function flush(s) { for (const c of s.pend || []) await s.pc.addIceCandidate(c); s.pend = []; }
@@ -675,7 +693,7 @@ function onSig(from, d) {
 }
 async function handle(s, d) {
   if (d.t === 'rej') return s.dir === 'out' && !s.pc ? fail(s, 'Declined') : undefined;
-  if (d.t === 'acc') { if (s.dir !== 'out' || s.pc) return; s.win = d.v >= 2; clearTimeout(s.timer); row(s.tid, { msg: 'Connecting…', state: 'sending' }); return startSender(s); }
+  if (d.t === 'acc') { if (s.dir !== 'out' || s.pc) return; if (s.files.some(f => fileName(f).includes('/')) && !(d.v >= 3)) return fail(s, 'Your friend needs DROPLY 2.6 or newer for folders', 'error', true); s.win = d.v >= 2; clearTimeout(s.timer); row(s.tid, { msg: 'Connecting…', state: 'sending' }); return startSender(s); }
   if (d.t === 'offer') {
     if (s.dir !== 'in' || s.pc) return;
     const pc = makePc(s); pc.ondatachannel = e => recv(s, e.channel);
@@ -699,26 +717,56 @@ async function showCode(s) {
     row(s.tid, { code: c.slice(0, 3) + ' ' + c.slice(3) });
   } catch {}
 }
-function cleanup(s) { clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); setTimeout(() => s.pc && s.pc.close(), 1500); delete sess[s.tid]; }
+function cleanup(s) {
+  if (s.dir === 'out') api.notify?.('completed', `Files sent to ${s.peerName}`);
+  recordSession(s, 'done');
+  api.finishReceive?.(s.tid);
+  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); setTimeout(() => s.pc && s.pc.close(), 1500); delete sess[s.tid]; }
 // state: 'error' | 'cancelled'. tell: null = don't notify the other side, true = "cancelled by me", string = custom reason
 function fail(s, msg, state = 'error', tell = null) {
   if (s.fin) return; s.fin = true;
   clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); s.wake && s.wake();
   row(s.tid, { msg, state, spd: '' });
+  recordSession(s, state, msg);
+  api.finishReceive?.(s.tid);
+  if (s.dir === 'out') {
+    retries.set(s.tid, { files: s.files, peerId: s.peerId });
+    if (retries.size > 20) retries.delete(retries.keys().next().value);
+    const b = h('button', 'ghost', 'Retry transfer'); b.onclick = () => retryTransfer(s.tid);
+    document.getElementById(s.tid)?.append(b);
+  }
   if (tell !== null) sig(s.peerId, { t: 'cancel', tid: s.tid, reason: tell === true ? undefined : tell });
   if (s.dir === 'in') api.saveAbort(s.tid);   // delete the half-written file
   s.pc && s.pc.close(); delete sess[s.tid];
 }
+function recordSession(s, state, message = '') {
+  // Received files are individually recorded by the main process after saving.
+  if (s.dir === 'in' && state === 'done') return;
+  api.recordTransfer?.({ name: s.files.length === 1 ? fileName(s.files[0]) : plural(s.files.length), peer: s.peerName, direction: s.dir, state, message });
+}
+async function retryTransfer(tid) {
+  const old = retries.get(tid); if (!old) return toast('Select the files again to retry');
+  if (!peers.some(p => p.id === old.peerId)) return toast('Your friend is offline. Retry when they reconnect.');
+  sel = old.peerId; updateDrop(); await sendFiles(old.files);
+}
 const cancelTransfer = tid => { const s = sess[tid]; if (s) fail(s, 'Cancelled', 'cancelled', true); };
 
 /* ---------- Input: drag & drop, paste, file picker ---------- */
+$('#folderBtn').onclick = e => { e.stopPropagation(); if (!peers.some(p => p.id === sel)) return toast('Pick an online friend first'); $('#folderInput').click(); };
+$('#folderInput').onchange = e => { sendFiles([...e.target.files]); e.target.value = ''; };
 const drop = $('#drop');
 ['dragenter', 'dragover'].forEach(e => document.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
 document.addEventListener('dragleave', ev => { ev.preventDefault(); if (!ev.relatedTarget) drop.classList.remove('over'); });
-document.addEventListener('drop', ev => {
+document.addEventListener('drop', async ev => {
   ev.preventDefault(); drop.classList.remove('over');
-  const files = [...ev.dataTransfer.items].filter(i => i.kind === 'file' && i.webkitGetAsEntry && i.webkitGetAsEntry().isFile).map(i => i.getAsFile());
-  sendFiles(files);
+  const entries = [...ev.dataTransfer.items].filter(i => i.kind === 'file').map(i => i.webkitGetAsEntry?.()).filter(Boolean);
+  const files = [];
+  async function visit(entry, prefix = '') {
+    if (files.length >= 1001) throw Error('Choose up to 1,000 files per transfer');
+    if (entry.isFile) { const f = await new Promise((resolve, reject) => entry.file(resolve, reject)); f.droplyPath = prefix + f.name; files.push(f); }
+    else if (entry.isDirectory) { const reader = entry.createReader(); let batch; do { batch = await new Promise((resolve, reject) => reader.readEntries(resolve, reject)); for (const child of batch) await visit(child, prefix + entry.name + '/'); } while (batch.length); }
+  }
+  try { for (const entry of entries) await visit(entry); if (!files.length) return toast('This folder has no files'); sendFiles(files); } catch (e) { toast(e.message || 'Could not read folder'); }
 });
 document.addEventListener('paste', ev => {
   if (ev.target.tagName === 'INPUT') return;
@@ -740,7 +788,7 @@ function openSetup(edit) {
 const closeSetup = () => $('#setup').classList.add('hidden');
 $('#setupX').onclick = closeSetup;
 $('#updateBtn').onclick = async () => {
-  const b = $('#updateBtn'); b.disabled = true; b.textContent = 'Checking updates�';
+  const b = $('#updateBtn'); b.disabled = true; b.textContent = 'Checking updates...';
   try { await api.checkUpdates(); } finally { b.disabled = false; b.textContent = 'Check for updates'; }
 };
 $('#copyBtn').innerHTML = ICON.copy;
@@ -785,6 +833,7 @@ $('#saveBtn').onclick = async () => {
   const name = $('#nameInput').value.trim(); if (!name) return $('#nameInput').focus();
   me = await api.saveProfile({ name, avatar: pendAv ?? me.avatar });
   $('#setup').classList.add('hidden'); renderMe(); hello();
+  if (typeof renderSettings === 'function' && !$('#settingsPane').classList.contains('hidden')) renderSettings(activeSettingsSection);
 };
 $('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveBtn').click(); });
 $('#meBox').onclick = () => openSetup(true);
@@ -799,10 +848,11 @@ api.on('save-wrote', d => {            // bytes are on disk -> tell the sender (
   s.last = Date.now(); s.ackN = (s.ackN || 0) + d.n;
   if (!s.ackT) s.ackT = setTimeout(() => { s.ackT = 0; try { if (s.ch.readyState === 'open') s.ch.send(JSON.stringify({ t: 'ack', n: s.ackN })); s.ackN = 0; } catch {} }, 50);
 });
-api.on('saved', d => { const s = sess[d.tid]; if (s) { s.saved = (s.saved || 0) + 1; s.last = Date.now(); maybeFinish(s); } row('f' + Math.random(), { label: d.name, sub: 'Saved to Downloads', path: d.path, state: 'done', pct: 100 }); });
+api.on('saved', d => { const s = sess[d.tid]; if (s) { s.saved = (s.saved || 0) + 1; s.last = Date.now(); maybeFinish(s); } row('f' + Math.random(), { label: d.name, sub: 'Saved to your download folder', path: d.path, state: 'done', pct: 100 }); });
 
 (async () => {
   me = await api.getProfile();
+  await initSettings();
   const st = (await api.getFriends()) || {};
   friends = st.friends || []; pendIn = st.inc || []; pendOut = st.out || []; gone = st.gone || [];
   if (!me.name) openSetup(false); else renderMe();

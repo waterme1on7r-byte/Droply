@@ -1,6 +1,21 @@
 const { contextBridge, ipcRenderer } = require('electron');
-const EVENTS = new Set(['saved', 'save-error', 'save-wrote']); // only these main→renderer channels are exposed
+const EVENTS = new Set(['saved', 'save-error', 'save-wrote', 'update-status', 'history-changed']); // only these main→renderer channels are exposed
 contextBridge.exposeInMainWorld('api', {
+  notify: (kind, body) => ipcRenderer.send('notify', kind, body),
+  getSettings: (...args) => ipcRenderer.invoke('get-settings', ...args),
+  saveSettings: (...args) => ipcRenderer.invoke('save-settings', ...args),
+  chooseDownloads: (...args) => ipcRenderer.invoke('choose-downloads', ...args),
+  openDownloads: (...args) => ipcRenderer.invoke('open-downloads', ...args),
+  prepareReceive: (...args) => ipcRenderer.invoke('prepare-receive', ...args),
+  finishReceive: (...args) => ipcRenderer.invoke('finish-receive', ...args),
+  getHistory: (...args) => ipcRenderer.invoke('get-history', ...args),
+  clearHistory: (...args) => ipcRenderer.invoke('clear-history', ...args),
+  recordTransfer: (...args) => ipcRenderer.invoke('record-transfer', ...args),
+  historyFile: (...args) => ipcRenderer.invoke('history-file', ...args),
+  openGithub: (...args) => ipcRenderer.invoke('open-github', ...args),
+  openLog: (...args) => ipcRenderer.invoke('open-log', ...args),
+  copyDiagnostics: (...args) => ipcRenderer.invoke('copy-diagnostics', ...args),
+  notify: (category, body) => ipcRenderer.send('notify', category, body),
   checkUpdates: () => ipcRenderer.invoke('check-updates'),
   getProfile: () => ipcRenderer.invoke('get-profile'),
   saveProfile: p => ipcRenderer.invoke('save-profile', p),
@@ -11,7 +26,7 @@ contextBridge.exposeInMainWorld('api', {
   saveChunk: (tid, u8) => ipcRenderer.send('save-chunk', tid, u8),
   saveClose: tid => ipcRenderer.send('save-close', tid),
   saveAbort: tid => ipcRenderer.send('save-abort', tid),
-  freeSpace: () => ipcRenderer.invoke('free-space'),
+  freeSpace: tid => ipcRenderer.invoke('free-space', tid),
   showFile: p => ipcRenderer.send('show-file', p),
   on: (ch, fn) => { if (EVENTS.has(ch)) ipcRenderer.on(ch, (_, d) => fn(d)); }
 });
