@@ -28,7 +28,6 @@ jobs:
         shell: bash
         env:
           DROPLY_SERVER_URL: ${{ secrets.DROPLY_SERVER_URL }}
-          DROPLY_KEY: ${{ secrets.DROPLY_KEY }}
           DROPLY_ICE_JSON: ${{ secrets.DROPLY_ICE_JSON }}
         run: |
           if [ ! -f config.js ]; then node scripts/make-config.js; fi

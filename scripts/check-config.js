@@ -4,11 +4,12 @@ const file = path.join(__dirname, '..', 'config.js');
 const die = m => { console.error(`\n[config] ${m}\n        Copy config.example.js to config.js and fill it in (in CI: set the DROPLY_* secrets).\n`); process.exit(1); };
 if (!fs.existsSync(file)) die('config.js is missing.');
 const win = {};
-try { vm.runInNewContext(fs.readFileSync(file, 'utf8'), { window: win }); } catch (e) { die('config.js has an error: ' + e.message); }
+try { vm.runInNewContext(fs.readFileSync(file, 'utf8'), { window: win }, { timeout: 1000 }); } catch (e) { die('config.js has an error: ' + e.message); }
 const c = win.CONFIG;
 if (!c || typeof c !== 'object') die('config.js must set window.CONFIG.');
 if (typeof c.SERVER_URL !== 'string' || !/^wss?:\/\/.+/.test(c.SERVER_URL)) die('CONFIG.SERVER_URL must be a ws:// or wss:// URL.');
-if (typeof c.KEY !== 'string' || !c.KEY) die('CONFIG.KEY must be a non-empty string.');
+if ('KEY' in c) die('Remove the shared KEY from the client configuration.');
+try { require('../access').validateServer(c.SERVER_URL); } catch { die('Use wss:// (ws:// is permitted only for localhost testing).'); }
 if (!Array.isArray(c.ICE)) die('CONFIG.ICE must be an array of ICE servers.');
-if (/your-signaling-server|example\.com/.test(c.SERVER_URL) || c.KEY === 'change-me') die('config.js still contains the placeholder values.');
+if (/your-signaling-server|example\.com/.test(c.SERVER_URL)) die('config.js still contains the placeholder values.');
 console.log('[config] OK');

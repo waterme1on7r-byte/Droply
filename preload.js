@@ -1,6 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
-const EVENTS = new Set(['saved', 'save-error', 'save-wrote', 'update-status', 'history-changed']); // only these main→renderer channels are exposed
+const EVENTS = new Set(['saved', 'save-error', 'save-wrote', 'update-status', 'history-changed', 'server-event']); // only these main→renderer channels are exposed
 contextBridge.exposeInMainWorld('api', {
+  getAccess: () => ipcRenderer.invoke('get-access'),
+  enrollDevice: invitation => ipcRenderer.invoke('enroll-device', invitation),
+  connectServer: () => ipcRenderer.invoke('connect-server'),
+  sendSignal: message => ipcRenderer.send('send-signal', message),
   notify: (kind, body) => ipcRenderer.send('notify', kind, body),
   getSettings: (...args) => ipcRenderer.invoke('get-settings', ...args),
   saveSettings: (...args) => ipcRenderer.invoke('save-settings', ...args),

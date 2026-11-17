@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Notification, shell, session, dialog, clipboard, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, shell, session, dialog, clipboard, Tray, Menu, nativeImage, safeStorage } = require('electron');
 const path = require('path'), fs = require('fs'), crypto = require('crypto');
 
 // Second instance: quit right away and don't run any of the setup below
@@ -188,6 +188,9 @@ function start() {
     autoHideMenuBar: true, title: 'Droply', icon: iconPath(),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true }
   });
+  const accessConfig = { window: {} };
+  require('vm').runInNewContext(fs.readFileSync(path.join(__dirname, 'config.js'), 'utf8'), accessConfig, { timeout: 1000 });
+  require('./access').createAccess({ app, ipcMain, safeStorage, fromUI, toUI, getProfile: () => profile, serverURL: accessConfig.window.CONFIG.SERVER_URL });
   desktop.appearance();
   function ensureTray() {
     if (tray || !desktop.settings.tray) return;

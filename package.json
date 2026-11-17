@@ -1,6 +1,6 @@
 {
   "name": "droply",
-  "version": "2.6.1",
+  "version": "2.7.0",
   "description": "Droply",
   "main": "main.js",
   "author": "Droply",
@@ -28,7 +28,8 @@
       "updater.js",
       "desktop.js",
       "settings.js",
-      "settings.css"
+      "settings.css",
+      "access.js"
     ],
     "win": {
       "target": "nsis",
@@ -91,7 +92,8 @@
     ]
   },
   "dependencies": {
-    "electron-updater": "6.6.2"
+    "electron-updater": "6.6.2",
+    "ws": "8.18.3"
   },
   "repository": {
     "type": "git",
