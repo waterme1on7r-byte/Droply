@@ -63,12 +63,16 @@ jobs:
           pattern: Droply-*
           merge-multiple: true
           path: release-assets
-      - name: Create draft release with all update assets
+      - name: Create private draft release with all update assets
         env:
-          GH_TOKEN: ${{ secrets.DROPLY_RELEASE_TOKEN }}
-          GH_REPO: waterme1on7r-byte/Droply-releases
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
+          if [ "$(gh repo view --json isPrivate --jq .isPrivate)" != "true" ]; then
+            echo '::error::Installer publication is restricted to the private source repository until server access is redesigned.'
+            exit 1
+          fi
           # Match the safe asset names generated in electron-builder metadata.
           for asset in release-assets/*; do
             safe=$(basename "$asset" | tr ' ' '-')
@@ -76,10 +80,6 @@ jobs:
           done
           test -f release-assets/latest.yml
           test -f release-assets/latest-mac.yml
-          if [ -z "$GH_TOKEN" ]; then
-            echo '::warning::Add DROPLY_RELEASE_TOKEN to publish to the public Droply-releases repository. Build artifacts are ready for manual publication.'
-            exit 0
-          fi
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" release-assets/* --clobber
           else

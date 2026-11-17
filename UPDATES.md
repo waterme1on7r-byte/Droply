@@ -35,3 +35,7 @@ Dark is the default. Light changes the palette while retaining the app layout. F
 Validation: behavioral tests, browser layout/navigation checks in both themes and minimum window size, actual local WebRTC folder payload/retry checks, and native Electron theme persistence and close-to-tray smoke checks. Windows installer packaging is verified locally. macOS signing and a real installed-version update remain deployment checks.
 
 The first public updater-enabled release is 2.6.1, which corrects the update feed to the public releases repository. Version 2.6.0 was prepared against the private source repository and should be replaced manually if installed.
+
+## Publication paused for server access redesign
+
+At the user's request, installers remain private. Release jobs now verify the destination repository is private and use only that repository's GITHUB_TOKEN. The public Droply-releases repository contains documentation only, with no installers. DROPLY_RELEASE_TOKEN is not used by the current workflow. Keep releases as private drafts while replacing the client-bundled signaling key. The configured public updater feed remains dormant until a release can be published without that reusable credential.
