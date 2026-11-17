@@ -398,6 +398,7 @@ const persist = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { ap
 function addFriend(rec) {
   friends = friends.filter(f => f.id !== rec.id); friends.push(rec); friends.sort(byName);
   pendIn = pendIn.filter(r => r.id !== rec.id); gone = gone.filter(g => g !== rec.id);
+  peers = raw.filter(p => isFriend(p.id));   // the new friend may already be online: don't wait for the server's next update
   persist(); renderRail(); renderPeers(); updateDrop();
 }
 // Who is online, as listed by the server. Friends are matched here: names/photos stay fresh, pending requests get
