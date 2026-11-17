@@ -19,7 +19,7 @@ function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,
   socket=current;let denied=false;
   current.on('open',()=>{if(socket===current)current.send(JSON.stringify({t:'auth',token}));});
   const deadline=setTimeout(()=>{if(socket===current&&!authenticated)current.terminate();},15000);deadline.unref();
-  current.on('message',raw=>{if(socket!==current)return;let m;try{m=JSON.parse(raw);}catch{return;}if(m.t==='authenticated'){
+  current.on('message',raw=>{if(socket!==current)return;let m;try{m=JSON.parse(raw);}catch{return;}if(m.t==='access-denied'){denied=true;authenticated=false;emit('enrollment-required','Device access expired or was revoked. Ask for a new invitation.');current.close();return;}if(m.t==='authenticated'){
    if(m.id!==getProfile().id){denied=true;current.close();emit('locked','Server identity mismatch. Ask the administrator for help.');return;}
    clearTimeout(deadline);authenticated=true;attempt=0;emit('connected','Connected securely');const p=getProfile();current.send(JSON.stringify({t:'hello',id:p.id,name:p.name,av:p.avatar}));
   }else if(authenticated&&(m.t==='peers'||m.t==='sig'))toUI('server-event',{t:'message',message:m});});

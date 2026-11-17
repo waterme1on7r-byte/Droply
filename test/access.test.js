@@ -32,3 +32,9 @@ test('only authenticated socket exposes signaling, and main process fixes hello 
  const n=socket.sent.length;f.listeners['send-signal'](false,{t:'sig',to:'victim',data:{}});assert.equal(socket.sent.length,n);
  socket.emit('close',4401);assert.equal(f.events.at(-1).state,'enrollment-required');f.access.stop();
 });
+
+test('explicit access denial stops reconnects even if a proxy changes the close code',async()=>{
+ const f=fixture();await f.call('enroll-device','I'.repeat(43));const socket=f.sockets[0];socket.emit('open');socket.emit('message',JSON.stringify({t:'authenticated',id:f.profile.id}));
+ socket.emit('message',JSON.stringify({t:'access-denied',message:'Revoked'}));
+ assert.equal(f.events.at(-1).state,'enrollment-required');assert(!f.events.some(e=>e.state==='offline'));f.access.stop();
+});
