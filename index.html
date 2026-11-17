@@ -78,7 +78,10 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 #drop p{font-size:14px;margin-top:8px}
 button{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;padding:11px 22px;border-radius:12px;font-weight:600;cursor:pointer;font-size:14px;font-family:inherit;transition:.15s}
 button:hover{filter:brightness(1.1)}button.ghost{background:var(--card2);border:1px solid var(--line);color:var(--text)}
-#log{max-height:230px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:12px;padding-right:6px;margin-right:-6px;scrollbar-gutter:stable}.row{flex:none}
+#transferFeed{display:flex;flex-direction:column;gap:8px;min-height:0;max-height:230px;flex-shrink:1}
+#transferTools{display:flex;justify-content:flex-end;flex:none}
+#clearTransfers{padding:7px 12px;font-size:12px;border-radius:9px}
+#log{min-height:0;max-height:230px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:12px;padding-right:6px;margin-right:-6px;scrollbar-gutter:stable}.row{flex:none}
 .row{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
 .rt{display:flex;align-items:center;gap:16px}
 .ri{width:50px;height:50px;border-radius:14px;background:#22314d;color:#b9cdf0;display:flex;align-items:center;justify-content:center;flex:none}
@@ -215,7 +218,10 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   </div>
   <input id="fi" type="file" multiple class="hidden">
   <input id="folderInput" type="file" webkitdirectory multiple class="hidden">
-  <div id="log"></div>
+  <section id="transferFeed" aria-label="Recent transfers">
+    <div id="transferTools" class="hidden"><button id="clearTransfers" class="ghost" title="Clear finished transfers; active transfers stay">Clear all</button></div>
+    <div id="log"></div>
+  </section>
   <footer id="sig">WTMLJR</footer>
 </main>
 
@@ -279,7 +285,7 @@ function renderPeers() {
   $('#reqDot').style.display = pendIn.length ? '' : 'none';
   renderReqs();
   const l = $('#list'); l.innerHTML = '';
-  if (!friends.length) { l.innerHTML = '<div class="empty">No friends yet. Paste a friend’s device code above to send a request.</div>'; return; }
+  if (!friends.length) { l.innerHTML = '<div class="empty">No friends yet. Click the + button in the sidebar to add a friend.</div>'; return; }
   l.appendChild(h('div', 'sect', 'Friends · ' + peers.length + ' online'));
   [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
     const el = document.createElement('div'); el.className = 'peer' + (f.id === sel ? ' sel' : '') + (on.has(f.id) ? '' : ' off');
@@ -332,6 +338,20 @@ function updateDrop() {
 }
 function setStatus(on, text) {
   if (typeof connectionText !== 'undefined') { connectionText = on ? 'Connected to the signaling server. Friends appear when both devices are online.' : (text || 'Connecting to the signaling server...'); const detail = $('#connectionDetail'); if (detail) detail.textContent = connectionText; } $('#status').classList.toggle('on', on); $('#status span').textContent = text || (on ? 'Connected' : 'Connecting…'); }
+const transferCards = new Map();
+const activeCard = state => state === 'sending' || state === 'finishing';
+function updateClearTransfers() {
+  $('#transferTools').classList.toggle('hidden', transferCards.size < 2);
+  $('#clearTransfers').disabled = ![...transferCards.values()].some(card => !activeCard(card.state));
+}
+function clearTransfers() {
+  for (const [id, card] of transferCards) {
+    if (activeCard(card.state)) continue;
+    card.element.remove(); transferCards.delete(id); retries.delete(id);
+  }
+  updateClearTransfers();
+}
+$('#clearTransfers').onclick = clearTransfers;
 function row(id, d) {
   let r = document.getElementById(id);
   if (!r) {
@@ -339,7 +359,10 @@ function row(id, d) {
     r.innerHTML = '<div class="rt"><div class="ri"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div><div class="rx"><div class="nm"></div><div class="sub"></div></div><div class="st"></div><button class="x" title="Cancel transfer" aria-label="Cancel transfer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="bar"><i></i></div><div class="enc"><span>Secure connection</span><span class="spd"></span></div>';
     r.querySelector('.x').onclick = () => cancelTransfer(id);
     $('#log').prepend(r);
+    transferCards.set(id, { element: r, state: d.state || '' });
   }
+  if (d.state != null && transferCards.has(id)) transferCards.get(id).state = d.state;
+  updateClearTransfers();
   if (d.state != null || !r.className) r.className = 'row ' + (d.state || '');
   if (d.label) r.querySelector('.nm').textContent = d.label;
   if (d.sub != null) r.querySelector('.sub').textContent = d.sub;
