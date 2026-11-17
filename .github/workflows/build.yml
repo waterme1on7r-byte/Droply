@@ -69,10 +69,19 @@ jobs:
           GH_REPO: waterme1on7r-byte/Droply-releases
         shell: bash
         run: |
+          # Match the safe asset names generated in electron-builder metadata.
+          for asset in release-assets/*; do
+            safe=$(basename "$asset" | tr ' ' '-')
+            if [ "$asset" != "release-assets/$safe" ]; then mv "$asset" "release-assets/$safe"; fi
+          done
           test -f release-assets/latest.yml
           test -f release-assets/latest-mac.yml
           if [ -z "$GH_TOKEN" ]; then
             echo '::warning::Add DROPLY_RELEASE_TOKEN to publish to the public Droply-releases repository. Build artifacts are ready for manual publication.'
             exit 0
           fi
-          gh release create "$GITHUB_REF_NAME" release-assets/* --draft --title "DROPLY $GITHUB_REF_NAME" --notes "DROPLY desktop update. See release documentation for features and installation details."
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release-assets/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release-assets/* --draft --title "DROPLY $GITHUB_REF_NAME" --notes "DROPLY desktop update. See release documentation for features and installation details."
+          fi
