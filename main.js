@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Notification, shell, session, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, shell, session, dialog, clipboard } = require('electron');
 const path = require('path'), fs = require('fs'), crypto = require('crypto');
 
 // Second instance: quit right away and don't run any of the setup below
@@ -27,6 +27,33 @@ function saveProfile() {
   catch (err) { console.error('Could not save profile:', err); }
 }
 const okAvatar = a => a === '' || (typeof a === 'string' && a.length < 300000 && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(a));
+
+// ---- Friends: stored per installation in <userData>/friends.json (deleted with the app data on uninstall) ----
+const ff = () => path.join(app.getPath('userData'), 'friends.json');
+const CODE_RE = /^DRP-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
+const okId = x => typeof x === 'string' && x.length > 0 && x.length <= 64;
+const okFriendAv = a => okAvatar(a) && a.length < 60000;
+const nm = x => Array.from(String(x || '').trim()).slice(0, 40).join('');
+const cap = (a, n) => (Array.isArray(a) ? a : []).slice(0, n);
+function cleanPerson(x) {
+  if (!x || typeof x !== 'object' || !okId(x.id) || !CODE_RE.test(x.code)) return null;
+  return { id: x.id, code: x.code, name: nm(x.name) || 'Friend', av: okFriendAv(x.av) ? x.av : '' };
+}
+function cleanSocial(x) {
+  x = x && typeof x === 'object' ? x : {};
+  const uniq = (list, key) => { const seen = new Set(); return list.filter(i => i && !seen.has(i[key]) && seen.add(i[key])); };
+  return {
+    friends: uniq(cap(x.friends, 200).map(cleanPerson), 'id'),
+    inc: uniq(cap(x.inc, 50).map(cleanPerson), 'id'),
+    out: uniq(cap(x.out, 100).filter(o => o && CODE_RE.test(o.code)).map(o => ({ code: o.code })), 'code'),
+    gone: [...new Set(cap(x.gone, 200).filter(okId))]
+  };
+}
+let social = cleanSocial();
+function saveSocial() {
+  try { const f = ff(), tmp = f + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(social)); fs.renameSync(tmp, f); }
+  catch (err) { console.error('Could not save friends:', err); }
+}
 
 const MAX_OPEN = 8;
 const open = new Map();        // tid -> { ws, dest, fd }  (files currently being received)
@@ -68,6 +95,11 @@ ipcMain.handle('save-profile', (e, p) => {
   if (p.avatar !== undefined && okAvatar(p.avatar)) profile.avatar = p.avatar;
   saveProfile(); return profile;
 });
+
+ipcMain.handle('get-friends', e => fromUI(e) ? social : null);
+ipcMain.handle('save-friends', (e, x) => { if (fromUI(e)) { social = cleanSocial(x); saveSocial(); } return social; });
+// Clipboard: only device codes can be copied (the page itself has no clipboard permission)
+ipcMain.on('copy', (e, text) => { if (fromUI(e) && typeof text === 'string' && CODE_RE.test(text)) clipboard.writeText(text); });
 
 ipcMain.on('save-open', (e, tid, name) => {
   if (!fromUI(e) || typeof tid !== 'string') return;
@@ -136,6 +168,8 @@ function start() {
     if (err.code !== 'ENOENT') { try { fs.copyFileSync(pf(), pf() + '.corrupt'); } catch {} }
   }
   saveProfile();
+  try { social = cleanSocial(JSON.parse(fs.readFileSync(ff(), 'utf8'))); }
+  catch (err) { if (err.code !== 'ENOENT') { try { fs.copyFileSync(ff(), ff() + '.corrupt'); } catch {} } }
 
   // The app only needs notifications; refuse every other permission request
   session.defaultSession.setPermissionRequestHandler((_wc, perm, cb) => cb(perm === 'notifications'));

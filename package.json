@@ -1,6 +1,6 @@
 {
   "name": "droply",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Droply",
   "main": "main.js",
   "author": "Droply",
@@ -33,6 +33,7 @@
     "nsis": {
       "oneClick": true,
       "perMachine": false,
+      "deleteAppDataOnUninstall": true,
       "createDesktopShortcut": true,
       "runAfterFinish": true,
       "installerIcon": "build/icon.ico",

@@ -12,17 +12,30 @@ body{font-family:'IBM Plex Sans','Segoe UI Variable','Segoe UI',system-ui,-apple
 input{user-select:text}
 #titlebar{position:fixed;top:0;left:0;right:0;height:40px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;color:#dfe7f5;background:var(--bar);border-bottom:1px solid var(--line);-webkit-app-region:drag;z-index:30}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-corner{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px;border:2px solid transparent;background-clip:padding-box}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.25);background-clip:padding-box;border:2px solid transparent}
-.rail{width:76px;background:#0d1524;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:18px 0;gap:12px;flex:none}
-.rbtn{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#9aa7bd;background:transparent;border:0;cursor:pointer;position:relative;padding:0;margin:0;transition:.15s}
+.rail{width:84px;background:#0d1524;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:12px;flex:none;min-height:0}
+.rbtn{width:56px;height:56px;flex:none;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#9aa7bd;background:transparent;border:0;cursor:pointer;position:relative;padding:0;margin:0;transition:.15s}
 .rbtn:hover{background:var(--card);color:var(--text);filter:none}
-.rbtn.active{background:linear-gradient(135deg,#5b5fe0,#7a5bd6);box-shadow:0 8px 20px rgba(100,90,220,.35);cursor:default}
-.rail #railAv{width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:12px;background:#12305a!important;color:#9cc0ff;margin:8px 0}
-#count{position:absolute;top:2px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
-main{flex:1;display:flex;flex-direction:column;padding:18px 32px 24px;gap:20px;min-width:0}
+.rbtn.active{background:linear-gradient(135deg,#5b5fe0,#7a5bd6);box-shadow:0 8px 22px rgba(100,90,220,.38);cursor:default}
+.rail #railAv{width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:20px;flex:none}
+#gearBtn{width:44px;height:44px;border-radius:12px}
+.rsep{width:36px;height:1px;background:var(--line);flex:none}
+#frList{flex:1;min-height:0;width:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
+#frList::-webkit-scrollbar{width:0}
+.fr{position:relative;width:52px;height:52px;flex:none;cursor:pointer;border-radius:50%;transition:.15s}
+.fr:hover{transform:scale(1.05)}
+.fr.sel{box-shadow:0 0 0 2.5px var(--accent)}
+.rail .fav{width:52px;height:52px;border-radius:50%;font-size:20px}
+.fr .dot{position:absolute;left:-1px;bottom:-1px;width:15px;height:15px;border-radius:50%;background:#ef4444;border:3px solid #0d1524}
+.fr.on .dot{background:#22c55e}
+.frx{position:absolute;top:-7px;right:-7px;width:20px;height:20px;padding:0;border-radius:50%;background:#26334d;border:1px solid var(--line);color:#c4d0e6;display:flex;align-items:center;justify-content:center;opacity:.75;transition:.15s}
+.frx:hover{background:#7f1d1d;border-color:rgba(248,113,113,.6);color:#fff;opacity:1;filter:none}
+#reqDot{position:absolute;bottom:5px;right:5px;width:11px;height:11px;border-radius:50%;background:var(--gold);border:2px solid #0d1524}
+#count{position:absolute;top:-4px;right:-4px;min-width:21px;height:21px;padding:0 5px;border-radius:11px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #0d1524}
+main{flex:1;display:flex;flex-direction:column;padding:16px 32px 24px;gap:20px;min-width:0}
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
-h1{font-family:var(--cond);font-size:34px;line-height:44px;height:44px;font-weight:700;letter-spacing:-.01em;color:var(--gold)}
+h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weight:700;letter-spacing:-.01em;color:var(--gold)}
 .head p{color:var(--mute);font-size:14px;margin-top:6px}
-.head #status{margin-top:5px}
+.head #status{margin-top:11px}
 #status{display:flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;font-size:13px;font-weight:500;border:1px solid rgba(255,255,255,.12);color:var(--mute);background:rgba(255,255,255,.03);white-space:nowrap}
 #status i{width:7px;height:7px;border-radius:50%;background:var(--err)}
 #status.on{color:var(--ok);border-color:rgba(126,232,193,.3);background:rgba(126,232,193,.08)}#status.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}
@@ -39,8 +52,18 @@ h1{font-family:var(--cond);font-size:34px;line-height:44px;height:44px;font-weig
 #pair:not(.live) .link{color:var(--mute)}
 .peer{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;border:1px solid transparent;transition:.15s;font-weight:600;color:var(--gold)}
 .peer:hover{background:var(--card2)}.peer.sel{background:rgba(59,130,246,.14);border-color:rgba(90,150,255,.5)}
-.peer::after{content:'';margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(126,232,193,.15)}
-#picker{position:absolute;top:calc(100% + 8px);right:0;width:340px;max-width:100%;max-height:300px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px;z-index:5;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.peer::after{content:'';margin-left:auto;width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+.peer.off{color:var(--mute)}.peer.off::after{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+.pk-add{display:flex;gap:8px;padding:4px 4px 0}
+.pk-add input[type=text]{flex:1;min-width:0;width:auto;text-align:left;font-family:var(--mono);font-size:12.5px;padding:10px 12px;letter-spacing:.02em}
+.pk-add button{padding:10px 16px;flex:none}
+.pk-msg{font-size:12.5px;color:var(--mute);padding:8px 8px 4px;min-height:14px;line-height:1.4}.pk-msg.bad{color:var(--err)}.pk-msg.good{color:var(--ok)}
+.sect{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:10px 8px 4px}
+.req{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(245,217,126,.06);border:1px solid rgba(245,217,126,.18);margin-bottom:6px;font-size:13px}
+.req .who{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}.req .who b{color:var(--gold)}
+.req button{padding:6px 12px;font-size:12.5px;border-radius:9px}
+.req.out{background:rgba(255,255,255,.03);border-color:var(--line)}.req.out .who{font-family:var(--mono);font-size:12px;color:var(--mute)}
+#picker{position:absolute;top:calc(100% + 8px);right:0;width:370px;max-width:100%;max-height:440px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px;z-index:5;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .empty{color:var(--mute);font-size:13px;padding:14px 12px;line-height:1.6;text-align:center;font-weight:400}
 .av{width:50px;height:50px;border-radius:14px;color:var(--gold);font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
 .peer .av{width:40px;height:40px;font-size:15px}
@@ -87,7 +110,24 @@ button:hover{filter:brightness(1.1)}button.ghost{background:var(--card2);border:
 .box{display:flex;flex-direction:column;align-items:center;gap:16px;width:340px;text-align:center}
 .box h2{font-family:var(--cond);color:var(--gold)}
 .box p{color:var(--mute);font-size:14px;margin-top:-8px}
-#ask .box{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+#ask .box,#pf .box{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+#pf{background:rgba(4,8,18,.7);backdrop-filter:blur(8px)}
+#pf .box{width:330px;position:relative;padding:34px 26px 26px;background:radial-gradient(260px 160px at 50% 0%,rgba(59,130,246,.2),transparent 75%),var(--card);animation:tin .2s ease}
+#pf .box h2{font-size:26px;letter-spacing:-.01em}
+#pf .box .av.big{width:124px;height:124px;border-radius:50%;font-size:48px;cursor:default;box-shadow:0 0 0 4px rgba(59,130,246,.25),0 14px 40px rgba(0,0,0,.45)}
+.pstat{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:5px 14px;border-radius:999px;color:#f87171;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.28)}
+.pstat i{width:8px;height:8px;border-radius:50%;background:#ef4444}
+.pstat.on{color:#4ade80;background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3)}.pstat.on i{background:#22c55e;box-shadow:0 0 8px #22c55e}
+.field{width:100%;text-align:left}
+.field small{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-family:var(--mono);margin-bottom:8px}
+.field .hint{display:block;margin:8px 2px 0;font-size:12px;line-height:1.5;letter-spacing:0;text-transform:none;font-family:inherit}
+.codebox{display:flex;align-items:center;gap:8px;background:#0f1828;border:1px solid var(--line);border-radius:12px;padding:6px 6px 6px 14px}
+.codebox code{flex:1;min-width:0;font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:.05em;color:var(--gold);user-select:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.cp{width:38px;height:38px;padding:0;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center}
+.cp.ok{background:linear-gradient(135deg,#16a34a,#15803d)}
+.closeX{position:absolute;top:14px;right:16px;width:34px;height:34px;padding:0;border-radius:10px;background:var(--card2);border:1px solid var(--line);color:var(--mute);display:flex;align-items:center;justify-content:center}
+.closeX:hover{color:var(--text);filter:none;background:#233250}
+button.danger{background:linear-gradient(135deg,#ef4444,#b91c1c)}
 #ask h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-family:var(--mono)}
 #askTxt{font-size:16px;font-weight:600;line-height:1.4}
 #askFiles{color:var(--mute);font-size:13px;word-break:break-word;max-height:90px;overflow:auto}
@@ -103,11 +143,12 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
 <div id="titlebar">Droply · Transfers</div>
 <div id="tl"></div><div id="br"></div>
 
-<div id="setup" class="overlay hidden"><div class="box">
+<div id="setup" class="overlay hidden"><button id="setupX" class="closeX hidden" aria-label="Close" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="box">
   <h2 style="font-size:26px;letter-spacing:-.02em">Welcome to Droply</h2>
   <p>Pick a username. Add a photo if you like.</p>
   <div id="setupAv" class="av big" title="Choose photo">?</div>
   <input id="nameInput" type="text" maxlength="24" placeholder="Username">
+  <div id="codeRow" class="field hidden"><small>Your device code</small><div class="codebox"><code id="myCode">…</code><button class="cp ghost" id="copyBtn" title="Copy code" aria-label="Copy code"></button></div><small class="hint">Give this code to a friend so they can add you. It belongs to this device and never changes.</small></div>
   <button id="saveBtn">Get started</button>
   <input id="avFile" type="file" accept="image/*" class="hidden">
 </div></div>
@@ -118,11 +159,14 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
   <div class="btns"><button id="rejBtn" class="ghost">Decline</button><button id="accBtn">Accept</button></div>
 </div></div>
 
+<div id="pf" class="overlay hidden"><div class="box" id="pfBox"></div></div>
+
 <nav class="rail">
-  <div class="rbtn active" title="Transfers"><svg width="22" height="22" viewBox="0 0 32 32"><path d="M16 6c3.7 4.9 6.4 8.1 6.4 11.5a6.4 6.4 0 0 1-12.8 0C9.6 14.1 12.3 10.9 16 6z" fill="#fff"/></svg></div>
+  <div class="rbtn active" title="Transfers"><svg width="32" height="32" viewBox="0 0 32 32"><path d="M16 6c3.7 4.9 6.4 8.1 6.4 11.5a6.4 6.4 0 0 1-12.8 0C9.6 14.1 12.3 10.9 16 6z" fill="#fff"/></svg></div>
   <div id="railAv" class="av" title="Edit profile">?</div>
-  <button class="rbtn" id="peopleBtn" title="People online"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M16 4.8a3.2 3.2 0 0 1 0 6M21 20v-1a5 5 0 0 0-3.5-4.8"/></svg><span id="count">0</span></button>
-  <div style="flex:1"></div>
+  <div class="rsep"></div>
+  <div id="frList"></div>
+  <button class="rbtn" id="peopleBtn" title="Friends"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M16 4.8a3.2 3.2 0 0 1 0 6M21 20v-1a5 5 0 0 0-3.5-4.8"/></svg><span id="count">0</span><span id="reqDot" style="display:none"></span></button>
   <button class="rbtn" id="gearBtn" title="Settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </nav>
 
@@ -137,7 +181,12 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
       <div class="link"><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span></div>
       <div class="pcard" id="peerBox"><div id="peerAv" class="av">+</div><div><b id="peerName">Pick a person</b><small id="peerSub">No one online</small></div></div>
     </div>
-    <div id="picker" class="hidden"><div id="list"></div></div>
+    <div id="picker" class="hidden">
+      <div class="pk-add"><input id="codeIn" type="text" maxlength="32" placeholder="Friend's code · DRP-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false"><button id="addBtn">Add</button></div>
+      <div id="addMsg" class="pk-msg"></div>
+      <div id="reqs"></div>
+      <div id="list"></div>
+    </div>
   </div>
   <div id="drop" class="off" title="Drop, click, or paste (Ctrl/⌘+V)">
     <div class="ico"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
@@ -156,7 +205,9 @@ const { SERVER_URL, KEY, ICE = [] } = window.CONFIG || {};
 const WIN = 16 * 1024 * 1024;            // max bytes the sender may have in flight that the receiver hasn't written yet
 const STALL_MS = 45000, CONNECT_MS = 30000;
 const MAX_ASKS = 20, MAX_SESS = 10;      // limits on pending requests / simultaneous transfers
-let me, ws, peers = [], sel = null, pendAv = null, known = null;
+let me, ws, peers = [], sel = null, pendAv = null, known = null;   // peers = friends that are online right now
+let friends = [], pendIn = [], pendOut = [], gone = [], raw = [];  // raw = everyone the server lists as online
+const MAX_FRIENDS = 200, MAX_REQ = 50;
 const sess = {}, asks = [];
 const fmt = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.ceil(b / 1e3) + ' KB';
 const plural = n => n + (n === 1 ? ' file' : ' files');
@@ -188,27 +239,71 @@ function renderMe() {
   const r = avatar(me.avatar, me.name, false, true); r.id = 'railAv'; r.title = 'Edit profile'; $('#railAv').replaceWith(r);
   r.onclick = () => openSetup(true);
 }
+const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const ICON = {
+  x: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  xl: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  copy: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
+  ok: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+};
+const isFriend = id => friends.some(f => f.id === id);
+const byName = (a, b) => a.name.localeCompare(b.name);
 function renderPeers() {
+  const on = new Set(peers.map(p => p.id));
   $('#count').textContent = peers.length; $('#count').style.display = peers.length ? '' : 'none';
+  $('#reqDot').style.display = pendIn.length ? '' : 'none';
+  renderReqs();
   const l = $('#list'); l.innerHTML = '';
-  if (!peers.length) { l.innerHTML = '<div class="empty">No one is online yet. Friends show up here when they open Droply.</div>'; return; }
-  peers.forEach(p => {
-    const el = document.createElement('div'); el.className = 'peer' + (p.id === sel ? ' sel' : '');
-    el.appendChild(avatar(p.av, p.name));
-    const n = document.createElement('div'); n.textContent = p.name; el.appendChild(n);
-    el.onclick = () => { sel = p.id; updateDrop(); renderPeers(); $('#picker').classList.add('hidden'); };
+  if (!friends.length) { l.innerHTML = '<div class="empty">No friends yet. Paste a friend’s device code above to send a request.</div>'; return; }
+  l.appendChild(h('div', 'sect', 'Friends · ' + peers.length + ' online'));
+  [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
+    const el = document.createElement('div'); el.className = 'peer' + (f.id === sel ? ' sel' : '') + (on.has(f.id) ? '' : ' off');
+    el.appendChild(avatar(f.av, f.name));
+    el.appendChild(h('div', null, f.name));
+    el.onclick = () => { selectFriend(f.id); $('#picker').classList.add('hidden'); };
     l.appendChild(el);
   });
 }
+function renderReqs() {
+  const box = $('#reqs'); box.innerHTML = '';
+  if (pendIn.length) box.appendChild(h('div', 'sect', 'Friend requests'));
+  pendIn.forEach(r => {
+    const el = h('div', 'req'), who = h('div', 'who'); who.appendChild(h('b', null, r.name)); who.append(' wants to be friends');
+    const ok = h('button', null, 'Accept'), no = h('button', 'ghost', 'Decline');
+    ok.onclick = () => acceptReq(r.id); no.onclick = () => declineReq(r.id);
+    el.append(avatar(r.av, r.name), who, ok, no); box.appendChild(el);
+  });
+  if (pendOut.length) box.appendChild(h('div', 'sect', 'Waiting for a reply'));
+  pendOut.forEach(o => {
+    const el = h('div', 'req out'), who = h('div', 'who', o.code), no = h('button', 'ghost', 'Cancel');
+    no.onclick = () => { pendOut = pendOut.filter(x => x !== o); persist(); renderReqs(); };
+    el.append(who, no); box.appendChild(el);
+  });
+}
+// Left sidebar: every accepted friend, online ones first. Green dot = online, red = offline.
+function renderRail() {
+  const l = $('#frList'); l.innerHTML = '';
+  const on = new Set(peers.map(p => p.id));
+  [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
+    const el = h('div', 'fr' + (on.has(f.id) ? ' on' : '') + (f.id === sel ? ' sel' : '')); el.title = f.name + (on.has(f.id) ? ' · online' : ' · offline');
+    const a = avatar(f.av, f.name); a.classList.add('fav');
+    const x = h('button', 'frx'); x.innerHTML = ICON.x; x.title = 'Remove friend'; x.setAttribute('aria-label', 'Remove ' + f.name);
+    x.onclick = ev => { ev.stopPropagation(); confirmRemove(f); };
+    el.append(a, h('i', 'dot'), x);
+    el.onclick = () => { selectFriend(f.id); showProfile(f); };
+    l.appendChild(el);
+  });
+}
+function selectFriend(id) { sel = id; updateDrop(); renderPeers(); renderRail(); }
 function updateDrop() {
-  if (!peers.find(x => x.id === sel)) sel = null;
+  if (!friends.find(x => x.id === sel)) sel = null;
   if (!sel && peers.length === 1) sel = peers[0].id;
-  const p = peers.find(x => x.id === sel);
+  const f = friends.find(x => x.id === sel), p = peers.find(x => x.id === sel), shown = p || f;
   $('#drop').classList.toggle('off', !p); $('#pair').classList.toggle('live', !!p);
-  $('#dropTitle').textContent = p ? 'Drop files to send' : 'Pick a person first';
-  $('#peerName').textContent = p ? p.name : 'Pick a person';
-  $('#peerSub').textContent = p ? 'Online' : (peers.length ? peers.length + ' online' : 'No one online');
-  const n = avatar(p && p.av, p ? p.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
+  $('#dropTitle').textContent = p ? 'Drop files to send' : f ? f.name + ' is offline' : friends.length ? 'Pick a person first' : 'Add a friend to start';
+  $('#peerName').textContent = shown ? shown.name : 'Pick a person';
+  $('#peerSub').textContent = p ? 'Online' : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
+  const n = avatar(shown && shown.av, shown ? shown.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
 }
 function setStatus(on, text) { $('#status').classList.toggle('on', on); $('#status span').textContent = text || (on ? 'Connected' : 'Connecting…'); }
 function row(id, d) {
@@ -251,7 +346,7 @@ function notify(title, sub, lock) {
 const notifyEnc = () => notify('Encrypted connection', 'Compare the code to be sure', true);
 function notifyNew() {
   const ids = new Set(peers.map(p => p.id));
-  if (known && peers.some(p => !known.has(p.id))) notify('Peer connected', 'Ready to share');
+  if (known && peers.some(p => !known.has(p.id))) notify('Friend online', 'Ready to share');
   known = ids;
 }
 
@@ -267,18 +362,149 @@ function connect() {
   ws.onopen = () => { retry = 0; setStatus(true); known = null; hello(); };
   ws.onmessage = e => {
     let m; try { m = JSON.parse(e.data); } catch { return; }
-    if (m.t === 'peers' && Array.isArray(m.peers)) { peers = m.peers.filter(p => p && typeof p.name === 'string' && p.id !== me.id).sort((a, b) => a.name.localeCompare(b.name)); updateDrop(); renderPeers(); notifyNew(); }
+    if (m.t === 'peers' && Array.isArray(m.peers)) setOnline(m.peers.filter(p => p && typeof p.id === 'string' && typeof p.name === 'string' && p.id !== me.id));
     else if (m.t === 'sig') onSig(m.from, m.data);
   };
   ws.onerror = () => {};   // onclose always follows
   // While offline the list would be stale and anything sent would silently vanish, so empty it
-  ws.onclose = () => { setStatus(false); peers = []; known = null; updateDrop(); renderPeers(); reconnectLater(); };
+  ws.onclose = () => { setStatus(false); known = null; sentFr.clear(); setOnline([]); reconnectLater(); };
+}
+
+/* ---------- Friends ---------- */
+// Device code: derived from this installation's random id (created on first launch, saved with the app data,
+// so it belongs to the device and never changes when the profile is edited). Only a hash is shared, never the id.
+const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ', codes = new Map(), FSIG = new Set(['fr', 'fa', 'fd', 'fx']), sentFr = new Set();
+async function deviceCode(id) {
+  if (codes.has(id)) return codes.get(id);
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('droply-device:' + id)));
+  let out = '', acc = 0, bits = 0;
+  for (const b of hash) {
+    acc = ((acc << 8) | b) & 0xffff; bits += 8;
+    while (bits >= 5 && out.length < 12) { out += B32[(acc >> (bits - 5)) & 31]; bits -= 5; }
+    if (out.length >= 12) break;
+  }
+  const c = 'DRP-' + out.match(/.{4}/g).join('-'); codes.set(id, c); return c;
+}
+function normCode(v) {
+  let t = String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
+  if (t.startsWith('DRP')) t = t.slice(3);
+  if (!/^[0-9A-HJKMNP-TV-Z]{12}$/.test(t)) return null;
+  return 'DRP-' + t.match(/.{4}/g).join('-');
+}
+const cleanName = n => Array.from(String(n || '').trim()).slice(0, 40).join('') || 'Friend';
+const cleanAv = a => typeof a === 'string' && a.length < 60000 && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(a) ? a : '';
+let saveT = 0;
+const persist = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { api.saveFriends({ friends, out: pendOut, inc: pendIn, gone }); } catch {} }, 150); };
+function addFriend(rec) {
+  friends = friends.filter(f => f.id !== rec.id); friends.push(rec); friends.sort(byName);
+  pendIn = pendIn.filter(r => r.id !== rec.id); gone = gone.filter(g => g !== rec.id);
+  persist(); renderRail(); renderPeers(); updateDrop();
+}
+// Who is online, as listed by the server. Friends are matched here: names/photos stay fresh, pending requests get
+// delivered the moment the other person shows up, and "remove" notices reach friends who were offline.
+let syncQ = Promise.resolve();
+const setOnline = list => (syncQ = syncQ.then(() => applyOnline(list)).catch(() => {}));
+async function applyOnline(list) {
+  raw = list; let dirty = false;
+  const byCode = new Map();
+  for (const p of list) byCode.set(await deviceCode(p.id), p);
+  for (const id of [...sentFr]) if (!list.some(p => p.id === id)) sentFr.delete(id);
+  for (const f of friends) {
+    const p = list.find(x => x.id === f.id); if (!p) continue;
+    const name = cleanName(p.name), av = cleanAv(p.av);
+    if (f.name !== name || f.av !== av) { f.name = name; f.av = av; dirty = true; }
+  }
+  for (const o of pendOut) {
+    const p = byCode.get(o.code);
+    if (p && !sentFr.has(p.id)) { sentFr.add(p.id); gone = gone.filter(g => g !== p.id); sig(p.id, { t: 'fr', name: me.name, av: me.avatar }); }
+  }
+  for (const id of [...gone]) if (list.some(p => p.id === id)) { sig(id, { t: 'fx' }); gone = gone.filter(g => g !== id); dirty = true; }
+  peers = list.filter(p => isFriend(p.id));
+  if (dirty) persist();
+  updateDrop(); renderPeers(); renderRail(); notifyNew();
+}
+async function friendSig(from, d) {
+  if (typeof from !== 'string' || !me || from === me.id) return;
+  const code = await deviceCode(from), live = raw.find(p => p.id === from);
+  if (d.t === 'fr') {                                              // someone wants to add us
+    const rec = { id: from, code, name: cleanName(d.name), av: cleanAv(d.av) };
+    if (isFriend(from)) return sig(from, { t: 'fa' });            // already friends: just confirm again
+    const mine = pendOut.find(o => o.code === code);
+    if (mine) { pendOut = pendOut.filter(o => o !== mine); addFriend(rec); sig(from, { t: 'fa' }); return notify('Friend added', rec.name); }   // both asked: match
+    const i = pendIn.findIndex(r => r.id === from);
+    if (i >= 0) { pendIn[i] = rec; persist(); return renderPeers(); }
+    if (pendIn.length >= MAX_REQ || friends.length >= MAX_FRIENDS) return;
+    pendIn.push(rec); persist(); renderPeers(); notify('Friend request', rec.name + ' wants to add you');
+  } else if (d.t === 'fa') {                                       // they accepted our request
+    const mine = pendOut.find(o => o.code === code); if (!mine || friends.length >= MAX_FRIENDS) return;
+    pendOut = pendOut.filter(o => o !== mine);
+    const rec = { id: from, code, name: cleanName(live ? live.name : d.name), av: cleanAv(live ? live.av : '') };
+    addFriend(rec); notify('Friend added', rec.name + ' accepted your request');
+  } else if (d.t === 'fd') {                                       // they declined
+    if (!pendOut.some(o => o.code === code)) return;
+    pendOut = pendOut.filter(o => o.code !== code); persist(); renderPeers(); toast('Your friend request was declined', 'cancelled');
+  } else if (d.t === 'fx') {                                       // they removed us
+    pendIn = pendIn.filter(r => r.id !== from);
+    const f = friends.find(x => x.id === from); if (!f) return persist();
+    friends = friends.filter(x => x.id !== from); peers = peers.filter(p => p.id !== from);
+    persist(); updateDrop(); renderPeers(); renderRail(); notify('Friend removed', f.name + ' removed you');
+  }
+}
+async function addByCode(input) {
+  const code = normCode(input);
+  if (!code) return { ok: false, msg: 'That doesn’t look like a Droply code. It should look like DRP-XXXX-XXXX-XXXX.' };
+  if (code === await deviceCode(me.id)) return { ok: false, msg: 'That’s your own code.' };
+  if (friends.some(f => f.code === code)) return { ok: false, msg: 'You’re already friends.' };
+  const inc = pendIn.find(r => r.code === code); if (inc) { acceptReq(inc.id); return { ok: true, msg: inc.name + ' added as a friend.' }; }
+  if (pendOut.some(o => o.code === code)) return { ok: false, msg: 'Request already sent. Waiting for a reply.' };
+  if (friends.length + pendOut.length >= MAX_FRIENDS) return { ok: false, msg: 'Friend list is full.' };
+  pendOut.push({ code }); persist(); renderPeers();
+  await setOnline(raw);
+  const onlineCodes = await Promise.all(raw.map(p => deviceCode(p.id)));
+  return { ok: true, msg: onlineCodes.includes(code) ? 'Request sent. It’s waiting for them to accept.' : 'Saved. The request is delivered as soon as that person opens Droply.' };
+}
+function acceptReq(id) {
+  const r = pendIn.find(x => x.id === id); if (!r || friends.length >= MAX_FRIENDS) return;
+  addFriend(r); sig(id, { t: 'fa' });
+}
+function declineReq(id) { pendIn = pendIn.filter(x => x.id !== id); sig(id, { t: 'fd' }); persist(); renderPeers(); }
+function removeFriend(id) {
+  if (!isFriend(id)) return;
+  friends = friends.filter(f => f.id !== id);
+  if (peers.some(p => p.id === id)) sig(id, { t: 'fx' }); else gone = [...gone, id].slice(-200);   // offline: tell them when they come back
+  peers = peers.filter(p => p.id !== id); if (sel === id) sel = null;
+  persist(); updateDrop(); renderPeers(); renderRail();
+}
+
+/* ---------- Pop-up cards (friend profile, confirmations) ---------- */
+function openCard(...nodes) { const b = $('#pfBox'); b.innerHTML = ''; nodes.forEach(n => b.appendChild(n)); $('#pf').classList.remove('hidden'); }
+const closeCard = () => $('#pf').classList.add('hidden');
+function copyCode(btn, text) {
+  try { api.copy(text); } catch {}
+  btn.innerHTML = ICON.ok; btn.classList.add('ok'); btn.title = 'Copied';
+  clearTimeout(btn.t); btn.t = setTimeout(() => { btn.innerHTML = ICON.copy; btn.classList.remove('ok'); btn.title = 'Copy code'; }, 1400);
+}
+function showProfile(f) {
+  const on = peers.some(p => p.id === f.id);
+  const x = h('button', 'closeX'); x.innerHTML = ICON.xl; x.title = 'Close'; x.setAttribute('aria-label', 'Close'); x.onclick = closeCard;
+  const st = h('div', 'pstat' + (on ? ' on' : '')); st.innerHTML = '<i></i><span></span>'; st.querySelector('span').textContent = on ? 'Online' : 'Offline';
+  const field = h('div', 'field'), box = h('div', 'codebox'), cp = h('button', 'cp ghost'); cp.innerHTML = ICON.copy; cp.title = 'Copy code'; cp.setAttribute('aria-label', 'Copy code');
+  cp.onclick = () => copyCode(cp, f.code);
+  box.append(h('code', null, f.code), cp);
+  field.append(h('small', null, 'Unique code'), box, h('small', 'hint', 'Share this code so someone else can add ' + f.name + '.'));
+  openCard(x, avatar(f.av, f.name, true), h('h2', null, f.name), st, field);
+}
+function confirmRemove(f) {
+  const btns = h('div', 'btns'), no = h('button', 'ghost', 'Cancel'), yes = h('button', 'danger', 'Remove');
+  no.onclick = closeCard; yes.onclick = () => { closeCard(); removeFriend(f.id); };
+  btns.append(no, yes);
+  openCard(h('h2', null, 'Remove ' + f.name + '?'), h('p', null, 'You won’t be able to send files to each other until you add each other again.'), btns);
 }
 
 /* ---------- Sender ---------- */
 async function sendFiles(files) {
   const peer = peers.find(p => p.id === sel);
-  if (!peer) return toast('Pick a person first');
+  if (!peer) return toast(isFriend(sel) ? 'Your friend is offline' : 'Pick a person first');
   if (!ws || ws.readyState !== 1) return toast('Not connected to the server');
   if (!files.length) return;
   const tid = crypto.randomUUID();
@@ -410,8 +636,10 @@ const validReq = d => typeof d.tid === 'string' && d.tid.length <= 64 && typeof 
   && d.files.every(f => f && typeof f.name === 'string' && Number.isFinite(f.size) && f.size >= 0);
 function onSig(from, d) {
   if (!d || typeof d !== 'object') return;
+  if (FSIG.has(d.t)) return void friendSig(from, d).catch(() => {});
   if (d.t === 'req') {
     if (!validReq(d) || sess[d.tid] || asks.some(a => a.d.tid === d.tid)) return;
+    if (!isFriend(from)) return sig(from, { t: 'rej', tid: d.tid });   // only accepted friends can send files
     if (asks.length >= MAX_ASKS || Object.keys(sess).length >= MAX_SESS) return sig(from, { t: 'rej', tid: d.tid });   // too busy
     d.from = d.from.slice(0, 40); return askUser(from, d);
   }
@@ -482,7 +710,29 @@ $('#fi').onchange = e => { sendFiles([...e.target.files]); e.target.value = ''; 
 
 /* ---------- Profile ---------- */
 function setupAv(src) { const n = avatar(src, $('#nameInput').value || me.name, true, true); n.id = 'setupAv'; n.onclick = () => $('#avFile').click(); $('#setupAv').replaceWith(n); }
-function openSetup(edit) { $('#setup').classList.remove('hidden'); $('#nameInput').value = edit ? me.name : ''; pendAv = null; setupAv(me.avatar); $('#nameInput').focus(); }
+function openSetup(edit) {
+  $('#setup').classList.remove('hidden'); $('#nameInput').value = edit ? me.name : ''; pendAv = null; setupAv(me.avatar);
+  $('#codeRow').classList.toggle('hidden', !edit); $('#setupX').classList.toggle('hidden', !edit); $('#saveBtn').textContent = edit ? 'Save' : 'Get started';
+  if (edit) deviceCode(me.id).then(c => { $('#myCode').textContent = c; });
+  $('#nameInput').focus();
+}
+const closeSetup = () => $('#setup').classList.add('hidden');
+$('#setupX').onclick = closeSetup;
+$('#copyBtn').innerHTML = ICON.copy;
+$('#copyBtn').onclick = () => deviceCode(me.id).then(c => copyCode($('#copyBtn'), c));
+$('#pf').addEventListener('click', e => { if (e.target === $('#pf')) closeCard(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!$('#pf').classList.contains('hidden')) closeCard();
+  else if (!$('#setup').classList.contains('hidden') && !$('#setupX').classList.contains('hidden')) closeSetup();
+  else $('#picker').classList.add('hidden');
+});
+async function submitCode() {
+  const inp = $('#codeIn'), msg = $('#addMsg'); if (!inp.value.trim()) return inp.focus();
+  const r = await addByCode(inp.value); msg.textContent = r.msg; msg.className = 'pk-msg ' + (r.ok ? 'good' : 'bad'); if (r.ok) inp.value = '';
+}
+$('#addBtn').onclick = submitCode;
+$('#codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(); });
 $('#setupAv').onclick = () => $('#avFile').click();
 $('#avFile').onchange = async e => { if (e.target.files[0]) { pendAv = await resizeImage(e.target.files[0]); setupAv(pendAv); } };
 $('#saveBtn').onclick = async () => {
@@ -493,9 +743,9 @@ $('#saveBtn').onclick = async () => {
 $('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveBtn').click(); });
 $('#meBox').onclick = () => openSetup(true);
 $('#gearBtn').onclick = () => openSetup(true);
-const togglePicker = e => { e.stopPropagation(); $('#picker').classList.toggle('hidden'); };
+const togglePicker = e => { e.stopPropagation(); $('#addMsg').textContent = ''; $('#picker').classList.toggle('hidden'); };
 $('#peerBox').onclick = togglePicker; $('#peopleBtn').onclick = togglePicker;
-document.addEventListener('click', e => { if (!e.target.closest('#picker')) $('#picker').classList.add('hidden'); });
+document.addEventListener('click', e => { if (!e.composedPath().includes($('#picker'))) $('#picker').classList.add('hidden'); });
 window.addEventListener('focus', () => { if (!$('#setup').classList.contains('hidden')) $('#nameInput').focus(); });
 api.on('save-error', d => { const s = sess[d.tid]; if (s) fail(s, d.message, 'error', 'Receiver: ' + d.message); else toast(d.message); });
 api.on('save-wrote', d => {            // bytes are on disk -> tell the sender (batched, ~20×/s)
@@ -507,8 +757,10 @@ api.on('saved', d => { const s = sess[d.tid]; if (s) { s.saved = (s.saved || 0) 
 
 (async () => {
   me = await api.getProfile();
+  const st = (await api.getFriends()) || {};
+  friends = st.friends || []; pendIn = st.inc || []; pendOut = st.out || []; gone = st.gone || [];
   if (!me.name) openSetup(false); else renderMe();
-  renderPeers(); connect();
+  updateDrop(); renderPeers(); renderRail(); connect();
 })();
 </script>
 </body>
