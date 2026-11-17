@@ -1,4 +1,4 @@
-const settingsSections = ['Profile', 'Device access', 'Downloads', 'Notifications', 'App behavior', 'Appearance', 'Updates & About', 'Transfer history', 'Troubleshooting'];
+const settingsSections = ['Profile', 'Downloads', 'Notifications', 'App behavior', 'Appearance', 'Updates & About', 'Transfer history', 'Troubleshooting'];
 let accessState = { text: 'Enter an invitation to connect this device.' };
 let settingsState = {}, historyItems = [], connectionText = 'Connecting to the signaling server…';
 let updateState = { text: 'Check for a newer version of DROPLY.' };
@@ -48,16 +48,6 @@ function renderSettings(section) {
     const field = h('div', 'field settings-code'), box = h('div', 'codebox'), code = h('code'), copy = h('button', 'cp ghost');
     field.append(h('small', '', 'Your device code')); copy.innerHTML = ICON.copy; copy.setAttribute('aria-label', 'Copy device code');
     deviceCode(me.id).then(c => { code.textContent = c; copy.onclick = () => copyCode(copy, c); }); box.append(code, copy); field.append(box); body.append(field);
-  } else if (section === 'Device access') {
-    intro('Your device code stays the same. Give it to your administrator to request a one-use invitation.');
-    const box = h('div', 'codebox'), code = h('code'), copy = h('button', 'cp ghost'); copy.innerHTML = ICON.copy; copy.setAttribute('aria-label', 'Copy enrollment device code');
-    deviceCode(me.id).then(c => { code.textContent = c; copy.onclick = () => copyCode(copy, c); }); box.append(code, copy); body.append(box);
-    body.append(h('p', 'intro', accessState.text));
-    const label = h('label', 'field', 'Invitation code'), input = document.createElement('input'); input.type = 'text'; input.maxLength = 128; input.autocomplete = 'off'; input.spellcheck = false; input.placeholder = 'Paste your one-use invitation'; input.setAttribute('aria-label', 'Invitation code'); label.append(input); body.append(label);
-    settingAction(actions(), 'Activate device', async () => {
-      const value = input.value; input.value = ''; await api.enrollDevice(value); settingsFeedback('Device activated. Your profile and friends were preserved.');
-    }, true);
-    intro('Invitations expire and work only for this device. Access credentials are encrypted by your operating system and never copied into diagnostics.');
   } else if (section === 'Downloads') {
     intro('Choose where received files are saved. Incoming transfers always require your approval.');
     const code = h('code', '', settingsState.downloadDir); code.id = 'downloadPath'; body.append(code);

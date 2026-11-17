@@ -38,3 +38,9 @@ test('explicit access denial stops reconnects even if a proxy changes the close 
  socket.emit('message',JSON.stringify({t:'access-denied',message:'Revoked'}));
  assert.equal(f.events.at(-1).state,'enrollment-required');assert(!f.events.some(e=>e.state==='offline'));f.access.stop();
 });
+test('first launch registers automatically and keeps the same device identity',async()=>{
+ const f=fixture();await f.access.connect();assert.equal(f.calls.length,1);assert.match(f.calls[0].url,/auth\/register$/);
+ const data=JSON.parse(f.calls[0].options.body);assert.equal(data.id,f.profile.id);assert.equal(data.invitation,undefined);assert.equal(data.token.length,43);
+ const saved=JSON.parse(fs.readFileSync(path.join(f.root,'device-access.json'),'utf8'));assert.equal(saved.registered,true);assert(!JSON.stringify(saved).includes(data.token));f.access.stop();
+ await f.access.connect();assert.equal(f.calls.length,1);f.access.stop();
+});

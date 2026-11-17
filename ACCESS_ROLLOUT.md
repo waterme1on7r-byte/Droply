@@ -21,3 +21,9 @@ Two native Electron instances were tested against the local secure server: enrol
 ## Remaining live deployment work
 
 Install/connect the Render and Neon integrations. Then create the Free database, set server-only environment credentials without exposing them in chat, deploy the server branch to a staging/controlled environment, verify real database persistence and the live enrollment flow, and migrate intended devices before disabling the old key. Do not switch the live server blindly.
+
+## 2.8.0: automatic connection
+
+The invitation UI is removed. Fresh installations generate and save their own encrypted credential and register automatically. Friend codes and accepted-friend/receiver approval remain the only user-facing connection steps. Existing enrolled installations reuse their credentials and keep their IDs, codes, profiles and friends.
+
+Registration is idempotent for the same credential and never replaces an existing identity with a different token or revives revoked devices. A failed HTTP response is retried using the already saved pending credential. Administrative recovery is reserved for exceptional lost/corrupt credentials; it is not part of normal onboarding. Public registration is rate- and capacity-limited. Keep legacy access during the older-client transition.
