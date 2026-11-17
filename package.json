@@ -95,7 +95,7 @@
   },
   "dependencies": {
     "electron-updater": "6.6.2",
-    "ws": "8.18.3"
+    "ws": "8.23.0"
   },
   "repository": {
     "type": "git",
