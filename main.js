@@ -194,6 +194,16 @@ function start() {
   win.webContents.on('did-fail-load', (_e, code, desc, url, isMain) => { if (isMain) { log('did-fail-load', code, desc, url); show(); } });
   win.webContents.on('render-process-gone', (_e, d) => { log('render-process-gone', JSON.stringify(d)); show(); });
   win.webContents.on('preload-error', (_e, file, err) => log('preload-error', file, err));
+  const updates = require('./updater').createUpdater({
+    app, dialog, getUpdater: () => require('electron-updater').autoUpdater, log,
+    isBusy: async () => {
+      if (open.size) return true;
+      try { return await win.webContents.executeJavaScript('Object.keys(sess).length > 0 || asks.length > 0'); }
+      catch { return true; }
+    }
+  });
+  ipcMain.handle('check-updates', e => fromUI(e) ? updates.check(true) : undefined);
+  win.webContents.once('did-finish-load', () => updates.start());
   win.loadFile('index.html').catch(err => { log('loadFile failed', err); show(); });
   // Windows'ta klavye odağı pencereye geçmeyebiliyor (özellikle installer'dan otomatik açılınca)
   win.on('focus', () => win.webContents.focus());

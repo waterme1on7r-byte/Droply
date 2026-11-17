@@ -1,6 +1,6 @@
 {
   "name": "droply",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "Droply",
   "main": "main.js",
   "author": "Droply",
@@ -24,7 +24,8 @@
       "main.js",
       "preload.js",
       "index.html",
-      "config.js"
+      "config.js",
+      "updater.js"
     ],
     "win": {
       "target": "nsis",
@@ -50,6 +51,12 @@
           "arch": [
             "universal"
           ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
         }
       ],
       "category": "public.app-category.utilities",
@@ -70,6 +77,21 @@
         "from": "build/icon.png",
         "to": "icon.png"
       }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "waterme1on7r-byte",
+        "repo": "Droply",
+        "releaseType": "draft"
+      }
     ]
+  },
+  "dependencies": {
+    "electron-updater": "6.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/waterme1on7r-byte/Droply.git"
   }
 }

@@ -1,6 +1,10 @@
-name: Droply derleme
+name: Droply build
 on:
   workflow_dispatch:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
 jobs:
   build:
     strategy:
@@ -13,11 +17,56 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install
-      - run: npx electron-builder --publish never
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Validate release version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: node -e "if (process.env.GITHUB_REF_NAME !== 'v' + require('./package.json').version) process.exit(1)"
+      - name: Configure application
+        shell: bash
+        env:
+          DROPLY_SERVER_URL: ${{ secrets.DROPLY_SERVER_URL }}
+          DROPLY_KEY: ${{ secrets.DROPLY_KEY }}
+          DROPLY_ICE_JSON: ${{ secrets.DROPLY_ICE_JSON }}
+        run: |
+          if [ ! -f config.js ]; then node scripts/make-config.js; fi
+          npm run check-config
+      - name: Package installers and update metadata
+        env:
+          CSC_LINK: ${{ runner.os == 'macOS' && secrets.CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ runner.os == 'macOS' && secrets.CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: npx electron-builder --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: Droply-${{ matrix.os }}
+          if-no-files-found: error
           path: |
             dist/*.exe
             dist/*.dmg
+            dist/*.zip
+            dist/*.blockmap
+            dist/latest*.yml
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Droply-*
+          merge-multiple: true
+          path: release-assets
+      - name: Create draft release with all update assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          gh release create "$GITHUB_REF_NAME" release-assets/* --draft --title "DROPLY $GITHUB_REF_NAME" --generate-notes

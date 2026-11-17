@@ -159,6 +159,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   <input id="nameInput" type="text" maxlength="24" placeholder="Username">
   <div id="codeRow" class="field hidden"><small>Your device code</small><div class="codebox"><code id="myCode">â€¦</code><button class="cp ghost" id="copyBtn" title="Copy code" aria-label="Copy code"></button></div><small class="hint">Give this code to a friend so they can add you. It belongs to this device and never changes.</small></div>
   <button id="saveBtn">Get started</button>
+  <button id="updateBtn" class="ghost hidden">Check for updates</button>
   <input id="avFile" type="file" accept="image/*" class="hidden">
 </div></div>
 
@@ -733,10 +734,15 @@ function openSetup(edit) {
   $('#setup').classList.remove('hidden'); $('#nameInput').value = edit ? me.name : ''; pendAv = null; setupAv(me.avatar);
   $('#codeRow').classList.toggle('hidden', !edit); $('#setupX').classList.toggle('hidden', !edit); $('#saveBtn').textContent = edit ? 'Save' : 'Get started';
   if (edit) deviceCode(me.id).then(c => { $('#myCode').textContent = c; });
+  $('#updateBtn').classList.toggle('hidden', !edit);
   $('#nameInput').focus();
 }
 const closeSetup = () => $('#setup').classList.add('hidden');
 $('#setupX').onclick = closeSetup;
+$('#updateBtn').onclick = async () => {
+  const b = $('#updateBtn'); b.disabled = true; b.textContent = 'Checking updates…';
+  try { await api.checkUpdates(); } finally { b.disabled = false; b.textContent = 'Check for updates'; }
+};
 $('#copyBtn').innerHTML = ICON.copy;
 $('#copyBtn').onclick = () => deviceCode(me.id).then(c => copyCode($('#copyBtn'), c));
 $('#pf').addEventListener('click', e => { if (e.target === $('#pf')) closeCard(); });
