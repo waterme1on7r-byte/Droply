@@ -8,7 +8,7 @@ function fixture({ packaged = true, available = true, busy = false, choices = [0
   updater.downloadUpdate = async () => { downloads++; updater.emit('update-downloaded'); };
   updater.quitAndInstall = () => installs++;
   const controller = createUpdater({ app: { isPackaged: packaged, getVersion: () => '2.6.0' }, getUpdater: () => updater,
-    dialog: { showMessageBox: async o => { messages.push(o); return { response: choices.shift() ?? 0 }; } },
+    showDialog: async o => { messages.push(o); return { response: choices.shift() ?? 0 }; },
     isBusy: async () => busy });
   return { controller, updater, messages, get downloads() { return downloads; }, get installs() { return installs; }, get checks() { return checks; } };
 }
