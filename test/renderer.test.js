@@ -66,10 +66,10 @@ test('receiver: oversize data, unannounced files and incomplete files are reject
     const r = loadRenderer(), { t } = r;
     t.onSig('bob', req('v', [{ name: 'ok.bin', size: 4 }])); t.answer(true);
     const ch = fakeCh(), s = t.sess.v; t.recv(s, ch);
-    if (evil === 'oversize') { ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'ok.bin', size: 4 }) }); ch.onmessage({ data: new ArrayBuffer(5) }); }
+    if (evil === 'oversize') { ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'ok.bin', size: 4 }) }); ch.onmessage({ data: r.arrayBuffer(5) }); }
     if (evil === 'unannounced') ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'other', size: 99 }) });
-    if (evil === 'incomplete') { ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'ok.bin', size: 4 }) }); ch.onmessage({ data: new ArrayBuffer(2) }); ch.onmessage({ data: JSON.stringify({ t: 'eof' }) }); }
-    if (evil === 'chunk-before-file') ch.onmessage({ data: new ArrayBuffer(1) });
+    if (evil === 'incomplete') { ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'ok.bin', size: 4 }) }); ch.onmessage({ data: r.arrayBuffer(2) }); ch.onmessage({ data: JSON.stringify({ t: 'eof' }) }); }
+    if (evil === 'chunk-before-file') ch.onmessage({ data: r.arrayBuffer(1) });
     assert.strictEqual(r.state('v'), 'row error', evil); assert(r.aborts.includes('v'), evil);
     assert(!r.saves.some(x => x[0] === 'close'), evil);
   }
@@ -78,7 +78,7 @@ test('receiver only confirms after the file is really on disk', () => {
   const r = loadRenderer(), { t } = r;
   t.onSig('bob', req('ok1', [{ name: 'a.bin', size: 3 }])); t.answer(true);
   const ch = fakeCh(), s = t.sess.ok1; t.recv(s, ch);
-  ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'a.bin', size: 3 }) }); ch.onmessage({ data: new ArrayBuffer(3) });
+  ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'a.bin', size: 3 }) }); ch.onmessage({ data: r.arrayBuffer(3) });
   ch.onmessage({ data: JSON.stringify({ t: 'eof' }) }); ch.onmessage({ data: JSON.stringify({ t: 'done' }) });
   assert(!ch.sent.includes('ok'), 'not yet: write may still be pending');
   r.handlers.saved({ tid: 'ok1', name: 'a.bin', path: '/x/a.bin' });
@@ -88,7 +88,7 @@ test('disk error after "done" reaches the user instead of a fake success', () =>
   const r = loadRenderer(), { t } = r;
   t.onSig('bob', req('de', [{ name: 'a.bin', size: 1 }])); t.answer(true);
   const ch = fakeCh(), s = t.sess.de; t.recv(s, ch);
-  ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'a.bin', size: 1 }) }); ch.onmessage({ data: new ArrayBuffer(1) });
+  ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'a.bin', size: 1 }) }); ch.onmessage({ data: r.arrayBuffer(1) });
   ch.onmessage({ data: JSON.stringify({ t: 'eof' }) }); ch.onmessage({ data: JSON.stringify({ t: 'done' }) });
   r.handlers['save-error']({ tid: 'de', message: 'Disk is full' });
   assert(!ch.sent.includes('ok')); assert.strictEqual(r.state('de'), 'row error');

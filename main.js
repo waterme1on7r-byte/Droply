@@ -7,7 +7,17 @@ if (!gotLock) app.quit();
 
 // Diagnostics: errors go to <userData>/droply.log (Windows: %APPDATA%\Droply\droply.log)
 function log(...a) {
-  try { fs.appendFileSync(path.join(app.getPath('userData'), 'droply.log'), `${new Date().toISOString()} ${a.map(x => x && x.stack || String(x)).join(' ')}\n`); } catch {}
+  const file = path.join(app.getPath('userData'), 'droply.log');
+  try {
+    const line = `${new Date().toISOString()} ${a.map(x => x && x.stack || String(x)).join(' ').slice(0, 16000)}\n`;
+    const size = fs.existsSync(file) ? fs.statSync(file).size : 0;
+    if (size + Buffer.byteLength(line) > 1024 * 1024) {
+      const previous = file + '.1';
+      try { fs.unlinkSync(previous); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+      try { fs.renameSync(file, previous); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    }
+    fs.appendFileSync(file, line);
+  } catch {}
 }
 process.on('unhandledRejection', e => log('unhandledRejection', e));
 process.on('uncaughtException', e => { log('uncaughtException', e); try { dialog.showErrorBox('Droply error', String(e && e.stack || e)); } catch {} });
@@ -20,7 +30,6 @@ const iconFile = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
 const iconPath = () => app.isPackaged ? path.join(process.resourcesPath, iconFile) : path.join(__dirname, 'build', iconFile);
 
 let desktop, tray, quitting = false;
-const pendingDialogs = new Map(); let dialogId = 0;
 let win, profile = { id: crypto.randomUUID(), name: '', avatar: '' };
 const pf = () => path.join(app.getPath('userData'), 'profile.json');
 // Atomic write (temp file + rename) so a crash mid-write can't corrupt the profile / lose the identity
@@ -28,7 +37,9 @@ function saveProfile() {
   try { const f = pf(), tmp = f + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(profile)); fs.renameSync(tmp, f); }
   catch (err) { console.error('Could not save profile:', err); }
 }
-const okAvatar = a => a === '' || (typeof a === 'string' && a.length < 300000 && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(a));
+const avatarPattern = /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/;
+const okAvatar = a => a === '' || (typeof a === 'string' && a.length < 60000 && avatarPattern.test(a));
+const okStoredAvatar = a => a === '' || (typeof a === 'string' && a.length < 300000 && avatarPattern.test(a));
 
 // ---- Friends: stored per installation in <userData>/friends.json (deleted with the app data on uninstall) ----
 const ff = () => path.join(app.getPath('userData'), 'friends.json');
@@ -59,18 +70,29 @@ function saveSocial() {
 
 const MAX_OPEN = 8;
 const open = new Map();        // tid -> { ws, dest, fd }  (files currently being received)
+const MAX_CHUNK_BYTES = 256 * 1024, MAX_PENDING_PER_TRANSFER = 64 * 1024 * 1024, MAX_PENDING_TOTAL = 512 * 1024 * 1024;
+let pendingSaveBytes = 0;
+const pendingByTransfer = new Map();
 const savedPaths = new Set();  // files we saved ourselves (the only ones "show in folder" may reveal)
 
 // Only accept IPC coming from our own window
 const fromUI = e => !!win && !win.isDestroyed() && e.sender === win.webContents;
 const toUI = (ch, data) => { if (win && !win.isDestroyed()) win.webContents.send(ch, data); };
+const pendingDialogs = new Map(); let dialogId = 0;
 function showAppDialog(options = {}) {
   const id = ++dialogId;
-  return new Promise(resolve => { pendingDialogs.set(id, resolve); toUI('app-dialog', { id, title: options.title || 'Droply', message: options.message || '', detail: options.detail || '', buttons: options.buttons || ['OK'] }); });
+  return new Promise(resolve => {
+    const buttons = Array.isArray(options.buttons) && options.buttons.length ? options.buttons.slice(0, 4) : ['OK'];
+    pendingDialogs.set(id, { resolve, count: buttons.length });
+    toUI('app-dialog', { id, title: options.title || 'Droply', message: options.message || '', detail: options.detail || '', buttons });
+  });
 }
 ipcMain.handle('dialog-response', (e, id, response) => {
-  if (!fromUI(e) || !Number.isInteger(id) || !pendingDialogs.has(id)) return false;
-  const resolve = pendingDialogs.get(id); pendingDialogs.delete(id); resolve({ response: Number.isInteger(response) ? response : 0 }); return true;
+  if (!fromUI(e) || !Number.isSafeInteger(id) || !pendingDialogs.has(id)) return false;
+  const pending = pendingDialogs.get(id); pendingDialogs.delete(id);
+  const choice = Number.isInteger(response) && response >= 0 && response < pending.count ? response : 0;
+  pending.resolve({ response: choice });
+  return true;
 });
 
 // The file name comes from the other person: never trust it as a path
@@ -115,15 +137,18 @@ ipcMain.on('notify', (e, kind, body) => {
 });
 ipcMain.on('copy', (e, text) => { if (fromUI(e) && typeof text === 'string' && CODE_RE.test(text)) clipboard.writeText(text); });
 
-ipcMain.on('save-open', (e, tid, name) => {
+ipcMain.on('save-open', (e, tid, name, size) => {
   if (!fromUI(e) || typeof tid !== 'string') return;
-  const prev = open.get(tid); if (prev) { open.delete(tid); removeFile(prev); }
+  if (open.has(tid)) {
+    const prev = open.get(tid); open.delete(tid); removeFile(prev);
+    return toUI('save-error', { tid, message: 'Unexpected file sequence' });
+  }
   if (open.size >= MAX_OPEN) return toUI('save-error', { tid, message: 'Too many files open at once' });
   let made;
-  try { const target = desktop.target(tid, name); made = createUnique(target.dir, target.name); }
+  try { const target = desktop.target(tid, name, size); made = createUnique(target.dir, target.name); }
   catch (err) { console.error(err); return toUI('save-error', { tid, message: "Couldn't create the file in Downloads" }); }
   const ws = fs.createWriteStream(made.p, { fd: made.fd });
-  const o = { ws, dest: made.p, fd: made.fd };
+  const o = { ws, dest: made.p, fd: made.fd, size, received: 0 };
   // Without this handler a disk-full / permission error would crash the whole app
   ws.on('error', err => {
     console.error('Write failed:', err);
@@ -136,14 +161,35 @@ ipcMain.on('save-open', (e, tid, name) => {
 ipcMain.on('save-chunk', (e, tid, u8) => {
   if (!fromUI(e)) return;
   const o = open.get(tid); if (!o || !u8) return;
-  // Wrap the received bytes instead of copying them a second time
+  if (!(ArrayBuffer.isView(u8) && u8.BYTES_PER_ELEMENT === 1) && !(u8 instanceof ArrayBuffer)) {
+    open.delete(tid); removeFile(o); return toUI('save-error', { tid, message: 'Invalid file data' });
+  }
+  // Wrap the received bytes instead of copying them a second time.
   const buf = ArrayBuffer.isView(u8) ? Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength) : Buffer.from(u8);
+  const transferPending = pendingByTransfer.get(tid) || 0;
+  if (!buf.length || buf.length > MAX_CHUNK_BYTES || buf.length > o.size - o.received
+      || pendingSaveBytes + buf.length > MAX_PENDING_TOTAL
+      || transferPending + buf.length > MAX_PENDING_PER_TRANSFER) {
+    open.delete(tid); o.failed = true; removeFile(o); return toUI('save-error', { tid, message: 'Transfer exceeded its safe receive limits' });
+  }
+  o.received += buf.length;
+  pendingSaveBytes += buf.length; pendingByTransfer.set(tid, transferPending + buf.length);
   // Tell the renderer once the bytes are really written: it relays this to the sender as flow control
-  o.ws.write(buf, err => { if (!err) toUI('save-wrote', { tid, n: buf.length }); });
+  o.ws.write(buf, err => {
+    pendingSaveBytes = Math.max(0, pendingSaveBytes - buf.length);
+    const left = Math.max(0, (pendingByTransfer.get(tid) || 0) - buf.length);
+    if (left) pendingByTransfer.set(tid, left); else pendingByTransfer.delete(tid);
+    if (!err && !o.failed) toUI('save-wrote', { tid, n: buf.length });
+  });
 });
 ipcMain.on('save-close', (e, tid) => {
   if (!fromUI(e)) return;
-  const o = open.get(tid); if (!o) return; open.delete(tid);
+  const o = open.get(tid); if (!o) return;
+  if (o.received !== o.size) {
+    open.delete(tid); o.failed = true; removeFile(o);
+    return toUI('save-error', { tid, message: 'Received file did not match its approved size' });
+  }
+  open.delete(tid);
   o.ws.once('finish', () => {
     savedPaths.add(o.dest);
     const info = { tid, name: path.basename(o.dest), path: o.dest };
@@ -156,7 +202,7 @@ ipcMain.on('save-close', (e, tid) => {
 // Transfer cancelled / failed: drop the half-written file
 ipcMain.on('save-abort', (e, tid) => {
   if (!fromUI(e)) return;
-  const o = open.get(tid); if (!o) return; open.delete(tid); removeFile(o);
+  const o = open.get(tid); if (!o) return; open.delete(tid); o.failed = true; removeFile(o);
 });
 // Free space in Downloads (null = unknown), so a transfer that can't fit is refused up front
 ipcMain.handle('free-space', async (e, tid) => {
@@ -177,7 +223,7 @@ function start() {
     if (p && typeof p === 'object') {
       if (typeof p.id === 'string' && p.id) profile.id = p.id;
       if (typeof p.name === 'string') profile.name = p.name.slice(0, 24);
-      if (okAvatar(p.avatar)) profile.avatar = p.avatar;
+      if (okStoredAvatar(p.avatar)) profile.avatar = p.avatar;
     }
   } catch (err) {
     // Unreadable profile: keep a copy instead of silently overwriting it with a new identity

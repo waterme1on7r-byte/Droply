@@ -1,5 +1,11 @@
 const fs = require('fs'), path = require('path'), os = require('os');
 const DEFAULTS = { theme: 'dark', askSave: false, friendNotifications: true, incomingNotifications: true, completedNotifications: true, sounds: false, launchAtStartup: false, tray: false };
+const MAX_TRANSFER_FILES = 1000, MAX_TRANSFER_BYTES = 1n << 40n;
+const validTid = tid => typeof tid === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(tid);
+const validManifest = files => Array.isArray(files) && files.length > 0 && files.length <= MAX_TRANSFER_FILES
+  && files.every(f => f && typeof f.name === 'string' && f.name.length > 0 && f.name.length <= 1024
+    && Number.isSafeInteger(f.size) && f.size >= 0 && f.size <= Number(MAX_TRANSFER_BYTES))
+  && files.reduce((sum, f) => sum + BigInt(f.size), 0n) <= MAX_TRANSFER_BYTES;
 function createDesktop({ app, ipcMain, dialog, shell, clipboard, fromUI, toUI, window: getWindow, safeName, log }) {
   const file = n => path.join(app.getPath('userData'), n + '.json');
   function read(n, fallback) { try { return JSON.parse(fs.readFileSync(file(n), 'utf8')); } catch { return fallback; } }
@@ -28,8 +34,9 @@ function createDesktop({ app, ipcMain, dialog, shell, clipboard, fromUI, toUI, w
   });
   handle('choose-downloads', async () => { const r = await dialog.showOpenDialog(getWindow(), { title: 'Choose download folder', defaultPath: settings.downloadDir, properties: ['openDirectory', 'createDirectory'] }); if (!r.canceled) { settings.downloadDir = r.filePaths[0]; write('settings', settings); } return settings.downloadDir; });
   handle('open-downloads', () => shell.openPath(settings.downloadDir));
-  handle('prepare-receive', async (tid, names) => {
-    if (typeof tid !== 'string' || tid.length > 64 || !Array.isArray(names) || names.length > 1000 || destinations.size >= 10) return false;
+  handle('prepare-receive', async (tid, files) => {
+    if (!validTid(tid) || destinations.has(tid) || !validManifest(files) || destinations.size >= 10) return false;
+    const names = files.map(f => f.name);
     let dir = settings.downloadDir;
     if (settings.askSave) { const r = await dialog.showOpenDialog(getWindow(), { title: 'Save incoming transfer to', defaultPath: dir, properties: ['openDirectory', 'createDirectory'] }); if (r.canceled) return false; dir = r.filePaths[0]; }
     // Isolate folder transfers inside an exclusively created directory; never walk existing folders.
@@ -39,7 +46,7 @@ function createDesktop({ app, ipcMain, dialog, shell, clipboard, fromUI, toUI, w
       for (let i = 0; i < 1000; i++) { const candidate = path.join(dir, i ? `DROPLY transfer (${i})` : 'DROPLY transfer'); try { fs.mkdirSync(candidate); root = candidate; break; } catch (e) { if (e.code !== 'EEXIST') throw e; } }
       if (!root) throw Error('Cannot create transfer folder');
     }
-    destinations.set(tid, { dir, root, names: new Set(names) }); return true;
+    destinations.set(tid, { dir, root, files: files.map(f => ({ name: f.name, size: f.size })), next: 0, started: 0n }); return true;
   });
   handle('finish-receive', tid => { destinations.delete(tid); });
   handle('get-history', () => history);
@@ -50,14 +57,18 @@ function createDesktop({ app, ipcMain, dialog, shell, clipboard, fromUI, toUI, w
   handle('open-github', () => shell.openExternal('https://github.com/waterme1on7r-byte/Droply'));
   handle('open-log', () => { const p = path.join(app.getPath('userData'), 'droply.log'); fs.appendFileSync(p, ''); return shell.openPath(p); });
   handle('copy-diagnostics', () => { clipboard.writeText(`DROPLY ${app.getVersion()}\nOS: ${process.platform} ${os.release()} ${process.arch}\nElectron: ${process.versions.electron}\nTheme: ${settings.theme}\nBackground mode: ${settings.tray}`); return true; });
-  return { settings, appearance, record, directory(tid) { return destinations.get(tid)?.dir || settings.downloadDir; }, target(tid, name) {
+  return { settings, appearance, record, directory(tid) { return destinations.get(tid)?.dir || settings.downloadDir; }, target(tid, name, size) {
     const d = destinations.get(tid);
-    if (!d?.root) return { dir: d?.dir || settings.downloadDir, name: safeName(name) };
-    if (!d.names.has(name)) throw Error('Unapproved file');
+    const expected = d?.files[d.next];
+    if (!d || !expected || expected.name !== name || expected.size !== size) throw Error('Unapproved file');
+    d.next++;
+    d.started += BigInt(size);
+    if (d.started > MAX_TRANSFER_BYTES) throw Error('Transfer too large');
+    if (!d.root) return { dir: d.dir, name: safeName(name), size };
     const parts = name.split('/').map(safeName), base = parts.pop(); let dir = d.root;
     if (fs.lstatSync(dir).isSymbolicLink()) throw Error('Unsafe destination');
     for (const part of parts) { dir = path.join(dir, part); try { fs.mkdirSync(dir); } catch (e) { if (e.code !== 'EEXIST') throw e; } const st = fs.lstatSync(dir); if (!st.isDirectory() || st.isSymbolicLink()) throw Error('Unsafe destination'); }
-    return { dir, name: base };
+    return { dir, name: base, size };
   } };
 }
-module.exports = { createDesktop, DEFAULTS };
+module.exports = { createDesktop, DEFAULTS, MAX_TRANSFER_FILES, MAX_TRANSFER_BYTES, validTid, validManifest };
