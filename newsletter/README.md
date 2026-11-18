@@ -1,4 +1,37 @@
-# Droply newsletter / Supabase setup
+# Droply newsletter — connected backend and marketing website
+
+**Status (18 November 2026):** The Supabase database and hardened `newsletter-subscribe` Edge Function (version 2) are deployed. The marketing page at `docs/index.html` now POSTs signups to that endpoint, and `docs/newsletter-privacy.html` is published in the repository. The Electron desktop app is unchanged.
+
+## Security checks completed
+
+- Both newsletter tables have RLS enabled, with no public table access.
+- Anonymous users cannot call the service-only atomic rate-limit SQL function.
+- Each signup requires an email and explicit opt-in, rejects honeypot submissions, and uses strict origin/CORS checks.
+- Server-side abuse controls limit global volume, per-email submissions, and per-IP requests when a gateway IP is available. Only hashed fingerprints are stored, with cleanup on subsequent requests.
+- Server-only privileged Supabase keys are not exposed in the marketing page. Its Content Security Policy restricts scripts, fonts and network requests.
+- Browser tests at 375, 768 and 1280 pixels passed using simulated API responses; no JavaScript/CSP errors or horizontal overflow were detected.
+- The original animated desktop preview, app downloads, contact links and design are unchanged.
+
+## Outstanding production checks
+
+- **Live end-to-end HTTP testing from GitHub Pages is still required.** The tests above used a mocked response, not an actual Supabase signup. Try one voluntary test signup and inspect the Supabase Table Editor afterward.
+- GitHub Pages must be deployed/enabled for the updated marketing site to be public.
+- Signup currently stores explicit consent without confirming email ownership; implement double opt-in and an unsubscribe email workflow before sending bulk newsletters.
+- For stronger protection against distributed bots, add managed bot verification such as Cloudflare Turnstile. An optional server verification hook is already implemented; configure the frontend widget before setting its private secret.
+- The site's general Terms page is still a placeholder; the newsletter privacy page is linked and active.
+
+## Project reference
+
+Supabase project: `zyppzqwqacvdnfiajbpp`
+
+Public endpoint: `https://zyppzqwqacvdnfiajbpp.supabase.co/functions/v1/newsletter-subscribe`
+
+The desktop application, signaling server and their settings were not modified.
+
+---
+
+## Original deployment notes (retained for reference; stages already completed where noted)
+
 
 STATUS (2026-11-18): Supabase project `zyppzqwqacvdnfiajbpp` is connected and healthy. The `create_newsletter_subscribers` migration has been applied, the empty `public.newsletter_subscribers` table is protected by RLS, and the `newsletter-subscribe` Edge Function is deployed and ACTIVE (version 1). The marketing website remains unchanged and still uses the email-app signup flow. A complete live HTTP signup test has NOT been performed yet.
 
@@ -54,9 +87,9 @@ Send this request after deployment (replace zyppzqwqacvdnfiajbpp):
 
 Expected response: HTTP 200, ok: true. Inspect the row in Supabase Table Editor, then remove the test subscriber. Submitting the same email again should not create a duplicate. Test invalid emails and missing consent too. Never use a real person's email for tests without their permission.
 
-## Stage 4: connect the website (NOT done yet)
+## Stage 4: website connection (already completed)
 
-Only after Supabase is ready:
+The integration described below is already live in docs/index.html and must not be installed again:
 
 1. In docs/index.html, remove the existing newsletterForm.addEventListener submit handler that opens a mailto: request. Keeping it alongside a new handler will trigger both flows.
 2. Copy newsletter/site-handler.mjs to docs/newsletter-site-handler.mjs.
