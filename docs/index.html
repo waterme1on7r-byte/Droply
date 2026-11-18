@@ -260,6 +260,20 @@
     .faq-answer { color: var(--muted); padding: 0 68px 22px 23px; font-size: .925rem; line-height: 1.85; }
     .faq-answer p { margin: 0; }
 
+
+    /* Contact CTA: the yellow button complements Droply's blue visual identity. */
+    .contact-section { padding: 14px 0 100px; }
+    .contact-panel { display: flex; align-items: center; justify-content: space-between; gap: 32px; padding: clamp(28px, 5vw, 54px); border: 1px solid rgba(123,181,255,.28); border-radius: 25px; background: radial-gradient(ellipse at 90% 0%, rgba(67,135,233,.24), transparent 55%), linear-gradient(140deg,#14243d,#121c2e); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+    .contact-panel .section-title { margin-bottom: 10px; font-size: clamp(2rem, 3.5vw, 3.1rem); }
+    .contact-panel .section-copy { max-width: 550px; }
+    .btn-contact { flex-shrink: 0; color: #17223c; background: #ffe36e; border-color: #ffe36e; box-shadow: 0 9px 30px rgba(255,227,110,.15); }
+    .btn-contact:hover { background: #fff0a3; border-color: #fff0a3; box-shadow: 0 13px 36px rgba(255,227,110,.24); }
+    @media (max-width: 700px) {
+      .contact-section { padding-bottom: 70px; }
+      .contact-panel { flex-direction: column; align-items: flex-start; gap: 26px; }
+      .btn-contact { width: 100%; }
+    }
+
     /* Footer */
     .site-footer { border-top: 1px solid #ffffff0c; padding: 37px 0 25px; }
     .footer-row { display: flex; align-items: center; justify-content: space-between; gap: 25px; }
@@ -686,6 +700,7 @@
         <a href="#features">Features</a>
         <a href="#security">Security</a>
         <a href="#download">Download</a>
+        <a href="#contact">Contact</a>
       </div>
       <a class="btn btn-primary nav-cta" href="#download">Download <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m-4-4 4 4 4-4M4 19h16"/></svg></a>
       <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-nav">
@@ -842,14 +857,30 @@
         </div>
       </div>
     </section>
+
+    <section class="contact-section section" id="contact" aria-labelledby="contact-title">
+      <div class="container">
+        <div class="contact-panel reveal">
+          <div>
+            <span class="eyebrow">Get in touch</span>
+            <h2 class="section-title" id="contact-title">Questions? <span class="gradient-text">Say hello.</span></h2>
+            <p class="section-copy">Need help, have feedback, or just want to say hi? We're an email away.</p>
+          </div>
+          <a class="btn btn-lg btn-contact" href="mailto:dev.leonb@gmail.com" aria-label="Contact Droply by email at dev.leonb@gmail.com">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            Contact us
+          </a>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
     <div class="container">
       <div class="footer-row"><div class="footer-brand"><a class="brand" href="#top" aria-label="Droply home"><svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#droply-mark"/></svg><span class="brand-name">Droply</span></a><p class="footer-tagline">Drop it. Done.</p></div>
         <nav class="footer-links" aria-label="Footer links">
-          <!-- FOOTER URLS: Privacy / Terms / Contact remain placeholders; GitHub points to the repository. -->
-          <a href="#" data-placeholder="Privacy page">Privacy</a><a href="#" data-placeholder="Terms page">Terms</a><a href="https://github.com/waterme1on7r-byte/Droply">GitHub</a><a href="#" data-placeholder="Contact page">Contact</a>
+          <!-- FOOTER URLS: Privacy / Terms remain placeholders; Contact opens an email and GitHub links to the repository. -->
+          <a href="#" data-placeholder="Privacy page">Privacy</a><a href="#" data-placeholder="Terms page">Terms</a><a href="https://github.com/waterme1on7r-byte/Droply">GitHub</a><a href="mailto:dev.leonb@gmail.com">Contact</a>
         </nav>
       </div>
       <div class="footer-bottom"><span>© 2026 Droply. All rights reserved.</span><span>Made for sharing. <svg viewBox="0 0 64 64" aria-label="drop" role="img"><path d="M32 13C29.4 17.1 20 28.5 20 37a12 12 0 0 0 24 0c0-8.5-9.4-19.9-12-24Z" fill="#9d91ff"/></svg></span></div>
@@ -878,7 +909,7 @@
       macButtons.forEach(btn => btn.classList.add(isWindows ? 'btn-outline' : 'btn-primary'));
       winButtons.forEach(btn => btn.classList.add(isWindows ? 'btn-primary' : 'btn-outline'));
 
-      // REMAINING PLACEHOLDER LINKS: Privacy / Terms / Contact until real URLs are provided.
+      // REMAINING PLACEHOLDER LINKS: Privacy / Terms until real URLs are provided.
       // Remove data-placeholder (and set a real href) to enable the actual destination.
       document.querySelectorAll('a[data-placeholder]').forEach(link => {
         link.addEventListener('click', event => {
@@ -967,24 +998,3 @@
           demo.classList.toggle('is-transferring', sending && !complete);
           demo.classList.toggle('is-complete', complete);
           const progress = !sending ? 0 : complete ? 100 : Math.min(99, Math.round(((phase - 4800) / 6200) * 100));
-          fill.style.width = `${progress}%`;
-          percent.textContent = `${progress}%`;
-          status.textContent = complete ? 'Sent securely to Alex' : 'Sending to Alex · Encrypted';
-          speed.textContent = complete ? 'Transfer complete' : `${(17.2 + Math.sin(now / 800) * 2.1).toFixed(1)} MB/s`;
-          requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
-      }
-
-      // Native details/summary stays accessible even without JavaScript.
-      document.querySelectorAll('.faq-item').forEach(item => {
-        item.addEventListener('toggle', () => {
-          if (item.open) document.querySelectorAll('.faq-item').forEach(other => {
-            if (other !== item) other.open = false;
-          });
-        });
-      });
-    })();
-  </script>
-</body>
-</html>
