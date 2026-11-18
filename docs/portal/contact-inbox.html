@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0b1426">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'sha256-O0tU3ewwk5eHR0zkFpo1VvQK20B+CC3g66Fm+mY0C1I='; style-src 'sha256-PkabUfu1HFoOiPgsc+g910dXKxiAHhgG4eboVT/Bw8I='; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; img-src 'none'; font-src 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'sha256-n/nFoBmnScTckyPyy2p8nfAKtsP2UahYsujTXpOGlls='; style-src 'sha256-E08zza1KTmeEGtyDlrs4RmSMS5Z0ezxpyhX1iEet+04='; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; img-src 'none'; font-src 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
 <title>Droply · Private inbox</title>
 <style>
 :root{color-scheme:dark;--bg:#091428;--surface:#102542;--border:#80baff2b;--yellow:#ffe36e;--muted:#bdcbe0;--blue:#559dff;--green:#9bf0ce;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -95,6 +95,13 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
 .resolution-actions button{min-height:45px;min-width:120px}
 @media(max-width:500px){.resolution-dialog-inner{padding:24px 20px}.resolution-actions button{flex:1}}
 @media(prefers-reduced-motion:reduce){.resolution-dialog[open]{animation:none}}
+
+.inbox-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:7px 0 20px;padding:6px;background:#0b1a31;border:1px solid #8fbdfb34;border-radius:17px;max-width:max-content}
+.inbox-tab{background:transparent;color:#bdd4eb;border:1px solid transparent;border-radius:12px;padding:12px 20px;font-weight:800;letter-spacing:.005em}
+.inbox-tab:hover{background:#1c426c;color:#ffe36e}
+.inbox-tab[aria-pressed="true"]{background:linear-gradient(110deg,#ffe36e,#ffebb1);color:#0b1f3a;border-color:#ffeaa0;box-shadow:0 6px 24px #ffe36e20}
+.inbox-tab:focus-visible{outline:3px solid #9fd5ff;outline-offset:2px}
+@media(max-width:480px){.inbox-tabs{max-width:none;display:grid;grid-template-columns:1fr 1fr;gap:5px}.inbox-tab{padding:10px 7px;font-size:.78rem}}
 </style>
 </head>
 <body>
@@ -117,15 +124,19 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
     <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7C6CFF"/><stop offset="1" stop-color="#4F8EFF"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#lg2)"/><path d="M32 13C29.4 17.1 20 28.5 20 37a12 12 0 0 0 24 0c0-8.5-9.4-19.9-12-24Z" fill="#fff"/></svg>Droply</div>
     <div class="top-right"><span class="user-pill" id="signed-user"></span><button type="button" class="ghost" id="refresh">Refresh</button><button type="button" class="ghost" id="sign-out">Sign out</button></div>
   </header>
-  <div class="titlebar"><div><span class="eyebrow">Private workspace</span><h1>Contact inbox.</h1><span class="muted">Read, organize, and resolve messages sent through Droply.</span></div><div class="status status-resolved">Secured access</div></div>
+  <div class="titlebar"><div><span class="eyebrow">Private workspace</span><h1 id="inbox-heading">Contact inbox.</h1><span class="muted" id="inbox-subtitle">Read, organize, and resolve messages sent through Droply.</span></div><div class="status status-resolved">Secured access</div></div>
+  <div class="inbox-tabs" role="group" aria-label="Inbox sections">
+    <button type="button" class="inbox-tab" data-inbox="contact" aria-pressed="true">Contact messages</button>
+    <button type="button" class="inbox-tab" data-inbox="tickets" aria-pressed="false">Support ticket requests</button>
+  </div>
   <section class="cards" aria-label="Inbox statistics">
-    <div class="stat"><span>All messages</span><strong id="count-all">—</strong></div>
+    <div class="stat"><span id="count-all-label">All messages</span><strong id="count-all">—</strong></div>
     <div class="stat"><span>New</span><strong id="count-new">—</strong></div>
     <div class="stat"><span>Resolved</span><strong id="count-resolved">—</strong></div>
   </section>
   <section class="workspace" aria-label="Message browser">
     <div class="panel">
-      <div class="panel-head"><h2>Messages</h2><label for="search" class="eyebrow">Search loaded messages</label><input id="search" class="search" type="search" placeholder="Search names, email, message…" autocomplete="off">
+      <div class="panel-head"><h2 id="list-heading">Messages</h2><label for="search" class="eyebrow">Search loaded messages</label><input id="search" class="search" type="search" placeholder="Search names, email, message…" autocomplete="off">
         <div class="filters" role="group" aria-label="Filter messages">
           <button type="button" class="filter" data-status="all" aria-pressed="true">All</button>
           <button type="button" class="filter" data-status="new" aria-pressed="false">New</button>
@@ -182,7 +193,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
   const $ = id => document.getElementById(id);
   const KEY = 'droply-contact-admin-session';
   const API_ENDPOINT = 'https://zyppzqwqacvdnfiajbpp.supabase.co/functions/v1/contact-admin';
-  let token = null, all = [], selectedId = null, currentFilter = 'all', offset = 0, totalFilter = 0;
+  let token = null, all = [], selectedId = null, currentFilter = 'all', mailbox = 'contact', offset = 0, totalFilter = 0, viewGeneration = 0;
   const PAGE_SIZE = 50;
   const fmt = value => {try{return new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}catch{return String(value||'')}};
   const short = str => String(str||'').replace(/\s+/g,' ').slice(0,130);
@@ -190,7 +201,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
     const headers = {'Content-Type':'application/json','X-Droply-Admin':'1'};
     if (token) headers.Authorization = 'Bearer ' + token;
     const url = new URL(API_ENDPOINT);url.search = '?mode=' + encodeURIComponent(mode);
-    if (mode === 'messages') { url.searchParams.set('offset',String(offset));url.searchParams.set('status',currentFilter); }
+    if (mode === 'messages' || mode === 'tickets') { url.searchParams.set('offset',String(offset));url.searchParams.set('status',currentFilter); }
     const res = await fetch(url.href,{method:method||'GET',headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});
     let data={};try{data=await res.json()}catch{}
     if (!res.ok) {
@@ -228,6 +239,25 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
     } finally {btn.disabled=false;}
   });
   $('refresh').addEventListener('click',()=>{offset=0;loadMessages(false)});
+  function switchInbox(next){
+    if(next===mailbox)return;
+    mailbox=next;currentFilter='all';offset=0;selectedId=null;all=[];
+    $('search').value='';
+    document.querySelectorAll('[data-inbox]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.inbox===mailbox)));
+    document.querySelectorAll('[data-status]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.status==='all')));
+    const tickets=mailbox==='tickets';
+    $('inbox-heading').textContent=tickets?'Support ticket requests.':'Contact inbox.';
+    $('inbox-subtitle').textContent=tickets?'Chatbot support tickets submitted for the team to review.':'Read, organize, and resolve messages sent through Droply.';
+    $('count-all-label').textContent=tickets?'All tickets':'All messages';
+    $('list-heading').textContent=tickets?'Support tickets':'Messages';
+    $('detail-empty').hidden=false;$('detail-content').hidden=true;
+    $('detail-name').textContent='';
+    $('resolution-summary').hidden=true;
+    loadMessages(false);
+  }
+  document.querySelectorAll('[data-inbox]').forEach(button=>{
+    button.addEventListener('click',()=>switchInbox(button.dataset.inbox));
+  });
   $('load-more').addEventListener('click',async()=>{offset+=PAGE_SIZE;await loadMessages(true)});
   document.querySelectorAll('[data-status]').forEach(btn=>btn.addEventListener('click',()=>{
     currentFilter=btn.dataset.status;offset=0;selectedId=null;
@@ -281,7 +311,10 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
     $('refresh').disabled=true;$('load-more').disabled=true;
     if (!append){$('message-list').replaceChildren(txt('div','empty','Loading messages…'));all=[];}
     try{
-      const result=await call('messages','GET');
+      const activeMailbox=mailbox;
+      const thisRequest=++viewGeneration;
+      const result=await call(activeMailbox==='tickets'?'tickets':'messages','GET');
+      if(activeMailbox!==mailbox||thisRequest!==viewGeneration)return;
       totalFilter=result.totalFiltered||0;
       all=append?all.concat(result.messages||[]):(result.messages||[]);
       $('count-all').textContent=result.total||0;
@@ -299,7 +332,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
     for(const button of [$('mark-new'),$('mark-read'),$('mark-resolved')])button.disabled=true;
     $('detail-feedback').textContent='Saving…';
     try{
-      await call('status','POST',{id,status});
+      await call(mailbox==='tickets'?'ticket-status':'status','POST',{id,status});
       const m=all.find(x=>x.id===id);if(m)m.status=status;
       $('detail-feedback').textContent='Saved.';
       await loadMessages(false);
@@ -348,7 +381,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
     $('resolution-cancel').disabled=true;
     resolutionFeedback.textContent='Saving resolution…';
     try{
-      const result=await call('status','POST',{id,status:'resolved',resolutionNote:note});
+      const result=await call(mailbox==='tickets'?'ticket-status':'status','POST',{id,status:'resolved',resolutionNote:note});
       const existing=all.find(m=>m.id===id);
       if(existing){
         existing.status='resolved';
