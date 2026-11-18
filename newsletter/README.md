@@ -1,6 +1,6 @@
 # Droply newsletter / Supabase setup
 
-STATUS: Supabase project reference received: `zyppzqwqacvdnfiajbpp` (provided by project owner; connection/deployment not yet verified). Migration and function code are prepared in GitHub, but no database migration or Edge Function deployment has been confirmed. The website and desktop app are unchanged.
+STATUS (2026-11-18): Supabase project `zyppzqwqacvdnfiajbpp` is connected and healthy. The `create_newsletter_subscribers` migration has been applied, the empty `public.newsletter_subscribers` table is protected by RLS, and the `newsletter-subscribe` Edge Function is deployed and ACTIVE (version 1). The marketing website remains unchanged and still uses the email-app signup flow. A complete live HTTP signup test has NOT been performed yet.
 
 ## Files prepared
 
@@ -14,7 +14,7 @@ STATUS: Supabase project reference received: `zyppzqwqacvdnfiajbpp` (provided by
 
 The desktop application's root index.html, package.json, JavaScript, configuration, signaling server, release workflows, and marketing website docs/index.html have NOT been changed. The current website continues its email-app-based signup until we deliberately connect Supabase.
 
-## Stage 1: connect the existing Supabase project
+## Stage 1: existing Supabase project — completed
 
 Use the existing Supabase project reference `zyppzqwqacvdnfiajbpp` for marketing newsletter email collection. Ensure the project is appropriate for this use, and do not point Droply's existing desktop app or signaling server at it.
 
@@ -29,7 +29,7 @@ These commands use the existing new files only. You may also run the SQL migrati
 
 In the Supabase dashboard, verify that public.newsletter_subscribers exists with Row Level Security enabled. It must have no policies granting data access to anon or authenticated roles.
 
-## Stage 2: function environment and security
+## Stage 2: function environment and security — verify before launch
 
 Edge Functions automatically receive SUPABASE_URL and a server-side secret key (new SUPABASE_SECRET_KEYS or legacy SUPABASE_SERVICE_ROLE_KEY). These are **server-side only**. Do not place secret keys in docs/index.html, public JavaScript, GitHub repository files, issues or Pages settings.
 
@@ -43,7 +43,7 @@ For stronger public signup abuse resistance, configure Cloudflare Turnstile or e
 
 No IP address is stored by this implementation. Only email, time of opt-in, consent version, source, subscription status, and an optional unsubscribe timestamp are stored.
 
-## Stage 3: test the backend before changing the website
+## Stage 3: test the backend before changing the website — pending
 
 Send this request after deployment (replace zyppzqwqacvdnfiajbpp):
 
