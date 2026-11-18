@@ -21,6 +21,9 @@ Open the private admin link provided to authorized team members. Enter username 
 - Search the loaded list by name, email or message.
 - Filter by New, Read or Resolved.
 - Open message details and mark a message New / Read / Resolved.
+- Clicking **Resolve** opens a themed dialog where you must enter a private **resolution note** (5–2000 characters) before the status is changed.
+- The system saves the note, the verified administrator username and the resolution timestamp in `contact_messages`; these details appear when you reopen the message.
+- Existing messages resolved before this feature keep their original status and show an explanation when no note was recorded. Reopening an issue preserves the previous note for reference.
 - Refresh or load more older messages.
 - Sign out; browser-tab sessions automatically expire within 45 minutes.
 
@@ -52,7 +55,12 @@ The originally supplied passwords were shared in chat and are relatively short f
 - Service-role password checking rejected an incorrect password.
 - Anonymous roles cannot read contact messages or admin hashes or invoke the credential-check RPC.
 - A temporary contact message was successfully changed from New to Read to Resolved and deleted after testing.
-- The `contact-admin` Edge Function is ACTIVE at version 2; it redirects HTML page requests to GitHub Pages and handles authenticated API requests.
+- The `contact-admin` Edge Function is ACTIVE at version 5; it redirects HTML page requests to GitHub Pages and handles authenticated API requests, including validated resolution notes.
 - A full live login test and GitHub Pages publication have **not** been independently verified from this environment. Verify the workflow and open the page in a browser.
 
 **Not modified:** marketing website files, newsletter signup, desktop app, installers, signaling server, or Contact us form.
+## Resolution notes schema
+
+The migration `supabase/migrations/20261118234000_contact_resolution_notes.sql` adds nullable `resolution_note`, `resolved_by` and `resolved_at` columns to the existing private `contact_messages` table. The Edge Function requires a note when transitioning to Resolved; it derives `resolved_by` from the validated session, not the browser. Stored text is displayed with `textContent` to avoid HTML injection.
+
+The server retains its 1 KiB default login request limit, but permits up to 12 KiB JSON for resolution updates so that international-language notes are supported. The original public contact form, marketing page, and desktop app are unchanged.
