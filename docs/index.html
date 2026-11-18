@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
+  <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'sha256-bIykCxfb9AQrP2zFayP+6qlKoli5pA+oLo9gUIu89BM='; style-src 'sha256-hgDnJgQPYJVzDixV0dM6FFPHsLwxkKBQSjmGN1kwwDI=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -705,6 +707,12 @@
     .newsletter-note { margin: 14px 0 0; color: #bfcce0; font-size: .75rem; line-height: 1.55; }
     .newsletter-feedback { margin: 12px 0 0; color: #ffea9b; font-size: .78rem; line-height: 1.5; }
     .newsletter-feedback:empty { display: none; }
+    .newsletter-note a { color: #FFE36E; text-underline-offset: 3px; }
+    .newsletter-note a:hover { color: #fff3b4; }
+    .newsletter-hp { position: absolute !important; left: -10000px !important; top: auto !important; height: 1px !important; width: 1px !important; overflow: hidden !important; pointer-events: none; }
+    .newsletter-submit:disabled { cursor: wait; opacity: .74; transform: none; }
+    .newsletter-feedback[data-state="error"] { color: #ffd6ac; }
+    .newsletter-feedback[data-state="success"] { color: #c8fbd4; }
     @media (max-width: 940px) { .newsletter-panel { grid-template-columns: 1fr; gap: 26px; } .newsletter-copy { max-width: 590px; } }
     @media (max-width: 540px) { .newsletter-section { padding-bottom: 75px; } .newsletter-panel { padding: 24px 19px; border-radius: 21px; } .newsletter-form-area { padding: 20px 15px; } .newsletter-input-row { flex-direction: column; } .newsletter-submit { width: 100%; } }
   </style>
@@ -929,7 +937,8 @@
                 </button>
               </div>
               <label class="newsletter-optin"><input id="newsletter-consent" type="checkbox" required><span>Yes, I want to receive occasional email updates about Droply.</span></label>
-              <p id="newsletter-note" class="newsletter-note">This opens your email app with a ready-to-send signup request. Please press Send to join; no address is stored on this page.</p>
+              <div class="newsletter-hp" aria-hidden="true"><label for="newsletter-website">Leave this field blank</label><input type="text" id="newsletter-website" name="website" tabindex="-1" autocomplete="off"></div>
+              <p id="newsletter-note" class="newsletter-note">We only use your email for Droply updates. You can opt out anytime. <a href="newsletter-privacy.html">How we protect your email</a>.</p>
               <p id="newsletter-feedback" class="newsletter-feedback" role="status" aria-live="polite" aria-atomic="true"></p>
             </form>
           </div>
@@ -942,8 +951,8 @@
     <div class="container">
       <div class="footer-row"><div class="footer-brand"><a class="brand" href="#top" aria-label="Droply home"><svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#droply-mark"/></svg><span class="brand-name">Droply</span></a><p class="footer-tagline">Drop it. Done.</p></div>
         <nav class="footer-links" aria-label="Footer links">
-          <!-- FOOTER URLS: Privacy / Terms remain placeholders; Contact opens an email and GitHub links to the repository. -->
-          <a href="#" data-placeholder="Privacy page">Privacy</a><a href="#" data-placeholder="Terms page">Terms</a><a href="#newsletter">Newsletter</a><a href="https://github.com/waterme1on7r-byte/Droply">GitHub</a><a href="mailto:dev.leonb@gmail.com">Contact</a>
+          <!-- FOOTER URLS: Newsletter privacy is published; Terms remains a placeholder. -->
+          <a href="newsletter-privacy.html">Newsletter privacy</a><a href="#" data-placeholder="Terms page">Terms</a><a href="#newsletter">Newsletter</a><a href="https://github.com/waterme1on7r-byte/Droply">GitHub</a><a href="mailto:dev.leonb@gmail.com">Contact</a>
         </nav>
       </div>
       <div class="footer-bottom"><span>© 2026 Droply. All rights reserved.</span><span>Made for sharing. <svg viewBox="0 0 64 64" aria-label="drop" role="img"><path d="M32 13C29.4 17.1 20 28.5 20 37a12 12 0 0 0 24 0c0-8.5-9.4-19.9-12-24Z" fill="#9d91ff"/></svg></span></div>
@@ -998,3 +1007,142 @@
       navLinks.forEach(link => link.addEventListener('click', closeMenu));
       document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
       document.addEventListener('click', event => { if (!event.target.closest('.nav-wrap')) closeMenu(); });
+      window.addEventListener('resize', () => { if (innerWidth > 700) closeMenu(); }, { passive: true });
+      const updateHeader = () => header.classList.toggle('is-scrolled', window.scrollY > 12);
+      window.addEventListener('scroll', updateHeader, { passive: true });
+      updateHeader();
+
+      // Keep the current section highlighted in the navigation.
+      const sectionIds = ['how-it-works', 'features', 'security', 'download'];
+      if ('IntersectionObserver' in window) {
+        const sections = sectionIds.map(id => document.getElementById(id));
+        const sectionObserver = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            navLinks.forEach(link => {
+              const active = link.getAttribute('href') === '#' + entry.target.id;
+              link.classList.toggle('active', active);
+              if (active) link.setAttribute('aria-current', 'location');
+              else link.removeAttribute('aria-current');
+            });
+          });
+        }, { rootMargin: '-25% 0px -58% 0px', threshold: 0 });
+        sections.forEach(section => sectionObserver.observe(section));
+      }
+
+      // Scroll-reveal effects with a no-JavaScript / reduced-motion-friendly default.
+      if ('IntersectionObserver' in window && !reducedMotion.matches) {
+        const reveals = document.querySelectorAll('.reveal');
+        reveals.forEach((item, index) => {
+          item.classList.add('will-reveal');
+          if (item.classList.contains('step-card') || item.classList.contains('feature-card')) {
+            item.style.transitionDelay = `${(index % 3) * 85}ms`;
+          }
+        });
+        const revealObserver = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              revealObserver.unobserve(entry.target);
+            }
+          });
+        }, { threshold: .08, rootMargin: '0px 0px -25px 0px' });
+        reveals.forEach(el => revealObserver.observe(el));
+      }
+
+      // Real desktop screenshot + illustrative walkthrough (not a real transfer).
+      // Start at the empty state, select a peer, drop a sample file, then animate progress.
+      // Motion stops automatically for visitors who prefer reduced motion.
+      if (!reducedMotion.matches) {
+        const demo = document.getElementById('app-demo');
+        const percent = document.getElementById('transfer-percent');
+        const fill = document.getElementById('progress-fill');
+        const speed = document.getElementById('transfer-speed');
+        const status = document.getElementById('demo-transfer-status');
+        const start = performance.now();
+        const duration = 13000;
+        function tick(now) {
+          const phase = (now - start) % duration;
+          const connected = phase >= 1800;
+          const sending = phase >= 4800;
+          const complete = phase >= 11000;
+          demo.classList.toggle('is-peer-connected', connected);
+          demo.classList.toggle('is-transferring', sending && !complete);
+          demo.classList.toggle('is-complete', complete);
+          const progress = !sending ? 0 : complete ? 100 : Math.min(99, Math.round(((phase - 4800) / 6200) * 100));
+          fill.style.width = `${progress}%`;
+          percent.textContent = `${progress}%`;
+          status.textContent = complete ? 'Sent securely to Alex' : 'Sending to Alex · Encrypted';
+          speed.textContent = complete ? 'Transfer complete' : `${(17.2 + Math.sin(now / 800) * 2.1).toFixed(1)} MB/s`;
+          requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      }
+
+
+      // Marketing-only signup. No Supabase keys, passwords or privileged tokens
+      // are embedded in this public page. The HTTPS Edge Function validates,
+      // limits and stores consent server-side; the database is never exposed.
+      const newsletterForm = document.getElementById('newsletter-form');
+      const newsletterEmail = document.getElementById('newsletter-email');
+      const newsletterConsent = document.getElementById('newsletter-consent');
+      const newsletterFeedback = document.getElementById('newsletter-feedback');
+      const newsletterSubmit = newsletterForm.querySelector('button[type="submit"]');
+      const newsletterEndpoint = 'https://zyppzqwqacvdnfiajbpp.supabase.co/functions/v1/newsletter-subscribe';
+      newsletterForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (!newsletterForm.reportValidity() || newsletterSubmit.disabled) return;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+        newsletterSubmit.disabled = true;
+        newsletterSubmit.setAttribute('aria-busy', 'true');
+        newsletterFeedback.dataset.state = '';
+        newsletterFeedback.textContent = 'Sending your signup…';
+        try {
+          const response = await fetch(newsletterEndpoint, {
+            method: 'POST',
+            mode: 'cors',
+            credentials: 'omit',
+            referrerPolicy: 'no-referrer',
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: newsletterEmail.value.trim(),
+              consent: newsletterConsent.checked,
+              website: newsletterForm.elements.namedItem('website')?.value || ''
+            }),
+            signal: controller.signal
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.ok !== true) {
+            throw new Error(response.status === 429
+              ? 'Too many attempts. Please try again later.'
+              : 'Unable to save your signup right now. Please try again.');
+          }
+          newsletterFeedback.dataset.state = 'success';
+          newsletterFeedback.textContent = 'Thanks! Your newsletter signup request has been received.';
+          newsletterForm.reset();
+        } catch (error) {
+          newsletterFeedback.dataset.state = 'error';
+          newsletterFeedback.textContent = error && error.name === 'AbortError'
+            ? 'The request timed out. Please try again.'
+            : error instanceof Error ? error.message : 'Could not sign you up. Please try again.';
+        } finally {
+          clearTimeout(timeout);
+          newsletterSubmit.disabled = false;
+          newsletterSubmit.removeAttribute('aria-busy');
+        }
+      });
+
+      // Native details/summary stays accessible even without JavaScript.
+      document.querySelectorAll('.faq-item').forEach(item => {
+        item.addEventListener('toggle', () => {
+          if (item.open) document.querySelectorAll('.faq-item').forEach(other => {
+            if (other !== item) other.open = false;
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
