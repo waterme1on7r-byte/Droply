@@ -22,7 +22,7 @@ function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,
    try{
     const url=new URL('/auth/register',base);url.protocol=base.protocol==='wss:'?'https:':'http:';
     const response=await fetcher(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:getProfile().id,token}),redirect:'error',signal:AbortSignal.timeout(30000)});
-    if(response.status===409){emit('locked','This device identity is already in use. Restore its existing profile data rather than resetting it.');return;}
+    if(response.status===409){emit('locked','This device is already registered. Open Settings → Device access to recover it with a one-time invitation.');return;}
     if(!response.ok)throw Error('Registration unavailable');
     const result=await response.json();if(result.id!==getProfile().id)throw Error('Identity mismatch');
     write(token,true);needsRegistration=false;
