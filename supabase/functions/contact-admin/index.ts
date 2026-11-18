@@ -142,7 +142,7 @@ Deno.serve(async (req:Request):Promise<Response>=>{
     }});
   }
   if(req.method!=="POST"&&req.method!=="GET")return fail(405,"Method not allowed.");
-  if(mode!=="login"&&mode!=="whoami"&&mode!=="messages"&&mode!=="status")return fail(404,"Not found.");
+  if(!["login","whoami","messages","status","tickets","ticket-status"].includes(mode))return fail(404,"Not found.");
   if(origin!==ADMIN_UI_ORIGIN||req.headers.get("X-Droply-Admin")!=="1")return fail(403,"Forbidden.");
   const serviceKey=getKey(),projectUrl=Deno.env.get("SUPABASE_URL");
   if(!serviceKey||!projectUrl)return fail(503,"Admin service unavailable.");
@@ -177,32 +177,40 @@ Deno.serve(async (req:Request):Promise<Response>=>{
       if(req.method!=="GET")return fail(405,"Method not allowed.");
       return response(200,{ok:true,username:identity});
     }
-    if(mode==="messages"){
+    if(mode==="messages"||mode==="tickets"){
       if(req.method!=="GET")return fail(405,"Method not allowed.");
+      const tickets=mode==="tickets";
+      const table=tickets?"support_tickets":"contact_messages";
       const offsetValue=Number(url.searchParams.get("offset")||"0");
       if(!Number.isInteger(offsetValue)||offsetValue<0||offsetValue>10000)
         return fail(400,"Invalid page.");
       const status=url.searchParams.get("status")||"all";
       if(!["all","new","read","resolved"].includes(status))return fail(400,"Invalid filter.");
-      let query=admin.from("contact_messages")
-        .select("id,sender_name,sender_email,body,status,created_at,resolution_note,resolved_by,resolved_at",{count:"exact"})
+      let query=admin.from(table)
+        .select(tickets
+          ? "id,sender_name,sender_email,summary,status,created_at,resolution_note,resolved_by,resolved_at"
+          : "id,sender_name,sender_email,body,status,created_at,resolution_note,resolved_by,resolved_at",
+          {count:"exact"})
         .order("created_at",{ascending:false}).range(offsetValue,offsetValue+49);
       if(status!=="all")query=query.eq("status",status);
       const [messagesResult,allResult,newResult,resolvedResult]=await Promise.all([
         query,
-        admin.from("contact_messages").select("id",{count:"exact",head:true}),
-        admin.from("contact_messages").select("id",{count:"exact",head:true}).eq("status","new"),
-        admin.from("contact_messages").select("id",{count:"exact",head:true}).eq("status","resolved")
+        admin.from(table).select("id",{count:"exact",head:true}),
+        admin.from(table).select("id",{count:"exact",head:true}).eq("status","new"),
+        admin.from(table).select("id",{count:"exact",head:true}).eq("status","resolved")
       ]);
       if(messagesResult.error||allResult.error||newResult.error||resolvedResult.error)
         return fail(503,"Unable to read inbox right now.");
       return response(200,{
-        ok:true,messages:messagesResult.data||[],totalFiltered:messagesResult.count||0,
+        ok:true,messages:(messagesResult.data||[]).map((item:Record<string,unknown>)=>({
+          ...item,body:tickets?item.summary:item.body
+        })),totalFiltered:messagesResult.count||0,
         total:allResult.count||0,newCount:newResult.count||0,resolvedCount:resolvedResult.count||0
       });
     }
-    if(mode==="status"){
+    if(mode==="status"||mode==="ticket-status"){
       if(req.method!=="POST")return fail(405,"Method not allowed.");
+      const table=mode==="ticket-status"?"support_tickets":"contact_messages";
       // Long resolution notes may use multi-byte UTF-8. Login requests
       // retain the much smaller default body limit above.
       const input=await parseBody(req,12000);
@@ -226,7 +234,7 @@ Deno.serve(async (req:Request):Promise<Response>=>{
       const changes=status==="resolved"
         ? {status,resolution_note:(incomingNote as string).trim(),resolved_by:identity,resolved_at:new Date().toISOString()}
         : {status};
-      const {data,error}=await admin.from("contact_messages")
+      const {data,error}=await admin.from(table)
         .update(changes).eq("id",id)
         .select("id,status,resolution_note,resolved_by,resolved_at").maybeSingle();
       if(error)return fail(503,"Unable to update this message.");
