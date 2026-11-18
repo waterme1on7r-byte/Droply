@@ -27,8 +27,8 @@ footer{border-top:1px solid #a9c9f52d;padding-top:26px;margin-top:35px;color:#ae
 <h1>Support privacy.</h1>
 <p class="meta">Updated 18 November 2026 · Applies to the website's Get help chatbot and support ticket requests, not desktop file transfers.</p>
 <section class="card">
-<h2>AI chat</h2>
-<p>When you use the AI chatbot, your recent conversation messages are sent through Droply's support service to OpenAI to generate responses. The chatbot keeps conversation context in your browser tab during the chat. Droply's chat endpoint does not intentionally save conversation messages in its own database or include the message text in application logs. The OpenAI request sets <code>store: false</code>, but OpenAI and hosting providers may still process or retain data in accordance with their applicable policies and settings. Avoid sharing passwords, private keys, file contents, or other sensitive details.</p>
+<h2>Free guided support</h2>
+<p>The Get help chat uses a built-in troubleshooting guide, not generative AI. Your questions are transmitted to Droply's Supabase support endpoint to select a prepared answer; they are not forwarded to OpenAI or another language-model provider. Recent chat messages remain in your browser tab until you clear the chat or close the page. Droply's endpoint does not intentionally save ordinary chat messages in its database or include them in application logs, although hosting infrastructure may process connection metadata. Avoid sharing passwords, private keys, file contents or other sensitive information.</p>
 <h2>Support tickets</h2>
 <p>When you explicitly select Create support ticket, review your issue summary and press Submit ticket, the name, email address and summary you enter are saved in a separate private Supabase support-ticket table. Only the authorized Droply administrators can review and update the ticket and their resolution notes. Chatbot conversations are not automatically submitted as tickets.</p>
 <h2>Why we collect tickets</h2>
