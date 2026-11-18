@@ -1,6 +1,6 @@
 # Droply newsletter / Supabase setup
 
-STATUS: Code prepared in GitHub. No Supabase project, database, subscriber list, Edge Function deployment, or email provider has been set up. The website and desktop app are unchanged.
+STATUS: Supabase project reference received: `zyppzqwqacvdnfiajbpp` (provided by project owner; connection/deployment not yet verified). Migration and function code are prepared in GitHub, but no database migration or Edge Function deployment has been confirmed. The website and desktop app are unchanged.
 
 ## Files prepared
 
@@ -14,14 +14,14 @@ STATUS: Code prepared in GitHub. No Supabase project, database, subscriber list,
 
 The desktop application's root index.html, package.json, JavaScript, configuration, signaling server, release workflows, and marketing website docs/index.html have NOT been changed. The current website continues its email-app-based signup until we deliberately connect Supabase.
 
-## Stage 1: create the Supabase project
+## Stage 1: connect the existing Supabase project
 
-Create a **separate new Supabase project** for marketing newsletter email collection. Do not point Droply's existing desktop app or signaling server at this project.
+Use the existing Supabase project reference `zyppzqwqacvdnfiajbpp` for marketing newsletter email collection. Ensure the project is appropriate for this use, and do not point Droply's existing desktop app or signaling server at it.
 
 From the root of a local clone of this repository, run:
 
     npx supabase login
-    npx supabase link --project-ref YOUR_PROJECT_REF
+    npx supabase link --project-ref zyppzqwqacvdnfiajbpp
     npx supabase db push
     npx supabase functions deploy newsletter-subscribe --no-verify-jwt
 
@@ -45,9 +45,9 @@ No IP address is stored by this implementation. Only email, time of opt-in, cons
 
 ## Stage 3: test the backend before changing the website
 
-Send this request after deployment (replace YOUR_PROJECT_REF):
+Send this request after deployment (replace zyppzqwqacvdnfiajbpp):
 
-    curl -i -X POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/newsletter-subscribe \
+    curl -i -X POST https://zyppzqwqacvdnfiajbpp.supabase.co/functions/v1/newsletter-subscribe \
       -H 'Origin: https://waterme1on7r-byte.github.io' \
       -H 'Content-Type: application/json' \
       --data '{"email":"test@example.com","consent":true,"website":""}'
@@ -65,7 +65,7 @@ Only after Supabase is ready:
        <script type="module">
          import { attachNewsletterForm } from "./newsletter-site-handler.mjs";
          attachNewsletterForm({
-           endpoint: "https://YOUR_PROJECT_REF.supabase.co/functions/v1/newsletter-subscribe"
+           endpoint: "https://zyppzqwqacvdnfiajbpp.supabase.co/functions/v1/newsletter-subscribe"
          });
        </script>
 
