@@ -185,7 +185,7 @@ Deno.serve(async (req:Request):Promise<Response>=>{
       const status=url.searchParams.get("status")||"all";
       if(!["all","new","read","resolved"].includes(status))return fail(400,"Invalid filter.");
       let query=admin.from("contact_messages")
-        .select("id,sender_name,sender_email,body,status,created_at",{count:"exact"})
+        .select("id,sender_name,sender_email,body,status,created_at,resolution_note,resolved_by,resolved_at",{count:"exact"})
         .order("created_at",{ascending:false}).range(offsetValue,offsetValue+49);
       if(status!=="all")query=query.eq("status",status);
       const [messagesResult,allResult,newResult,resolvedResult]=await Promise.all([
@@ -208,8 +208,25 @@ Deno.serve(async (req:Request):Promise<Response>=>{
       if(typeof id!=="string"||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id)||
          !["new","read","resolved"].includes(status as string))
         return fail(422,"Invalid message update.");
+      // Resolution notes are required for new resolutions. The server, not
+      // the browser, assigns the resolver identity and timestamp.
+      const incomingNote=input?.resolutionNote;
+      if(status==="resolved" &&
+         (typeof incomingNote!=="string" ||
+          incomingNote.trim().length<5 ||
+          incomingNote.trim().length>2000 ||
+          /[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f]/.test(incomingNote))) {
+        return fail(422,"Please provide a resolution note (5 to 2000 characters).");
+      }
+      if(status!=="resolved" && incomingNote!==undefined) {
+        return fail(422,"Resolution notes can only be saved when resolving.");
+      }
+      const changes=status==="resolved"
+        ? {status,resolution_note:(incomingNote as string).trim(),resolved_by:identity,resolved_at:new Date().toISOString()}
+        : {status};
       const {data,error}=await admin.from("contact_messages")
-        .update({status}).eq("id",id).select("id,status").maybeSingle();
+        .update(changes).eq("id",id)
+        .select("id,status,resolution_note,resolved_by,resolved_at").maybeSingle();
       if(error)return fail(503,"Unable to update this message.");
       if(!data)return fail(404,"Message not found.");
       return response(200,{ok:true,message:data});
