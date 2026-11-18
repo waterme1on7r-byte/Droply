@@ -110,7 +110,7 @@ The public endpoint URL is safe to include in browser code. The privileged Supab
 
 ## Consent, email sending and future work
 
-This release captures an explicit checkbox opt-in and stores the consent timestamp, but **does not implement double opt-in confirmation**. It also does not send newsletters, verify ownership of email addresses, send confirmation emails, generate unsubscribe links, or manage campaigns.
+This release records an explicit newsletter opt-in when a visitor clicks **Sign up**, with the newsletter-purpose and privacy notice displayed next to the form; there is **no separate checkbox**. A server-side timestamp records this action. It **does not implement double opt-in confirmation**. It also does not send newsletters, verify ownership of email addresses, send confirmation emails, generate unsubscribe links, or manage campaigns.
 
 Before sending campaigns, choose an email provider, build a confirmation and unsubscribe flow, publish a privacy notice, and decide how to honor data deletion/access requests (contact: dev.leonb@gmail.com). A repeated signup will not automatically reactivate a previously unsubscribed email.
 
