@@ -15,3 +15,8 @@ verify_jwt = false
 [functions.contact-admin]
 # Custom server-verified admin login/session; only authorized admins can read inbox data.
 verify_jwt = false
+
+[functions.droply-chat]
+# Public website chat + visitor-confirmed ticket creation. Requests are validated
+# and rate-limited inside the Edge Function. Service keys stay on the server.
+verify_jwt = false
