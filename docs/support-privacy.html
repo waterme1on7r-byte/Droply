@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow"><meta name="theme-color" content="#121214">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none';script-src 'none';style-src 'unsafe-inline';img-src 'none';font-src 'none';base-uri 'none';object-src 'none';form-action 'none'">
+<meta name="description" content="Privacy information for Droply AI support chat and support tickets.">
+<title>Support privacy — Droply</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#091529;color:#ffe36e}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 85% 0%,#173f76,#0a1932 42%,#081225)}
+main{max-width:830px;margin:auto;padding:clamp(26px,6vw,68px) 22px 90px}
+a{color:#ffe36e;text-underline-offset:3px}a:focus-visible{outline:3px solid #92c8ff;outline-offset:3px}
+.brand{font-weight:800;font-size:1.5rem;text-decoration:none;letter-spacing:-.03em}
+.back{display:block;margin:32px 0;color:#b6d8ff}
+h1{font-size:clamp(2.3rem,6vw,4rem);letter-spacing:-.05em;line-height:1.1}
+h2{font-size:1.22rem;margin:30px 0 8px}
+p,li{color:#e0e7f1;line-height:1.75}
+.meta{color:#b8cbe2;font-size:.85rem}
+.card{border:1px solid #8cbfff50;border-radius:22px;padding:clamp(22px,5vw,38px);background:#0d2341d9}
+footer{border-top:1px solid #a9c9f52d;padding-top:26px;margin-top:35px;color:#aec0d4;font-size:.85rem}
+</style>
+</head>
+<body><main>
+<a class="brand" href="index.html">Droply</a><a class="back" href="index.html">← Back to Droply</a>
+<h1>Support privacy.</h1>
+<p class="meta">Updated 18 November 2026 · Applies to the website's Get help chatbot and support ticket requests, not desktop file transfers.</p>
+<section class="card">
+<h2>AI chat</h2>
+<p>When you use the AI chatbot, your recent conversation messages are sent through Droply's support service to OpenAI to generate responses. The chatbot keeps conversation context in your browser tab during the chat. Droply's chat endpoint does not intentionally save conversation messages in its own database or include the message text in application logs. The OpenAI request sets <code>store: false</code>, but OpenAI and hosting providers may still process or retain data in accordance with their applicable policies and settings. Avoid sharing passwords, private keys, file contents, or other sensitive details.</p>
+<h2>Support tickets</h2>
+<p>When you explicitly select Create support ticket, review your issue summary and press Submit ticket, the name, email address and summary you enter are saved in a separate private Supabase support-ticket table. Only the authorized Droply administrators can review and update the ticket and their resolution notes. Chatbot conversations are not automatically submitted as tickets.</p>
+<h2>Why we collect tickets</h2>
+<p>We use ticket information to investigate problems, follow up with you and manage issue resolution. Your ticket is separate from the marketing newsletter and from ordinary Contact us messages. We do not sell your support information.</p>
+<h2>Abuse protection</h2>
+<p>Our server uses temporary rate-limit counters derived from protected one-way identifiers to restrict spam. We do not put raw IP addresses into support ticket records. Hosting providers may process connection metadata as part of normal logs.</p>
+<h2>Access, deletion and replies</h2>
+<p>Ticket records are kept as long as reasonably needed for support and follow-up, subject to deletion requests and applicable legal requirements. To ask for a copy, correction or removal, contact <a href="mailto:dev.leonb@gmail.com">dev.leonb@gmail.com</a>. Tickets currently reach the team's private admin panel rather than triggering an automatic reply email or a guaranteed response time.</p>
+<h2>Your choice</h2>
+<p>Chat and ticket submission are optional. They are separate from the Droply desktop app and do not affect your ability to transfer files.</p>
+</section>
+<footer>© 2026 Droply · Drop it. Done.</footer>
+</main></body></html>
