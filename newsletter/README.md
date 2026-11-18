@@ -87,7 +87,7 @@ The table has an unsubscribe status and timestamp for future use. Maintain these
 
 Requires Node 22.16 or later:
 
-    node --test newsletter/tests/validation.test.mjs
+    node --experimental-strip-types --test newsletter/tests/validation.test.mjs
 
 This only validates the email/consent helper. Database and endpoint integration tests require a running Supabase project and have not been run.
 
