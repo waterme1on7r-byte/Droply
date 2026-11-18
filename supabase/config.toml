@@ -11,3 +11,7 @@ verify_jwt = false
 # Anonymous messages are validated and rate-limited by the server-side
 # Edge Function. Public users do not have table privileges.
 verify_jwt = false
+
+[functions.contact-admin]
+# Custom server-verified admin login/session; only authorized admins can read inbox data.
+verify_jwt = false
