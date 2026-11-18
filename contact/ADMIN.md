@@ -59,6 +59,17 @@ The originally supplied passwords were shared in chat and are relatively short f
 - A full live login test and GitHub Pages publication have **not** been independently verified from this environment. Verify the workflow and open the page in a browser.
 
 **Not modified:** marketing website files, newsletter signup, desktop app, installers, signaling server, or Contact us form.
+## Support ticket requests — separate admin tab
+
+The private portal now has two independent views:
+
+- **Contact messages** — the original `public.contact_messages` inbox.
+- **Support ticket requests** — `public.support_tickets` created by visitors who use the Get help chatbot and explicitly submit a ticket.
+
+Both tabs are behind the existing Anil/Cenk login, can be searched and filtered, and use New / Read / Resolved controls. Resolving a ticket also requires a private note and records the administrator and timestamp. The ticket queue does not alter or expose the ordinary contact inbox.
+
+The Edge Function exposes `mode=tickets` and `mode=ticket-status` **only after verifying signed administrator sessions**. The table itself remains RLS-protected with no anonymous or normal authenticated read/write permission. The admin function is now deployed as version 6.
+
 ## Resolution notes schema
 
 The migration `supabase/migrations/20261118234000_contact_resolution_notes.sql` adds nullable `resolution_note`, `resolved_by` and `resolved_at` columns to the existing private `contact_messages` table. The Edge Function requires a note when transitioning to Resolved; it derives `resolved_by` from the validated session, not the browser. Stored text is displayed with `textContent` to avoid HTML injection.
