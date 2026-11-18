@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'sha256-CxZSYgzasqMpULpMwex+RKUBD5sAf459bFzdq40kY0Q='; style-src 'sha256-BPOx5mr6P8Krc+LLYoxOmvCl6Z0FPSS6+BUwrJhSKHA=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-CxZSYgzasqMpULpMwex+RKUBD5sAf459bFzdq40kY0Q='; style-src 'self' 'sha256-BPOx5mr6P8Krc+LLYoxOmvCl6Z0FPSS6+BUwrJhSKHA=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -748,6 +748,9 @@
     @media(max-width:520px){.contact-grid{grid-template-columns:1fr}.contact-dialog-inner{padding:22px 19px}}
     @media(prefers-reduced-motion:reduce){.contact-dialog[open]{animation:none}.contact-send{transition:none}}
   </style>
+  <!-- Droply support widget. No provider or database secret is exposed here. -->
+  <link rel="stylesheet" href="chat-widget.css">
+  <script defer src="chat-widget.js"></script>
 </head>
 <body>
   <!-- Shared vector logo, reused in the navbar, hero app mockup, download card, and footer. -->
