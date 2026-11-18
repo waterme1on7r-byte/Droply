@@ -1,11 +1,11 @@
 /**
  * Droply public support chat and visitor-confirmed ticket creation.
- * Chat advice uses OpenAI only when an operator configures OPENAI_API_KEY +
- * CHAT_OPENAI_MODEL as private Supabase Edge Function secrets.
- * Creating a support ticket works without an OpenAI API key.
+ * Chat advice comes from local, reviewed troubleshooting rules — no paid
+ * AI API, model, provider token or browser-side secret is required.
+ * Human support tickets still require explicit user submission.
  */
 import { createClient } from "npm:@supabase/supabase-js@2.119.0";
-import { INSTRUCTIONS } from "./instructions.ts";
+import { getSupportReply } from "./guide.ts";
 
 const allowed = new Set((Deno.env.get("CHAT_ALLOWED_ORIGINS") || "https://waterme1on7r-byte.github.io").split(",").map(s => s.trim()).filter(Boolean));
 const encoder = new TextEncoder();
@@ -154,26 +154,10 @@ Deno.serve(async(req:Request):Promise<Response>=>{
     if(!await quota("support-chat:global:"+hour,100,3600)||
        (ip&&!await quota("support-chat:ip:"+ip+":"+hour,20,3600)))
       return send(429,{error:"Chat is busy. Please try again later."});
-    const apiKey=Deno.env.get("OPENAI_API_KEY");
-    const model=Deno.env.get("CHAT_OPENAI_MODEL");
-    if(!apiKey||!model)return send(503,{error:"AI chat isn't configured yet. You can still create a support ticket."});
-    const upstream=await fetch("https://api.openai.com/v1/responses",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
-      body:JSON.stringify({model,instructions:INSTRUCTIONS,input:messages,max_output_tokens:600,store:false}),
-      signal:AbortSignal.timeout(25000)
-    });
-    if(!upstream.ok){
-      console.error("AI provider unavailable:",upstream.status);
-      return send(503,{error:"Chat is temporarily unavailable. You can create a support ticket."});
-    }
-    const data=await upstream.json();
-    const reply=Array.isArray(data.output)?data.output.flatMap((item:{type?:string;content?:{type?:string;text?:string}[]})=>
-      item.type==="message"&&Array.isArray(item.content)
-        ? item.content.filter(c=>c.type==="output_text"&&typeof c.text==="string").map(c=>c.text)
-        : []).join("\n").trim():"";
-    if(!reply)return send(503,{error:"Chat is temporarily unavailable. You can create a support ticket."});
-    return send(200,{reply:reply.slice(0,3000)});
+    // A deterministic guide processes the latest question transiently.
+    // We never forward chat text to an external language-model provider.
+    const lastQuestion=messages[messages.length-1].content;
+    return send(200,{reply:getSupportReply(lastQuestion)});
   }catch(e){
     console.error("Droply support request failed:",e instanceof Error?e.name:"unknown");
     return send(503,{error:"Support is temporarily unavailable. You can try again."});
