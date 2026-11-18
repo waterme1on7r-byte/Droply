@@ -12,6 +12,12 @@
 body{font-family:'IBM Plex Sans','Segoe UI Variable','Segoe UI',system-ui,-apple-system,sans-serif;background:radial-gradient(900px 500px at 50% 38%,rgba(30,90,200,.15),transparent 70%),linear-gradient(180deg,#13243f 0%,#0e1a2e 60%);color:var(--text);height:100vh;padding-top:40px;display:flex;overflow:hidden;-webkit-font-smoothing:antialiased;user-select:none}
 input{user-select:text}
 #titlebar{position:fixed;top:0;left:0;right:0;height:40px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;color:#dfe7f5;background:var(--bar);-webkit-app-region:drag;z-index:30}
+#windowControls{position:absolute;top:0;right:0;height:40px;display:flex;-webkit-app-region:no-drag;z-index:31}
+.win-control{width:46px;height:40px;padding:0;border:0;border-radius:0;background:transparent;color:var(--mute);display:flex;align-items:center;justify-content:center;filter:none;transition:background-color .12s,color .12s}
+.win-control svg{width:12px;height:12px;pointer-events:none}
+.win-control:hover{background:var(--accent);color:#fff;filter:none}
+#closeWindowBtn:hover{background:#c93643;color:#fff}
+.win-control:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-corner{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px;border:2px solid transparent;background-clip:padding-box}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.25);background-clip:padding-box;border:2px solid transparent}
 .rail{width:84px;background:#0d1524;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:12px;flex:none;min-height:0}
 .rbtn{width:56px;height:56px;flex:none;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#9aa7bd;background:transparent;border:0;cursor:pointer;position:relative;padding:0;margin:0;transition:.15s}
@@ -51,7 +57,7 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 .link::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:1px dashed rgba(180,200,235,.35)}
 .link>span{position:relative;z-index:2;width:56px;height:56px;border-radius:50%;background:#101b2e;border:7px solid #1c2d4a;display:flex;align-items:center;justify-content:center}
 .transferPackets{position:absolute;inset:0;pointer-events:none;z-index:3}
-.packet{position:absolute;top:4px;left:8px;width:15px;height:18px;color:var(--accent);opacity:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))}
+.packet{position:absolute;top:-15px;left:8px;width:15px;height:18px;color:var(--accent);opacity:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))}
 .packet svg{display:block;width:100%;height:100%}
 #pair .packet.out{animation:packet-right 1.8s ease-in-out infinite;opacity:1}
 #pair.flow-out .packet.out{color:var(--ok)}
@@ -59,10 +65,10 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 #pair.flow-in .packet.in{color:var(--ok);animation:packet-left 1.8s ease-in-out infinite;opacity:1}
 #pair .packet.p2{animation-delay:.42s!important}
 #pair .packet.p3{animation-delay:.84s!important}
-@keyframes packet-right{0%{opacity:0;transform:translateX(0) scale(.78)}16%,72%{opacity:1}100%{opacity:0;transform:translateX(60px) scale(.78)}}
-@keyframes packet-left{0%{opacity:0;transform:translateX(60px) scale(.78)}16%,72%{opacity:1}100%{opacity:0;transform:translateX(0) scale(.78)}}
+@keyframes packet-right{0%{opacity:0;transform:translate(0,0) scale(.78)}12%{opacity:1;transform:translate(8px,-2px) scale(.78)}42%,58%{opacity:1;transform:translate(36px,-10px) scale(.78)}88%{opacity:1;transform:translate(68px,-2px) scale(.78)}100%{opacity:0;transform:translate(76px,0) scale(.78)}}
+@keyframes packet-left{0%{opacity:0;transform:translate(76px,0) scale(.78)}12%{opacity:1;transform:translate(68px,-2px) scale(.78)}42%,58%{opacity:1;transform:translate(36px,-10px) scale(.78)}88%{opacity:1;transform:translate(8px,-2px) scale(.78)}100%{opacity:0;transform:translate(0,0) scale(.78)}}
 #pair.flow-error .packet{animation:none!important;opacity:0!important;transform:none!important;color:var(--err)!important}
-#pair.flow-error .packet.out.p1{left:42px;opacity:1!important}
+#pair.flow-error .packet.out.p1{left:42px;top:-25px;opacity:1!important}
 @media(prefers-reduced-motion:reduce){#pair .packet.out,#pair.flow-in .packet.in{animation:none;opacity:1}#pair.flow-in:not(.flow-out) .packet.out{display:none}#pair.flow-in .packet.in{left:auto;right:8px}}
 #pair:not(.live) .link{color:var(--mute)}
 .peer{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;border:1px solid transparent;transition:.15s;font-weight:600;color:var(--gold)}
@@ -167,7 +173,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 #addFriendBtn:hover{color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));filter:brightness(1.08)}
 .av.placeholder{color:#fff!important;background:linear-gradient(135deg,var(--accent),var(--accent2))!important}
 .packetDefs{position:absolute;width:0;height:0;overflow:hidden}
-html[data-theme=light] #titlebar{color:var(--accent2);border-bottom:1px solid var(--line)}
+html[data-theme=light] #titlebar{color:var(--accent2)}
+html[data-theme=light] #titlebar::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line);pointer-events:none}
+html[data-theme=light] body.rightWindowControls #titlebar::after{right:138px}
 #appDialog{background:rgba(4,8,18,.58);backdrop-filter:blur(7px);z-index:50}
 #appDialog .box{width:min(390px,calc(100vw - 40px));padding:28px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.35);animation:tin .18s ease}
 #appDialog h2{font-size:24px;color:var(--accent)}#appDialog p{margin:0;color:var(--text);line-height:1.55;white-space:pre-wrap}
@@ -175,7 +183,7 @@ html[data-theme=light] #titlebar{color:var(--accent2);border-bottom:1px solid va
 </style>
 </head>
 <body>
-<div id="titlebar">Droply · Transfers</div>
+<div id="titlebar">Droply · Transfers<div id="windowControls" class="hidden" aria-label="Window controls"><button type="button" id="minimizeWindowBtn" class="win-control" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1"><path d="M2 6h8"/></svg></button><button type="button" id="maximizeWindowBtn" class="win-control" title="Maximize" aria-label="Maximize"><svg id="maximizeWindowIcon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1"><rect x="2.5" y="2.5" width="7" height="7"/></svg><svg id="restoreWindowIcon" class="hidden" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1"><path d="M4 2.5h5.5v5.5M2.5 4v5.5H8"/></svg></button><button type="button" id="closeWindowBtn" class="win-control" title="Close" aria-label="Close"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1"><path d="m3 3 6 6M9 3 3 9"/></svg></button></div></div>
 <div id="tl"></div><div id="br"></div>
 <div id="appDialog" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle"><div class="box"><h2 id="appDialogTitle">Droply</h2><p id="appDialogText"></p><div class="btns" id="appDialogButtons"></div></div></div>
 
@@ -254,6 +262,18 @@ html[data-theme=light] #titlebar{color:var(--accent2);border-bottom:1px solid va
 <script src="config.js"></script>
 <script>
 const $ = s => document.querySelector(s);
+function updateWindowState(state) {
+  if (!state) return;
+  $('#maximizeWindowIcon').classList.toggle('hidden', state.maximized);
+  $('#restoreWindowIcon').classList.toggle('hidden', !state.maximized);
+  const label = state.maximized ? 'Restore' : 'Maximize';
+  $('#maximizeWindowBtn').title = label; $('#maximizeWindowBtn').setAttribute('aria-label', label);
+}
+$('#minimizeWindowBtn').onclick = () => api.windowControl('minimize');
+$('#maximizeWindowBtn').onclick = () => api.windowControl('toggle-maximize');
+$('#closeWindowBtn').onclick = () => api.windowControl('close');
+api.on('window-state', updateWindowState);
+api.getWindowChrome?.().then(state => { if (state?.rightControls) document.body.classList.add('rightWindowControls'); if (state?.custom) $('#windowControls').classList.remove('hidden'); updateWindowState(state); }).catch(() => {});
 const { SERVER_URL, ICE = [] } = window.CONFIG || {};
 const WIN = 16 * 1024 * 1024;            // max bytes the sender may have in flight that the receiver hasn't written yet
 const STALL_MS = 45000, CONNECT_MS = 30000;

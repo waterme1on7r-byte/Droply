@@ -239,10 +239,20 @@ function start() {
 
   win = new BrowserWindow({
     width: 780, height: 740, minWidth: 640, minHeight: 560, backgroundColor: '#0f1b2e', show: false, titleBarStyle: 'hidden',
-    ...(process.platform === 'darwin' ? { trafficLightPosition: { x: 16, y: 13 } } : { titleBarOverlay: { color: '#0e1523', symbolColor: '#9aa7bd', height: 40 } }),
+    ...(process.platform === 'darwin' ? { trafficLightPosition: { x: 16, y: 13 } } : process.platform === 'win32' ? { frame: false, thickFrame: true } : { titleBarOverlay: { color: '#0e1523', symbolColor: '#9aa7bd', height: 40 } }),
     autoHideMenuBar: true, title: 'Droply', icon: iconPath(),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true }
   });
+  ipcMain.handle('get-window-chrome', e => fromUI(e) ? { custom: process.platform === 'win32', rightControls: process.platform !== 'darwin', maximized: win.isMaximized() } : null);
+  ipcMain.handle('window-control', (e, action) => {
+    if (!fromUI(e) || !['minimize', 'toggle-maximize', 'close'].includes(action)) return false;
+    if (action === 'minimize') win.minimize();
+    else if (action === 'toggle-maximize') win.isMaximized() ? win.unmaximize() : win.maximize();
+    else win.close();
+    return true;
+  });
+  win.on('maximize', () => toUI('window-state', { maximized: true }));
+  win.on('unmaximize', () => toUI('window-state', { maximized: false }));
   const accessConfig = { window: {} };
   require('vm').runInNewContext(fs.readFileSync(path.join(__dirname, 'config.js'), 'utf8'), accessConfig, { timeout: 1000 });
   require('./access').createAccess({ app, ipcMain, safeStorage, fromUI, toUI, getProfile: () => profile, serverURL: accessConfig.window.CONFIG.SERVER_URL });

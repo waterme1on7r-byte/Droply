@@ -18,7 +18,7 @@ function createDesktop({ app, ipcMain, dialog, shell, clipboard, fromUI, toUI, w
   history = history.slice(0, 300);
   const destinations = new Map();
   const handle = (name, fn) => ipcMain.handle(name, async (e, ...args) => { if (!fromUI(e)) return null; return fn(...args); });
-  function appearance() { const win = getWindow(); if (win && process.platform !== 'darwin' && win.setTitleBarOverlay) win.setTitleBarOverlay({ color: settings.theme === 'light' ? '#f1f5fb' : '#0e1523', symbolColor: settings.theme === 'light' ? '#526079' : '#9aa7bd', height: 40 }); }
+  function appearance() { const win = getWindow(); if (win && process.platform === 'linux' && win.setTitleBarOverlay) win.setTitleBarOverlay({ color: settings.theme === 'light' ? '#f1f5fb' : '#0e1523', symbolColor: settings.theme === 'light' ? '#526079' : '#9aa7bd', height: 40 }); }
   handle('get-settings', () => ({ ...settings, startupSupported: app.isPackaged && ['win32', 'darwin'].includes(process.platform), version: app.getVersion ? app.getVersion() : 'dev' }));
   handle('save-settings', patch => {
     if (!patch || typeof patch !== 'object') throw Error('Invalid settings');

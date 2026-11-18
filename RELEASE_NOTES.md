@@ -1,3 +1,8 @@
+# DROPLY 2.8.8
+
+- Move the animated file packets along an arc above the shield so they stay clear of it in every transfer state.
+- Shorten the light title-bar divider before the window controls and add blue hover feedback to Windows minimize and maximize/restore buttons.
+
 # DROPLY 2.8.7
 
 - Keep profile, friends, settings and the encrypted device credential when DROPLY is uninstalled, so reinstalling does not register a new key for the same device identity.
