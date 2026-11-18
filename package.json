@@ -16,8 +16,8 @@
     "server:test": "npm --prefix server test"
   },
   "devDependencies": {
-    "electron": "33.4.11",
-    "electron-builder": "25.1.8"
+    "electron": "43.8.10",
+    "electron-builder": "26.18.1"
   },
   "build": {
     "appId": "com.droply.app",
@@ -51,6 +51,7 @@
       "include": "build/installer.nsh"
     },
     "mac": {
+      "minimumSystemVersion": "12.0.0",
       "target": [
         {
           "target": "dmg",
@@ -94,7 +95,7 @@
     ]
   },
   "dependencies": {
-    "electron-updater": "6.6.2",
+    "electron-updater": "6.8.11",
     "ws": "8.23.0"
   },
   "repository": {

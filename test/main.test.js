@@ -1,9 +1,10 @@
 const { test } = require('node:test'), assert = require('node:assert'), fs = require('fs'), path = require('path');
 const { loadMain, tick } = require('./helpers');
+const prepare = (m, tid, files) => m.h.handle['prepare-receive'](m.ev, tid, files.map(f => ({ name: f.name, size: f.size })));
 
 test('saves a file, sanitises the name, never overwrites, reports the tid', async () => {
   const m = loadMain(); await m.ready();
-  for (const t of ['a', 'b']) { m.h.on['save-open'](m.ev, t, '../../evil:name?.txt'); m.h.on['save-chunk'](m.ev, t, new Uint8Array([1, 2, 3])); m.h.on['save-close'](m.ev, t); }
+  for (const t of ['a', 'b']) { await prepare(m, t, [{ name: '../../evil:name?.txt', size: 3 }]); m.h.on['save-open'](m.ev, t, '../../evil:name?.txt', 3); m.h.on['save-chunk'](m.ev, t, new Uint8Array([1, 2, 3])); m.h.on['save-close'](m.ev, t); }
   await tick(100);
   assert.deepStrictEqual(fs.readdirSync(m.dl).sort(), ['evil_name_ (1).txt', 'evil_name_.txt']);
   assert.deepStrictEqual([...fs.readFileSync(path.join(m.dl, 'evil_name_.txt'))], [1, 2, 3]);
@@ -12,12 +13,12 @@ test('saves a file, sanitises the name, never overwrites, reports the tid', asyn
 });
 test('acknowledges written bytes (flow control)', async () => {
   const m = loadMain(); await m.ready();
-  m.h.on['save-open'](m.ev, 'f', 'x.bin'); m.h.on['save-chunk'](m.ev, 'f', new Uint8Array(1000)); await tick(60);
+  await prepare(m, 'f', [{ name:'x.bin',size:1000 }]); m.h.on['save-open'](m.ev, 'f', 'x.bin', 1000); m.h.on['save-chunk'](m.ev, 'f', new Uint8Array(1000)); await tick(60);
   assert.deepStrictEqual(m.sent.find(s => s[0] === 'save-wrote')[1], { tid: 'f', n: 1000 });
 });
 test('dangerous / reserved names are neutralised', async () => {
   const m = loadMain(); await m.ready();
-  for (const [i, n] of ['..', 'CON.txt', 'a'.repeat(400) + '.pdf', ''].entries()) m.h.on['save-open'](m.ev, 't' + i, n);
+  for (const [i, n] of ['..', 'CON.txt', 'a'.repeat(400) + '.pdf', ''].entries()) { await prepare(m, 't' + i, [{ name:n,size:0 }]); m.h.on['save-open'](m.ev, 't' + i, n, 0); }
   await tick(60);
   const files = fs.readdirSync(m.dl); assert.strictEqual(files.length, 4);
   assert(files.includes('file') && files.includes('_CON.txt'));
@@ -25,7 +26,7 @@ test('dangerous / reserved names are neutralised', async () => {
 });
 test('abort deletes the partial file', async () => {
   const m = loadMain(); await m.ready();
-  m.h.on['save-open'](m.ev, 'x', 'partial.bin'); m.h.on['save-chunk'](m.ev, 'x', new Uint8Array(10)); await tick(30);
+  await prepare(m, 'x', [{ name:'partial.bin',size:10 }]); m.h.on['save-open'](m.ev, 'x', 'partial.bin', 10); m.h.on['save-chunk'](m.ev, 'x', new Uint8Array(10)); await tick(30);
   assert(fs.existsSync(path.join(m.dl, 'partial.bin')));
   m.h.on['save-abort'](m.ev, 'x'); await tick(80);
   assert(!fs.existsSync(path.join(m.dl, 'partial.bin')));
@@ -38,12 +39,12 @@ test('ignores IPC from anything but our window', async () => {
 });
 test('unwritable Downloads reports an error instead of crashing', async () => {
   const m = loadMain({ downloads: path.join(require('os').tmpdir(), 'droply-does-not-exist', 'nope') }); await m.ready();
-  m.h.on['save-open'](m.ev, 'e', 'a.txt'); await tick(30);
+  await prepare(m, 'e', [{ name:'a.txt',size:0 }]); m.h.on['save-open'](m.ev, 'e', 'a.txt', 0); await tick(30);
   assert.strictEqual(m.sent.find(s => s[0] === 'save-error')[1].tid, 'e');
 });
 test('limits how many files can be open at once', async () => {
   const m = loadMain(); await m.ready();
-  for (let i = 0; i < 10; i++) m.h.on['save-open'](m.ev, 't' + i, `f${i}.bin`);
+  for (let i = 0; i < 10; i++) { await prepare(m, 't' + i, [{ name:`f${i}.bin`,size:0 }]); m.h.on['save-open'](m.ev, 't' + i, `f${i}.bin`, 0); }
   await tick(50);
   assert.strictEqual(fs.readdirSync(m.dl).length, 8);
   assert.strictEqual(m.sent.filter(s => s[0] === 'save-error').length, 2);

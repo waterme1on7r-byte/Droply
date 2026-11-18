@@ -18,15 +18,15 @@ test('preferences persist, validate themes, and ignore renderer-supplied downloa
 });
 test('download destination dialog cancel refuses transfer',async()=>{
  const f=fixture({askSave:true}); f.deps.dialog.showOpenDialog=async()=>({canceled:true});
- assert.equal(await f.call('prepare-receive','a',['file']),false);
+ assert.equal(await f.call('prepare-receive','a',[{ name:'file',size:0 }]),false);
 });
 test('folder paths preserve nesting in exclusive transfer roots and reject traversal',async()=>{
- const f=fixture(); assert.equal(await f.call('prepare-receive','a',['Photos/Trip/a.jpg']),true);
- const dest=f.desktop.target('a','Photos/Trip/a.jpg'); assert.equal(dest.name,'a.jpg');assert(dest.dir.startsWith(path.join(f.dir,'DROPLY transfer')));
+ const f=fixture(); assert.equal(await f.call('prepare-receive','a',[{ name:'Photos/Trip/a.jpg',size:12 }]),true);
+ const dest=f.desktop.target('a','Photos/Trip/a.jpg',12); assert.equal(dest.name,'a.jpg');assert(dest.dir.startsWith(path.join(f.dir,'DROPLY transfer')));
  assert(fs.statSync(dest.dir).isDirectory());
- await f.call('prepare-receive','b',['Photos/Trip/a.jpg']); assert.notEqual(f.desktop.target('b','Photos/Trip/a.jpg').dir,dest.dir);
- await assert.rejects(f.call('prepare-receive','bad',['../outside.txt']));
- await assert.rejects(f.call('prepare-receive','bad',['root/../../outside.txt']));
+ await f.call('prepare-receive','b',[{ name:'Photos/Trip/a.jpg',size:12 }]); assert.notEqual(f.desktop.target('b','Photos/Trip/a.jpg',12).dir,dest.dir);
+ await assert.rejects(f.call('prepare-receive','bad',[{ name:'../outside.txt',size:12 }]));
+ await assert.rejects(f.call('prepare-receive','bad',[{ name:'root/../../outside.txt',size:12 }]));
 });
 test('history paths are only recorded by main process and capped',async()=>{
  const f=fixture(); await f.call('record-transfer',{name:'example',direction:'out',state:'done',path:'C:/untrusted'});
