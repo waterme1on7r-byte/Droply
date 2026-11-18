@@ -6,3 +6,8 @@ project_id = "droply-newsletter"
 # The landing-page visitors are anonymous. Authentication and validation are handled
 # inside the function; never expose a service-role/secret key in the website.
 verify_jwt = false
+
+[functions.contact-send]
+# Anonymous messages are validated and rate-limited by the server-side
+# Edge Function. Public users do not have table privileges.
+verify_jwt = false
