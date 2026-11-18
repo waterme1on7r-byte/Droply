@@ -1,3 +1,9 @@
+# DROPLY 2.8.7
+
+- Keep profile, friends, settings and the encrypted device credential when DROPLY is uninstalled, so reinstalling does not register a new key for the same device identity.
+- Add a reusable local administrator recovery tool that accepts any device code and creates a one-time replacement invitation.
+- Match the empty receiver tile to the theme accent, use rounded-square profile and friend photos throughout the app, and animate file movement between devices during transfers.
+
 # DROPLY 2.8.5
 
 - Added a Device access recovery screen for one-time replacement invitations when a device's saved connection key is missing or no longer accepted.

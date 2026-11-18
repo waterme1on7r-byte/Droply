@@ -14,6 +14,10 @@ New macOS builds require macOS 12 (Monterey) or later.
 
 Run `npm ci` then `npm start` from `server/`. See [server/README.md](server/README.md) for environment settings and migration details. From the root, `npm run server:test` runs the server suite after installing server dependencies.
 
+### Device recovery (administrator)
+
+For an identity-conflict recovery, run `Start-Droply-Recovery.cmd` on Windows (or `npm run recovery-tool` from the repository root). Enter the affected device code and the private server `ADMIN_TOKEN`; the tool returns a one-time invitation to paste into **Settings → Device access** on that device. The invitation expires in 15 minutes. Keep the administrator token and invitation private, and close the tool when finished. The tool does not save the token.
+
 Render source: waterme1on7r-byte/Droply, branch main, root directory empty, build command `npm --prefix server ci`, start command `npm --prefix server start`. Preserve the existing Render environment variables and service URL when changing its repository.
 
 ## Releases

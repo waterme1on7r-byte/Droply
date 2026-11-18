@@ -35,6 +35,8 @@ Invite endpoints remain available for exceptional recovery and older clients. Se
 
 Replacement invitations expire, are bound to one device code and are one-use. Revocation disconnects the device and prevents reconnection. Do not share administrator credentials with users.
 
+For a browser-based local tool, run `Start-Droply-Recovery.cmd` on Windows or `npm run recovery-tool` from the repository root. It opens a page bound to `127.0.0.1` where the administrator enters the affected device code and the server-only `ADMIN_TOKEN`. The token is sent over HTTPS to the production signaling service, is not written to disk or printed, and the tool returns a 15-minute replacement invitation. Paste that invitation into the affected app under **Settings → Device access**. Stop the tool with Ctrl+C after recovery.
+
 ## Security and tests
 
 Signaling fixes the sender identity from the authenticated connection and limits rates, payloads, output buffering and authentication time. PostgreSQL transactions and a row lock protect shared authentication state. Bearer credentials can still be stolen by malware running as the same OS user, and this protocol does not hide group presence or add signatures to WebRTC offers.

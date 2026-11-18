@@ -17,15 +17,15 @@ input{user-select:text}
 .rbtn{width:56px;height:56px;flex:none;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#9aa7bd;background:transparent;border:0;cursor:pointer;position:relative;padding:0;margin:0;transition:.15s}
 .rbtn:hover{background:var(--card);color:var(--text);filter:none}
 .rbtn.active{background:linear-gradient(135deg,#5b5fe0,#7a5bd6);box-shadow:0 8px 22px rgba(100,90,220,.38);cursor:default}
-.rail #railAv{width:56px;height:56px;border-radius:50%;cursor:pointer;font-size:20px;flex:none}
+.rail #railAv{width:56px;height:56px;border-radius:14px;cursor:pointer;font-size:20px;flex:none}
 #gearBtn{width:44px;height:44px;border-radius:12px}
 .rsep{width:36px;height:1px;background:var(--line);flex:none}
 #frList{flex:1;min-height:0;width:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
 #frList::-webkit-scrollbar{width:0}
-.fr{position:relative;width:52px;height:52px;flex:none;cursor:pointer;border-radius:50%;transition:.15s}
+.fr{position:relative;width:52px;height:52px;flex:none;cursor:pointer;border-radius:14px;transition:.15s}
 .fr:hover{transform:scale(1.05)}
 .fr.sel{box-shadow:0 0 0 2.5px var(--accent)}
-.rail .fav{width:52px;height:52px;border-radius:50%;font-size:20px}
+.rail .fav{width:52px;height:52px;border-radius:14px;font-size:20px}
 .fr .dot{position:absolute;left:-1px;bottom:-1px;width:15px;height:15px;border-radius:50%;background:#ef4444;border:3px solid #0d1524}
 .fr.on .dot{background:#22c55e}
 .frx{position:absolute;top:-7px;right:-7px;width:20px;height:20px;padding:0;border-radius:50%;background:#26334d;border:1px solid var(--line);color:#c4d0e6;display:flex;align-items:center;justify-content:center;opacity:.75;transition:.15s}
@@ -49,7 +49,21 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 .pcard small{color:var(--mute);font-size:13px}
 .link{width:100px;display:flex;align-items:center;justify-content:center;position:relative;color:#cfe0ff;flex:none}
 .link::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:1px dashed rgba(180,200,235,.35)}
-.link span{position:relative;width:56px;height:56px;border-radius:50%;background:#101b2e;border:7px solid #1c2d4a;display:flex;align-items:center;justify-content:center}
+.link>span{position:relative;z-index:2;width:56px;height:56px;border-radius:50%;background:#101b2e;border:7px solid #1c2d4a;display:flex;align-items:center;justify-content:center}
+.transferPackets{position:absolute;inset:0;pointer-events:none;z-index:3}
+.packet{position:absolute;top:4px;left:8px;width:15px;height:18px;color:var(--accent);opacity:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))}
+.packet svg{display:block;width:100%;height:100%}
+#pair .packet.out{animation:packet-right 1.8s ease-in-out infinite;opacity:1}
+#pair.flow-out .packet.out{color:var(--ok)}
+#pair.flow-in:not(.flow-out) .packet.out{animation:none;opacity:0}
+#pair.flow-in .packet.in{color:var(--ok);animation:packet-left 1.8s ease-in-out infinite;opacity:1}
+#pair .packet.p2{animation-delay:.42s!important}
+#pair .packet.p3{animation-delay:.84s!important}
+@keyframes packet-right{0%{opacity:0;transform:translateX(0) scale(.78)}16%,72%{opacity:1}100%{opacity:0;transform:translateX(60px) scale(.78)}}
+@keyframes packet-left{0%{opacity:0;transform:translateX(60px) scale(.78)}16%,72%{opacity:1}100%{opacity:0;transform:translateX(0) scale(.78)}}
+#pair.flow-error .packet{animation:none!important;opacity:0!important;transform:none!important;color:var(--err)!important}
+#pair.flow-error .packet.out.p1{left:42px;opacity:1!important}
+@media(prefers-reduced-motion:reduce){#pair .packet.out,#pair.flow-in .packet.in{animation:none;opacity:1}#pair.flow-in:not(.flow-out) .packet.out{display:none}#pair.flow-in .packet.in{left:auto;right:8px}}
 #pair:not(.live) .link{color:var(--mute)}
 .peer{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;border:1px solid transparent;transition:.15s;font-weight:600;color:var(--gold)}
 .peer:hover{background:var(--card2)}.peer.sel{background:rgba(59,130,246,.14);border-color:rgba(90,150,255,.5)}
@@ -68,7 +82,7 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 .empty{color:var(--mute);font-size:13px;padding:14px 12px;line-height:1.6;text-align:center;font-weight:400}
 .av{width:50px;height:50px;border-radius:14px;color:var(--gold);font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
 .peer .av{width:40px;height:40px;font-size:15px}
-.av img{width:100%;height:100%;object-fit:cover}.av.big{width:104px;height:104px;border-radius:30px;font-size:40px;cursor:pointer;box-shadow:0 0 0 4px rgba(59,130,246,.22)}
+.av img{width:100%;height:100%;object-fit:cover}.av.big{width:104px;height:104px;border-radius:24px;font-size:40px;cursor:pointer;box-shadow:0 0 0 4px rgba(59,130,246,.22)}
 #drop{position:relative;flex:1;min-height:170px;border:1.2px dashed rgba(100,170,255,.65);border-radius:18px;background:radial-gradient(ellipse at 50% 60%,rgba(30,100,220,.24),transparent 72%),rgba(20,40,80,.28);box-shadow:inset 0 0 0 4px rgba(100,170,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--mute);text-align:center;transition:.2s;padding:24px;cursor:pointer}
 #drop:hover:not(.off){background:radial-gradient(ellipse at 50% 60%,rgba(30,100,220,.32),transparent 72%),rgba(20,40,80,.35)}
 #drop.over{border-color:#7fb4ff;background:radial-gradient(ellipse at 50% 60%,rgba(40,120,240,.4),transparent 75%),rgba(20,50,100,.4);color:var(--text)}
@@ -118,7 +132,7 @@ button:hover{filter:brightness(1.1)}button.ghost{background:var(--card2);border:
 #pf{background:rgba(4,8,18,.7);backdrop-filter:blur(8px)}
 #pf .box{width:330px;position:relative;padding:34px 26px 26px;background:radial-gradient(260px 160px at 50% 0%,rgba(59,130,246,.2),transparent 75%),var(--card);animation:tin .2s ease}
 #pf .box h2{font-size:26px;letter-spacing:-.01em}
-#pf .box .av.big{width:124px;height:124px;border-radius:50%;font-size:48px;cursor:default;box-shadow:0 0 0 4px rgba(59,130,246,.25),0 14px 40px rgba(0,0,0,.45)}
+#pf .box .av.big{width:124px;height:124px;border-radius:24px;font-size:48px;cursor:default;box-shadow:0 0 0 4px rgba(59,130,246,.25),0 14px 40px rgba(0,0,0,.45)}
 .pstat{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:5px 14px;border-radius:999px;color:#f87171;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.28)}
 .pstat i{width:8px;height:8px;border-radius:50%;background:#ef4444}
 .pstat.on{color:#4ade80;background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3)}.pstat.on i{background:#22c55e;box-shadow:0 0 8px #22c55e}
@@ -151,7 +165,8 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
 #addFriend .codebox code{font-size:13px}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}#addFriendBtn{width:50px;height:50px;border-radius:13px;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 5px 14px rgba(59,130,246,.22)}
 #addFriendBtn:hover{color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));filter:brightness(1.08)}
-#peerAv{color:#fff;background:linear-gradient(135deg,#20b8c5,#28a9ed)}
+.av.placeholder{color:#fff!important;background:linear-gradient(135deg,var(--accent),var(--accent2))!important}
+.packetDefs{position:absolute;width:0;height:0;overflow:hidden}
 html[data-theme=light] #titlebar{color:var(--accent2);border-bottom:1px solid var(--line)}
 #appDialog{background:rgba(4,8,18,.58);backdrop-filter:blur(7px);z-index:50}
 #appDialog .box{width:min(390px,calc(100vw - 40px));padding:28px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.35);animation:tin .18s ease}
@@ -209,10 +224,11 @@ html[data-theme=light] #titlebar{color:var(--accent2);border-bottom:1px solid va
     <div><h1>Droply</h1><p>Pick a person. Drop a file. Done.</p></div>
     <div id="status"><i></i><span>Connecting…</span></div>
   </div>
+  <svg class="packetDefs" aria-hidden="true"><symbol id="filePacketIcon" viewBox="0 0 16 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.75h6l4 4V18a.75.75 0 0 1-.75.75h-9.5A.75.75 0 0 1 2 18V2.5a.75.75 0 0 1 .75-.75Z"/><path d="M9 2v4h4M5 10h5M5 13h6"/></symbol></svg>
   <div class="pairwrap">
     <div id="pair">
       <div class="pcard" id="meBox" title="Edit profile"><div id="meAv" class="av">?</div><div><b id="meName"></b><small>This device</small></div></div>
-      <div class="link"><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span></div>
+      <div class="link"><div class="transferPackets" aria-hidden="true"><i class="packet out p1"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i><i class="packet out p2"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i><i class="packet out p3"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i><i class="packet in p1"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i><i class="packet in p2"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i><i class="packet in p3"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i></div><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span></div>
       <div class="pcard" id="peerBox"><div id="peerAv" class="av">+</div><div><b id="peerName">Pick a person</b><small id="peerSub">No one online</small></div></div>
     </div>
     <div id="picker" class="hidden">
@@ -251,6 +267,11 @@ let me, ws, peers = [], sel = null, pendAv = null, known = null;   // peers = fr
 let friends = [], pendIn = [], pendOut = [], gone = [], raw = [];  // raw = everyone the server lists as online
 const MAX_FRIENDS = 200, MAX_REQ = 50;
 const sess = Object.create(null), asks = [];
+function syncTransferFlow() {
+  const active = Object.values(sess).filter(s => !s.fin);
+  $('#pair')?.classList.toggle('flow-out', active.some(s => s.dir === 'out'));
+  $('#pair')?.classList.toggle('flow-in', active.some(s => s.dir === 'in'));
+}
 const fmt = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.ceil(b / 1e3) + ' KB';
 const plural = n => n + (n === 1 ? ' file' : ' files');
 const GRADS = ['linear-gradient(135deg,#3b8cff,#2563eb)', 'linear-gradient(135deg,#2f7be0,#4db6c9)', 'linear-gradient(135deg,#5b6cf0,#8b5cf6)', 'linear-gradient(135deg,#0ea5a4,#38bdf8)', 'linear-gradient(135deg,#3b82f6,#6366f1)'];
@@ -258,6 +279,7 @@ const GRADS = ['linear-gradient(135deg,#3b8cff,#2563eb)', 'linear-gradient(135de
 /* ---------- UI ---------- */
 function avatar(src, name, big, self) {
   const d = document.createElement('div'); d.className = 'av' + (big ? ' big' : '');
+  if (!src && name === '+') d.classList.add('placeholder');
   d.textContent = (name || '?')[0].toUpperCase();
   d.style.background = GRADS[self ? 0 : 1 + ((name || '?').charCodeAt(0) + 3) % (GRADS.length - 1)];
   if (src) { const i = new Image(); i.onload = () => { d.textContent = ''; d.appendChild(i); }; i.src = src; }
@@ -573,6 +595,7 @@ async function sendFiles(files) {
   if (!validFiles(files.map(f => ({ name: fileName(f), size: f.size })))) return toast('These files exceed DROPLY’s safe transfer limits');
   const tid = crypto.randomUUID();
   const s = sess[tid] = { tid, peerId: peer.id, peerName: peer.name, files, dir: 'out', q: Promise.resolve(), sent: 0, acked: 0, total: files.reduce((a, f) => a + f.size, 0) || 1 };
+  $('#pair').classList.remove('flow-error'); syncTransferFlow();
   sig(peer.id, { t: 'req', tid, from: me.name, files: files.map(f => ({ name: fileName(f), size: f.size })) });
   row(tid, { label: files.length === 1 ? files[0].name : plural(files.length), sub: `Sending to ${peer.name} · ${fmt(s.total)}`, msg: 'Waiting…', state: 'sending', pct: 0 });
   s.timer = setTimeout(() => !s.pc && fail(s, 'No response', 'error', 'Request expired'), 60000);
@@ -688,6 +711,7 @@ async function accept(from, d) {
   if (!friend) return sig(from, { t: 'rej', tid: d.tid });
   d.from = friend.name;
   const s = sess[d.tid] = { tid: d.tid, peerId: from, peerName: d.from, dir: 'in', files: d.files, q: Promise.resolve() };
+  $('#pair').classList.remove('flow-error'); syncTransferFlow();
   s.timer = setTimeout(() => !s.open && fail(s, 'Sender did not connect', 'error', 'Receiver timed out'), 45000);
   row(d.tid, { label: d.files.length === 1 ? d.files[0].name : plural(d.files.length), sub: `Receiving from ${d.from} · ${fmt(size)}`, msg: 'Connecting…', state: 'sending', pct: 0 });
   if (api.prepareReceive) {
@@ -792,7 +816,7 @@ function cleanup(s) {
   recordSession(s, 'done');
   api.finishReceive?.(s.tid);
   s.pend = [];
-  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); setTimeout(() => s.pc && s.pc.close(), 1500); delete sess[s.tid]; }
+  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); setTimeout(() => s.pc && s.pc.close(), 1500); delete sess[s.tid]; syncTransferFlow(); }
 // state: 'error' | 'cancelled'. tell: null = don't notify the other side, true = "cancelled by me", string = custom reason
 function fail(s, msg, state = 'error', tell = null) {
   if (s.fin) return; s.fin = true;
@@ -809,7 +833,7 @@ function fail(s, msg, state = 'error', tell = null) {
   }
   if (tell !== null) sig(s.peerId, { t: 'cancel', tid: s.tid, reason: tell === true ? undefined : tell });
   if (s.dir === 'in') api.saveAbort(s.tid);   // delete the half-written file
-  s.pc && s.pc.close(); delete sess[s.tid];
+  s.pc && s.pc.close(); delete sess[s.tid]; syncTransferFlow(); $('#pair').classList.add('flow-error');
 }
 function recordSession(s, state, message = '') {
   // Received files are individually recorded by the main process after saving.

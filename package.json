@@ -1,6 +1,6 @@
 {
   "name": "droply",
-  "version": "2.8.5",
+  "version": "2.8.7",
   "description": "Droply",
   "main": "main.js",
   "author": "Droply",
@@ -13,7 +13,8 @@
     "predist": "node scripts/check-config.js",
     "dist": "electron-builder --publish never",
     "server:start": "npm --prefix server start",
-    "server:test": "npm --prefix server test"
+    "server:test": "npm --prefix server test",
+    "recovery-tool": "node scripts/recovery-tool.cjs"
   },
   "devDependencies": {
     "electron": "43.8.10",
@@ -40,7 +41,7 @@
     "nsis": {
       "oneClick": true,
       "perMachine": false,
-      "deleteAppDataOnUninstall": true,
+      "deleteAppDataOnUninstall": false,
       "createDesktopShortcut": true,
       "runAfterFinish": true,
       "installerIcon": "build/icon.ico",
