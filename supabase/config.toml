@@ -1,0 +1,8 @@
+# Isolated newsletter backend configuration.
+# This file does not configure or change the Droply desktop app or its signaling server.
+project_id = "droply-newsletter"
+
+[functions.newsletter-subscribe]
+# The landing-page visitors are anonymous. Authentication and validation are handled
+# inside the function; never expose a service-role/secret key in the website.
+verify_jwt = false
