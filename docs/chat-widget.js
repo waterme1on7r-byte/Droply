@@ -3,7 +3,7 @@
   const endpoint = 'https://zyppzqwqacvdnfiajbpp.supabase.co/functions/v1/droply-chat';
   const root = document.createElement('div');
   root.className = 'droply-chat';
-  root.innerHTML = "<button class=\"droply-chat-launch\" type=\"button\" aria-expanded=\"false\" aria-controls=\"droply-chat-panel\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 11.5a8 8 0 0 1-8 8c-1.4 0-2.7-.3-3.9-1L4 20l1.5-4.1A8 8 0 1 1 20 11.5Z\"/><path d=\"M8 11.5h8\"/></svg>Get help</button>\n<section id=\"droply-chat-panel\" class=\"droply-chat-panel\" role=\"region\" aria-label=\"Droply help and support\" hidden>\n <div class=\"droply-chat-header\"><div><strong>Droply support</strong><span>AI assistant · Human ticket handoff</span></div><button type=\"button\" class=\"droply-chat-close\" aria-label=\"Close help\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6 6 18 18M18 6 6 18\"/></svg></button></div>\n <div class=\"droply-chat-conversation\">\n  <p class=\"droply-chat-notice\">AI messages are sent to an AI provider for a response. Please don't share private keys, passwords or sensitive information. <a href=\"support-privacy.html\">Support privacy</a>.</p>\n  <div class=\"droply-chat-messages\" role=\"log\" aria-live=\"polite\" aria-relevant=\"additions text\" aria-label=\"Support conversation\"></div>\n  <p class=\"droply-chat-status\" role=\"status\" aria-live=\"polite\"></p>\n  <form class=\"droply-chat-form\"><label class=\"droply-chat-label\" for=\"droply-chat-input\">Your support message</label><textarea id=\"droply-chat-input\" rows=\"2\" maxlength=\"2000\" placeholder=\"How can we help?\" required></textarea><button class=\"droply-chat-send\" type=\"submit\">Send</button></form>\n  <div class=\"droply-chat-footer\"><button class=\"droply-chat-ticket\" type=\"button\">Create support ticket</button><button class=\"droply-chat-clear\" type=\"button\">Clear chat</button></div>\n </div>\n <div class=\"droply-chat-ticket-view\" hidden>\n  <button class=\"droply-chat-back\" type=\"button\">Back to chat</button>\n  <div class=\"droply-chat-ticket-form-view\">\n   <h3>Create a support ticket.</h3><p>Your reviewed issue summary goes into the private Support ticket requests inbox, separate from ordinary contact messages.</p>\n   <form class=\"droply-chat-ticket-form\">\n    <div class=\"droply-chat-ticket-field\"><label for=\"droply-ticket-name\">Your name</label><input id=\"droply-ticket-name\" name=\"name\" maxlength=\"80\" autocomplete=\"name\" placeholder=\"Your name\" required></div>\n    <div class=\"droply-chat-ticket-field\"><label for=\"droply-ticket-email\">Email address</label><input id=\"droply-ticket-email\" name=\"email\" type=\"email\" inputmode=\"email\" maxlength=\"254\" autocomplete=\"email\" placeholder=\"you@example.com\" required></div>\n    <div class=\"droply-chat-ticket-field\"><label for=\"droply-ticket-summary\">Issue summary</label><textarea id=\"droply-ticket-summary\" name=\"summary\" rows=\"6\" minlength=\"10\" maxlength=\"4000\" placeholder=\"What happened, and what have you tried?\" required></textarea></div>\n    <div class=\"droply-chat-hp\" aria-hidden=\"true\"><label for=\"droply-ticket-website\">Leave blank</label><input id=\"droply-ticket-website\" name=\"website\" tabindex=\"-1\" autocomplete=\"off\"></div>\n    <p class=\"droply-chat-ticket-privacy\">Review your summary before submitting. It will be saved for the Droply support team. Don't include passwords, private keys or sensitive information. <a href=\"support-privacy.html\">Privacy details</a>.</p>\n    <button class=\"droply-chat-submit\" type=\"submit\">Submit ticket</button><p class=\"droply-chat-ticket-result\" role=\"status\" aria-live=\"polite\"></p>\n   </form>\n  </div>\n  <div class=\"droply-chat-ticket-confirm\" hidden role=\"status\"><strong>Support ticket created.</strong><p class=\"droply-chat-ticket-reference\"></p><p>Our team can review your request in the private support inbox. Keep this reference for your records.</p><button class=\"droply-chat-submit droply-chat-another\" type=\"button\">New ticket</button></div>\n </div>\n</section>";
+  root.innerHTML = "<button class=\"droply-chat-launch\" type=\"button\" aria-expanded=\"false\" aria-controls=\"droply-chat-panel\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 11.5a8 8 0 0 1-8 8c-1.4 0-2.7-.3-3.9-1L4 20l1.5-4.1A8 8 0 1 1 20 11.5Z\"/><path d=\"M8 11.5h8\"/></svg>Get help</button>\n<section id=\"droply-chat-panel\" class=\"droply-chat-panel\" role=\"region\" aria-label=\"Droply help and support\" hidden>\n <div class=\"droply-chat-header\"><div><strong>Droply support</strong><span>Free guided help · Human ticket handoff</span></div><button type=\"button\" class=\"droply-chat-close\" aria-label=\"Close help\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6 6 18 18M18 6 6 18\"/></svg></button></div>\n <div class=\"droply-chat-conversation\">\n  <p class=\"droply-chat-notice\">This is a free guided help tool, not generative AI. Your question is handled by Droply's support service, not an external model. Avoid sharing private keys, passwords or sensitive data. <a href=\"support-privacy.html\">Support privacy</a>.</p>\n  <div class=\"droply-chat-messages\" role=\"log\" aria-live=\"polite\" aria-relevant=\"additions text\" aria-label=\"Support conversation\"></div>\n  <p class=\"droply-chat-status\" role=\"status\" aria-live=\"polite\"></p>\n  <form class=\"droply-chat-form\"><label class=\"droply-chat-label\" for=\"droply-chat-input\">Your support message</label><textarea id=\"droply-chat-input\" rows=\"2\" maxlength=\"2000\" placeholder=\"How can we help?\" required></textarea><button class=\"droply-chat-send\" type=\"submit\">Send</button></form>\n  <div class=\"droply-chat-footer\"><button class=\"droply-chat-ticket\" type=\"button\">Create support ticket</button><button class=\"droply-chat-clear\" type=\"button\">Clear chat</button></div>\n </div>\n <div class=\"droply-chat-ticket-view\" hidden>\n  <button class=\"droply-chat-back\" type=\"button\">Back to chat</button>\n  <div class=\"droply-chat-ticket-form-view\">\n   <h3>Create a support ticket.</h3><p>Your reviewed issue summary goes into the private Support ticket requests inbox, separate from ordinary contact messages.</p>\n   <form class=\"droply-chat-ticket-form\">\n    <div class=\"droply-chat-ticket-field\"><label for=\"droply-ticket-name\">Your name</label><input id=\"droply-ticket-name\" name=\"name\" maxlength=\"80\" autocomplete=\"name\" placeholder=\"Your name\" required></div>\n    <div class=\"droply-chat-ticket-field\"><label for=\"droply-ticket-email\">Email address</label><input id=\"droply-ticket-email\" name=\"email\" type=\"email\" inputmode=\"email\" maxlength=\"254\" autocomplete=\"email\" placeholder=\"you@example.com\" required></div>\n    <div class=\"droply-chat-ticket-field\"><label for=\"droply-ticket-summary\">Issue summary</label><textarea id=\"droply-ticket-summary\" name=\"summary\" rows=\"6\" minlength=\"10\" maxlength=\"4000\" placeholder=\"What happened, and what have you tried?\" required></textarea></div>\n    <div class=\"droply-chat-hp\" aria-hidden=\"true\"><label for=\"droply-ticket-website\">Leave blank</label><input id=\"droply-ticket-website\" name=\"website\" tabindex=\"-1\" autocomplete=\"off\"></div>\n    <p class=\"droply-chat-ticket-privacy\">Review your summary before submitting. It will be saved for the Droply support team. Don't include passwords, private keys or sensitive information. <a href=\"support-privacy.html\">Privacy details</a>.</p>\n    <button class=\"droply-chat-submit\" type=\"submit\">Submit ticket</button><p class=\"droply-chat-ticket-result\" role=\"status\" aria-live=\"polite\"></p>\n   </form>\n  </div>\n  <div class=\"droply-chat-ticket-confirm\" hidden role=\"status\"><strong>Support ticket created.</strong><p class=\"droply-chat-ticket-reference\"></p><p>Our team can review your request in the private support inbox. Keep this reference for your records.</p><button class=\"droply-chat-submit droply-chat-another\" type=\"button\">New ticket</button></div>\n </div>\n</section>";
   document.body.append(root);
   const $ = selector => root.querySelector(selector);
   const launch = $('.droply-chat-launch'), panel = $('.droply-chat-panel');
@@ -22,7 +22,7 @@
     log.scrollTop = log.scrollHeight;
     return el;
   }
-  addMessage("Hi, I'm the Droply support assistant. How can I help? You can also create a ticket for our team.", 'assistant');
+  addMessage("Hi! I can help with installs, connecting to friends, transfer issues and privacy. You can also create a ticket for our team.", 'assistant');
   function openPanel(open) {
     panel.hidden = !open;
     launch.setAttribute('aria-expanded', String(open));
@@ -43,6 +43,29 @@
       $('#droply-ticket-name').focus();
     } else input.focus();
   }
+  // Quick help topics make the free guided assistant easier to use.
+  const quickTopics = [
+    ['Friend offline', 'My friend appears offline'],
+    ['Transfer issues', 'My transfer is stuck'],
+    ['How to connect', 'How do I exchange public keys?'],
+    ['Install Droply', 'How do I install Droply?']
+  ];
+  const quickRow = document.createElement('div');
+  quickRow.className = 'droply-chat-quick-topics';
+  quickRow.setAttribute('aria-label', 'Quick help topics');
+  for (const [label, question] of quickTopics) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'droply-chat-quick-topic';
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      if (chatPending) return;
+      input.value = question;
+      form.requestSubmit();
+    });
+    quickRow.append(button);
+  }
+  $('.droply-chat-notice').after(quickRow);
   launch.addEventListener('click', () => openPanel(panel.hidden));
   $('.droply-chat-close').addEventListener('click', () => openPanel(false));
   root.addEventListener('keydown', event => {
@@ -54,7 +77,7 @@
     if (chatPending) return;
     history = [];
     log.replaceChildren();
-    addMessage("Hi, I'm the Droply support assistant. How can I help?", 'assistant');
+    addMessage("Hi! I can help with installing, pairing, transfer speed and security. What's your question?", 'assistant');
     input.value = '';
     summary.value = '';
     status.textContent = '';
@@ -79,7 +102,7 @@
     const text = input.value.trim();
     if (!text || chatPending) return;
     chatPending = true; send.disabled = true; clear.disabled = true;
-    status.classList.remove('error'); status.textContent = 'Thinking…';
+    status.classList.remove('error'); status.textContent = 'Checking help topics…';
     const bubble = addMessage(text, 'user');
     input.value = '';
     const next = [...history, { role: 'user', content: text }].slice(-11);
@@ -94,7 +117,7 @@
       bubble.remove();
       input.value = text;
       status.classList.add('error');
-      status.textContent = 'AI chat is unavailable right now. You can still create a support ticket.';
+      status.textContent = 'Help is temporarily unavailable. You can still create a support ticket.';
     } finally { chatPending = false; send.disabled = false; clear.disabled = false; }
   });
   ticketForm.addEventListener('submit', async event => {
