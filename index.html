@@ -17,7 +17,7 @@ input{user-select:text}
 .rbtn{width:56px;height:56px;flex:none;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#9aa7bd;background:transparent;border:0;cursor:pointer;position:relative;padding:0;margin:0;transition:.15s}
 .rbtn:hover{background:var(--card);color:var(--text);filter:none}
 .rbtn.active{background:linear-gradient(135deg,#5b5fe0,#7a5bd6);box-shadow:0 8px 22px rgba(100,90,220,.38);cursor:default}
-.rail #railAv{width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:20px;flex:none}
+.rail #railAv{width:56px;height:56px;border-radius:50%;cursor:pointer;font-size:20px;flex:none}
 #gearBtn{width:44px;height:44px;border-radius:12px}
 .rsep{width:36px;height:1px;background:var(--line);flex:none}
 #frList{flex:1;min-height:0;width:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
@@ -195,6 +195,7 @@ html[data-theme=light] #titlebar{color:var(--accent2);border-bottom:1px solid va
 
 <nav class="rail">
   <div class="rbtn active" title="Transfers"><svg width="32" height="32" viewBox="0 0 32 32"><path d="M16 6c3.7 4.9 6.4 8.1 6.4 11.5a6.4 6.4 0 0 1-12.8 0C9.6 14.1 12.3 10.9 16 6z" fill="#fff"/></svg></div>
+  <div class="rsep"></div>
   <div id="railAv" class="av" title="Edit profile">?</div>
   <div class="rsep"></div>
   <div id="frList"></div>
