@@ -23,7 +23,7 @@ export function getSupportReply(message) {
   if (has(/\b(crash|crashing|crashed|freeze|frozen|blank screen|bug|broken|data loss|file gone|corrupt|malware|virus|compromised)\b/))
     return "That needs a closer look. Please try reopening Droply once and note your operating system, app version and the exact error. Then select “Create support ticket” so the team can investigate. Don't include private keys or file contents.";
 
-  if (has(/\b(offline transfer|send offline|both online|same time|other person online)\b/))
+  if (has(/\b(offline transfer|send offline|both online|same time|other person online|other person is offline|friend is offline|recipient is offline|send.*while.*offline|send.*if.*offline)\b/))
     return "Both people must be online at the same time for a direct transfer. Droply doesn't upload your file to a cloud account for someone to collect later.";
 
   if (has(/\b(offline|not online|not showing|not appear|can't see|cannot see|can't find|cannot find|unavailable|friend.*(disappear|missing)|peer.*(disappear|missing))\b/))
@@ -52,6 +52,9 @@ export function getSupportReply(message) {
 
   if (has(/\b(free|price|pricing|cost|pay|paid|subscription|account|register|sign up|email needed|password needed)\b/))
     return "Droply is free to use. The desktop app doesn't require an account, email address or password: it identifies devices using cryptographic keys. The newsletter and support forms are separate from file transfers.";
+
+  if (has(/\b(post.quantum|quantum|cipher|cryptographic algorithm|protocol implementation|specific port|port number)\b/))
+    return "I don't have verified details about that low-level security or protocol question, so I don't want to guess. You can choose “Create support ticket” and ask the team directly. Never include a private key in the request.";
 
   if (has(/\b(help|how does|how to|what is|what can|hello|hi|hey|thanks|thank you)\b/))
     return "I can help with installing Droply, exchanging public keys, seeing an offline person, stalled transfers, speed, file sizes and encryption. What would you like to troubleshoot? You can also create a support ticket for a person to review.";
