@@ -78,12 +78,12 @@ async function validateSession(req:Request,admin:ReturnType<typeof createClient>
     return claims.sub;
   } catch {return null;}
 }
-async function parseBody(req:Request):Promise<Record<string,unknown>|null> {
+async function parseBody(req:Request,maxBytes=MAX_BODY_BYTES):Promise<Record<string,unknown>|null> {
   const len=req.headers.get("Content-Length");
-  if(len&&Number(len)>MAX_BODY_BYTES)return null;
+  if(len&&Number(len)>maxBytes)return null;
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get("Content-Type")||""))return null;
   const raw=await req.text();
-  if(enc.encode(raw).byteLength>MAX_BODY_BYTES)return null;
+  if(enc.encode(raw).byteLength>maxBytes)return null;
   try {
     const value=JSON.parse(raw);
     return value && typeof value==="object"&&!Array.isArray(value)?value:null;
@@ -203,7 +203,9 @@ Deno.serve(async (req:Request):Promise<Response>=>{
     }
     if(mode==="status"){
       if(req.method!=="POST")return fail(405,"Method not allowed.");
-      const input=await parseBody(req);
+      // Long resolution notes may use multi-byte UTF-8. Login requests
+      // retain the much smaller default body limit above.
+      const input=await parseBody(req,12000);
       const id=input?.id, status=input?.status;
       if(typeof id!=="string"||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id)||
          !["new","read","resolved"].includes(status as string))
