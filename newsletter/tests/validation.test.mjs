@@ -1,4 +1,4 @@
-// Run with Node 22.16+: node --test newsletter/tests/validation.test.mjs
+// Run with Node 22.16+: node --experimental-strip-types --test newsletter/tests/validation.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CONSENT_VERSION, normalizeEmail, parseSignupPayload } from "../../supabase/functions/_shared/newsletter.ts";
