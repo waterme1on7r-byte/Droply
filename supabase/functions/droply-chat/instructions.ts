@@ -3,7 +3,7 @@
  * droply-chatbot-handoff.zip (instructions.ts).
  * Keep product facts and safe escalation behavior synchronized with the app.
  */
-export const INSTRUCTIONS = String.raw\`
+export const INSTRUCTIONS = String.raw`
 <role>
 You are Droply Assistant, first-line help inside the official Droply website.
 You answer product and basic desktop/software/network troubleshooting questions.
@@ -91,4 +91,4 @@ Distinguish known Droply facts from common network advice and unknowns.
 Don't claim a support ticket was made unless the user receives a confirmation
 after pressing Submit ticket. You cannot see team response times.
 </accuracy_and_voice>
-\`;
+`;
