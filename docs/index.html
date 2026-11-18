@@ -676,6 +676,37 @@
     @media(max-width:900px){ .app-screenshot-window { transform:none; } }
     @media(prefers-reduced-motion:reduce){ .app-screenshot-window .demo-peer-ready,.app-screenshot-window .demo-active-zone {opacity:0!important;} .app-screenshot-window .demo-shield-ripple,.app-screenshot-window .demo-file-flight {display:none!important;} }
 
+
+
+    /* Newsletter — no external signup backend is configured; the form prepares an
+       opt-in email addressed to the Droply team, never an unverified success state. */
+    .newsletter-section { padding: 0 0 108px; overflow: hidden; }
+    .newsletter-panel { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1fr); align-items: center; gap: clamp(28px, 5vw, 76px); padding: clamp(30px, 5.6vw, 66px); background: linear-gradient(123deg, #10213d 2%, #13396c 53%, #10294c 100%); border: 1px solid rgba(120,187,255,.38); border-radius: 26px; box-shadow: 0 25px 75px #0003, inset 0 1px #ffffff1e; }
+    .newsletter-panel::before { content: ''; position: absolute; z-index: -1; width: 480px; height: 480px; border-radius: 50%; right: -210px; top: -250px; background: radial-gradient(circle, #498eff3b 0%, transparent 68%); pointer-events: none; }
+    .newsletter-panel::after { content: ''; position: absolute; z-index: -1; width: 160px; height: 160px; right: 10%; bottom: -112px; border: 1px solid #98caff2c; border-radius: 50%; box-shadow: 0 0 0 35px #86bdff09, 0 0 0 75px #86bdff07; pointer-events: none; }
+    .newsletter-heading { margin-top: 17px; margin-bottom: 14px; font-size: clamp(2.05rem, 4.2vw, 3.7rem); line-height: 1.07; letter-spacing: -.055em; }
+    .newsletter-copy { max-width: 430px; color: #e0d2aa; line-height: 1.75; margin: 0; }
+    .newsletter-tags { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+    .newsletter-tags span { display: inline-flex; align-items: center; gap: 7px; font-size: .75rem; font-weight: 600; color: #dceeff; border-radius: 999px; border: 1px solid #87bfff40; background: #75b6ff10; padding: 6px 10px; }
+    .newsletter-tags svg { width: 14px; height: 14px; stroke: #86c3ff; stroke-width: 2; fill: none; }
+    .newsletter-form-area { min-width: 0; padding: clamp(19px, 2.4vw, 30px); background: #08182dc2; border: 1px solid #99caff40; border-radius: 20px; box-shadow: inset 0 1px #ffffff13; }
+    .newsletter-form-area > .newsletter-form-title { font-size: 1.12rem; font-weight: 700; color: #FFE36E; margin: 0 0 14px; }
+    .newsletter-form { display: block; }
+    .newsletter-label { display: block; font-size: .80rem; font-weight: 650; color: #f9e5a6; margin-bottom: 9px; }
+    .newsletter-input-row { display: flex; align-items: stretch; gap: 8px; }
+    .newsletter-email { width: 100%; min-width: 0; min-height: 52px; padding: 0 16px; border-radius: 13px; border: 1px solid #a3b7d35b; background: #09172c; color: #FFE36E; font: 500 .93rem 'IBM Plex Sans', system-ui, sans-serif; outline: none; transition: border-color .2s, box-shadow .2s; }
+    .newsletter-email::placeholder { color: #bbbdc0; opacity: 1; }
+    .newsletter-email:focus-visible { border-color: #80c3ff; outline: 2px solid #8dcaff; outline-offset: 2px; box-shadow: 0 0 25px #3f9aff25; }
+    .newsletter-submit { flex: 0 0 auto; min-height: 52px; padding: 11px 19px; border-radius: 13px; border-color: #FFE36E; color: #10213a; background: #FFE36E; box-shadow: 0 8px 22px #00000025; }
+    .newsletter-submit:hover { background: #fff0a7; border-color: #fff0a7; box-shadow: 0 10px 27px #ffe36e30; }
+    .newsletter-submit svg { width: 17px; height: 17px; }
+    .newsletter-optin { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; font-size: .78rem; line-height: 1.6; color: #d5d9e2; cursor: pointer; }
+    .newsletter-optin input { flex-shrink: 0; width: 17px; height: 17px; accent-color: #ffe36e; margin: 2px 0 0; cursor: pointer; }
+    .newsletter-note { margin: 14px 0 0; color: #bfcce0; font-size: .75rem; line-height: 1.55; }
+    .newsletter-feedback { margin: 12px 0 0; color: #ffea9b; font-size: .78rem; line-height: 1.5; }
+    .newsletter-feedback:empty { display: none; }
+    @media (max-width: 940px) { .newsletter-panel { grid-template-columns: 1fr; gap: 26px; } .newsletter-copy { max-width: 590px; } }
+    @media (max-width: 540px) { .newsletter-section { padding-bottom: 75px; } .newsletter-panel { padding: 24px 19px; border-radius: 21px; } .newsletter-form-area { padding: 20px 15px; } .newsletter-input-row { flex-direction: column; } .newsletter-submit { width: 100%; } }
   </style>
 </head>
 <body>
@@ -873,6 +904,38 @@
         </div>
       </div>
     </section>
+
+    <section class="newsletter-section section" id="newsletter" aria-labelledby="newsletter-title">
+      <div class="container">
+        <div class="newsletter-panel reveal">
+          <div class="newsletter-intro">
+            <span class="eyebrow">The Droply newsletter</span>
+            <h2 class="section-title newsletter-heading" id="newsletter-title">Stay in the <span class="gradient-text">flow.</span></h2>
+            <p class="newsletter-copy">A little Droply in your inbox. Get new-release news, useful tips, and product updates from the people building it.</p>
+            <div class="newsletter-tags" aria-label="Newsletter topics">
+              <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>Release updates</span>
+              <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>Behind the scenes</span>
+            </div>
+          </div>
+          <div class="newsletter-form-area">
+            <p class="newsletter-form-title">Get the next drop.</p>
+            <form id="newsletter-form" class="newsletter-form" aria-describedby="newsletter-note">
+              <label class="newsletter-label" for="newsletter-email">Email address</label>
+              <div class="newsletter-input-row">
+                <input id="newsletter-email" class="newsletter-email" type="email" name="email" placeholder="you@example.com" autocomplete="email" inputmode="email" maxlength="254" required aria-describedby="newsletter-note">
+                <button class="btn newsletter-submit" type="submit">
+                  Join the list
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                </button>
+              </div>
+              <label class="newsletter-optin"><input id="newsletter-consent" type="checkbox" required><span>Yes, I want to receive occasional email updates about Droply.</span></label>
+              <p id="newsletter-note" class="newsletter-note">This opens your email app with a ready-to-send signup request. Please press Send to join; no address is stored on this page.</p>
+              <p id="newsletter-feedback" class="newsletter-feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -880,7 +943,7 @@
       <div class="footer-row"><div class="footer-brand"><a class="brand" href="#top" aria-label="Droply home"><svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#droply-mark"/></svg><span class="brand-name">Droply</span></a><p class="footer-tagline">Drop it. Done.</p></div>
         <nav class="footer-links" aria-label="Footer links">
           <!-- FOOTER URLS: Privacy / Terms remain placeholders; Contact opens an email and GitHub links to the repository. -->
-          <a href="#" data-placeholder="Privacy page">Privacy</a><a href="#" data-placeholder="Terms page">Terms</a><a href="https://github.com/waterme1on7r-byte/Droply">GitHub</a><a href="mailto:dev.leonb@gmail.com">Contact</a>
+          <a href="#" data-placeholder="Privacy page">Privacy</a><a href="#" data-placeholder="Terms page">Terms</a><a href="#newsletter">Newsletter</a><a href="https://github.com/waterme1on7r-byte/Droply">GitHub</a><a href="mailto:dev.leonb@gmail.com">Contact</a>
         </nav>
       </div>
       <div class="footer-bottom"><span>© 2026 Droply. All rights reserved.</span><span>Made for sharing. <svg viewBox="0 0 64 64" aria-label="drop" role="img"><path d="M32 13C29.4 17.1 20 28.5 20 37a12 12 0 0 0 24 0c0-8.5-9.4-19.9-12-24Z" fill="#9d91ff"/></svg></span></div>
@@ -935,66 +998,3 @@
       navLinks.forEach(link => link.addEventListener('click', closeMenu));
       document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
       document.addEventListener('click', event => { if (!event.target.closest('.nav-wrap')) closeMenu(); });
-      window.addEventListener('resize', () => { if (innerWidth > 700) closeMenu(); }, { passive: true });
-      const updateHeader = () => header.classList.toggle('is-scrolled', window.scrollY > 12);
-      window.addEventListener('scroll', updateHeader, { passive: true });
-      updateHeader();
-
-      // Keep the current section highlighted in the navigation.
-      const sectionIds = ['how-it-works', 'features', 'security', 'download'];
-      if ('IntersectionObserver' in window) {
-        const sections = sectionIds.map(id => document.getElementById(id));
-        const sectionObserver = new IntersectionObserver(entries => {
-          entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
-            navLinks.forEach(link => {
-              const active = link.getAttribute('href') === '#' + entry.target.id;
-              link.classList.toggle('active', active);
-              if (active) link.setAttribute('aria-current', 'location');
-              else link.removeAttribute('aria-current');
-            });
-          });
-        }, { rootMargin: '-25% 0px -58% 0px', threshold: 0 });
-        sections.forEach(section => sectionObserver.observe(section));
-      }
-
-      // Scroll-reveal effects with a no-JavaScript / reduced-motion-friendly default.
-      if ('IntersectionObserver' in window && !reducedMotion.matches) {
-        const reveals = document.querySelectorAll('.reveal');
-        reveals.forEach((item, index) => {
-          item.classList.add('will-reveal');
-          if (item.classList.contains('step-card') || item.classList.contains('feature-card')) {
-            item.style.transitionDelay = `${(index % 3) * 85}ms`;
-          }
-        });
-        const revealObserver = new IntersectionObserver(entries => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('is-visible');
-              revealObserver.unobserve(entry.target);
-            }
-          });
-        }, { threshold: .08, rootMargin: '0px 0px -25px 0px' });
-        reveals.forEach(el => revealObserver.observe(el));
-      }
-
-      // Real desktop screenshot + illustrative walkthrough (not a real transfer).
-      // Start at the empty state, select a peer, drop a sample file, then animate progress.
-      // Motion stops automatically for visitors who prefer reduced motion.
-      if (!reducedMotion.matches) {
-        const demo = document.getElementById('app-demo');
-        const percent = document.getElementById('transfer-percent');
-        const fill = document.getElementById('progress-fill');
-        const speed = document.getElementById('transfer-speed');
-        const status = document.getElementById('demo-transfer-status');
-        const start = performance.now();
-        const duration = 13000;
-        function tick(now) {
-          const phase = (now - start) % duration;
-          const connected = phase >= 1800;
-          const sending = phase >= 4800;
-          const complete = phase >= 11000;
-          demo.classList.toggle('is-peer-connected', connected);
-          demo.classList.toggle('is-transferring', sending && !complete);
-          demo.classList.toggle('is-complete', complete);
-          const progress = !sending ? 0 : complete ? 100 : Math.min(99, Math.round(((phase - 4800) / 6200) * 100));
