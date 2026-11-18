@@ -4,8 +4,8 @@ const fs = require('fs'),path=require('path');
 const { loadMain, tick } = require('./helpers');
 test('accepted folder transfer saves nested files and durable history through main IPC', async()=>{
  const {h,ev,ready,dl}=loadMain();await ready();
- assert.equal(await h.handle['prepare-receive'](ev,'nested',['Photos/Trip/a.txt']),true);
- h.on['save-open'](ev,'nested','Photos/Trip/a.txt');h.on['save-chunk'](ev,'nested',Buffer.from('folder payload'));h.on['save-close'](ev,'nested');
+ assert.equal(await h.handle['prepare-receive'](ev,'nested',[{ name:'Photos/Trip/a.txt',size:14 }]),true);
+ h.on['save-open'](ev,'nested','Photos/Trip/a.txt',14);h.on['save-chunk'](ev,'nested',Buffer.from('folder payload'));h.on['save-close'](ev,'nested');
  await tick(50);
  const saved=h.sent.find(([ch,d])=>ch==='saved'&&d.tid==='nested');assert(saved);
  assert.equal(fs.readFileSync(saved[1].path,'utf8'),'folder payload');

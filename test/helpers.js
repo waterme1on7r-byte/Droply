@@ -61,7 +61,7 @@ function loadRenderer() {
   const t = ctx.__t; t.setMe(); t.setWs(true); t.setPeers([{ id: 'bob', name: 'Bob' }]);
   all.push(t);
   const row = id => created.find(e => e.id === id);
-  return { t, ctx, api: ctx.api, sig: sentSig, aborts, handlers, saves, stored, copied, row, state: id => row(id) && row(id).className, text: id => row(id) && row(id)._q['.st'] && row(id)._q['.st'].textContent };
+  return { t, ctx, api: ctx.api, sig: sentSig, aborts, handlers, saves, stored, copied, row, arrayBuffer: size => vm.runInContext(`new ArrayBuffer(${Number(size)})`, ctx), state: id => row(id) && row(id).className, text: id => row(id) && row(id)._q['.st'] && row(id)._q['.st'].textContent };
 }
 const tick = (ms = 5) => new Promise(r => setTimeout(r, ms));
 module.exports = { loadMain, loadRenderer, tick, cleanupAll };
