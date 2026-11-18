@@ -1,6 +1,10 @@
 # Droply contact inbox — private administration
 
-The contact inbox admin panel is a separate Supabase Edge Function (`contact-admin`). It is deliberately **not linked from the marketing website** and does not use GitHub Pages.
+The admin panel now uses an **unlinked, noindex HTML login screen** on GitHub Pages with a protected Supabase Edge Function (`contact-admin`) for API requests. The earlier Supabase-hosted URL redirects to the corrected web page.
+
+Open: https://waterme1on7r-byte.github.io/Droply/portal/contact-inbox.html
+
+**Security boundary:** The HTML login screen is technically public because GitHub Pages and the GitHub repository are public. Only users who pass server-side authentication can read or update inbox data. Keeping a link unlisted does not make its contents private.
 
 ## Administrators
 
@@ -30,8 +34,8 @@ Messages remain in `public.contact_messages`. No email forwarding is configured;
 - The Edge Function checks user credentials on the server, and signs short-lived HMAC session tokens using a server-side secret. Every inbox API call validates the token and rechecks the active account and session version.
 - Login attempts are throttled using private, hashed rate-limit buckets (global and username/IP keyed).
 - Browser sessions are held in `sessionStorage`; signing out clears them. No long-lived persistent user tokens are set.
-- No cross-origin CORS permission is issued for the admin API. POSTs require same-origin and an explicit custom header.
-- An HTML Content Security Policy blocks external scripts and unauthorized network connections; personal messages are rendered with textContent, never as executable HTML.
+- The admin API permits browser requests from only the exact GitHub Pages origin, requires a custom header, and verifies authenticated bearer tokens for every inbox data operation. CORS is not used as a substitute for authentication.
+- The static login HTML uses a SHA-256 Content Security Policy for its inline styles and scripts, and allows network requests only to the Supabase admin API. Personal messages are rendered with textContent, never as executable HTML.
 - The login screen can still be reached by someone who knows the URL. **The inbox data and actions remain inaccessible without authorized credentials.** The public website has no link to this page.
 
 ## Account maintenance
@@ -48,7 +52,7 @@ The originally supplied passwords were shared in chat and are relatively short f
 - Service-role password checking rejected an incorrect password.
 - Anonymous roles cannot read contact messages or admin hashes or invoke the credential-check RPC.
 - A temporary contact message was successfully changed from New to Read to Resolved and deleted after testing.
-- The `contact-admin` Edge Function was deployed as ACTIVE.
-- A full external HTTP login / dashboard test has **not** yet been confirmed due environment network restrictions. Verify with a real browser before relying on it.
+- The `contact-admin` Edge Function is ACTIVE at version 2; it redirects HTML page requests to GitHub Pages and handles authenticated API requests.
+- A full live login test and GitHub Pages publication have **not** been independently verified from this environment. Verify the workflow and open the page in a browser.
 
 **Not modified:** marketing website files, newsletter signup, desktop app, installers, signaling server, or Contact us form.
