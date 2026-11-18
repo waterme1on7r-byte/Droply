@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121214">
+  <meta name="robots" content="index,follow">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; object-src 'none'; form-action 'none'">
+  <meta name="description" content="How Droply collects and protects email addresses used for the Droply newsletter.">
+  <title>Newsletter privacy — Droply</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0e1627; color: #ffe36e; }
+    * { box-sizing: border-box; }
+    body { margin:0; line-height:1.72; background: radial-gradient(ellipse at top right, #163f79 0%, #0e1627 54%); min-height:100vh; }
+    main { max-width:810px; margin:0 auto; padding: clamp(24px, 6vw, 68px) 22px 90px; }
+    .brand { display:inline-flex; align-items:center; gap:12px; text-decoration:none; font-weight:800; font-size:1.3rem; color:#ffe36e; }
+    .icon { width:38px; height:38px; flex-shrink:0; }
+    .back { display:inline-flex; margin:32px 0 26px; color:#9fc9ff; text-decoration:none; font-size:.9rem; }
+    h1 { margin:0 0 12px; font-size:clamp(2.3rem,7vw,4.1rem); line-height:1.1; letter-spacing:-.045em; }
+    h2 { font-size:1.25rem; margin:35px 0 8px; letter-spacing:-.01em; }
+    p,li { color:#e2e6ed; }
+    .lead { color:#c3d2e8; margin-top:12px; }
+    .card { background:#0a1d39; border:1px solid #8fbfff40; border-radius:21px; padding:clamp(21px,4vw,37px); margin-top:26px; }
+    a { color:#ffeb97; text-underline-offset:3px; }
+    a:hover { color:#fff7d0; }
+    a:focus-visible { outline:3px solid #80baff; outline-offset:4px; border-radius:3px; }
+    ul { padding-left:22px; }
+    .meta { font-size:.84rem; color:#a8bdd5; }
+    footer { margin-top:36px; border-top:1px solid #c4d8ee26; padding-top:21px; font-size:.85rem; color:#9bb5ce; }
+  </style>
+</head>
+<body>
+<main>
+  <a class="brand" href="./index.html" aria-label="Return to Droply home">
+    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#7C6CFF"/><stop offset="1" stop-color="#4F8EFF"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#g)"/><path d="M32 13C29.4 17.1 20 28.5 20 37a12 12 0 0 0 24 0c0-8.5-9.4-19.9-12-24Z" fill="white"/></svg>
+    Droply
+  </a>
+  <a class="back" href="./index.html#newsletter">← Back to newsletter signup</a>
+  <h1>Newsletter privacy.</h1>
+  <p class="lead">Just the updates. Not your data.</p>
+  <p class="meta">Last updated: 18 November 2026 · This notice covers the newsletter signup on the Droply marketing website, not file transfers in the desktop application.</p>
+  <section class="card" aria-label="Newsletter privacy details">
+    <h2>What we collect</h2>
+    <p>When you sign up, we store your email address, the date and time you gave consent, the version of the consent statement, the signup source and whether your subscription is active or withdrawn. We do not ask you to create an account for the newsletter.</p>
+
+    <h2>Why we use it</h2>
+    <p>With your consent, we use your email address to send occasional Droply release news, product updates and tips. We do not sell subscriber email addresses.</p>
+
+    <h2>Where it is stored</h2>
+    <p>Subscriber details are stored in a restricted database hosted by Supabase. Visitors cannot view other subscribers or access this database directly. Access for maintenance is restricted to authorized service-side operations.</p>
+
+    <h2>Preventing abuse</h2>
+    <p>To keep the signup form working for everyone, we use short-lived rate-limit counters based on protected one-way identifiers. These may be derived from a visitor's network address, but we do not put raw visitor IP addresses into the newsletter subscriber table. Expired counters are removed during subsequent signup processing. Hosting providers may also process connection metadata in normal service logs.</p>
+
+    <h2>Retention and withdrawal</h2>
+    <p>We keep your address while you wish to receive newsletter updates. To unsubscribe, request a copy of your information, or ask us to delete your record, email <a href="mailto:dev.leonb@gmail.com?subject=Droply%20newsletter%20privacy%20request">dev.leonb@gmail.com</a>. Unsubscribe requests are handled manually at present. If you withdraw consent, we will stop using your email for newsletter campaigns and process your deletion request as appropriate.</p>
+
+    <h2>Important limits</h2>
+    <p>Signing up records a request; the current form does not send a verification email or confirm ownership of the address. We will not treat an email address as proof of someone else's identity. Newsletter mail delivery, confirmation and automated unsubscribe links may be added later, with this notice updated accordingly.</p>
+
+    <h2>Your choices</h2>
+    <p>Newsletter signup is optional. You can decline without affecting your use of Droply. Where applicable, privacy law may give you further access, correction, erasure or complaint rights. Contact us at the address above to exercise them.</p>
+  </section>
+  <footer>© 2026 Droply · <a href="./index.html">Drop it. Done.</a></footer>
+</main>
+</body>
+</html>
