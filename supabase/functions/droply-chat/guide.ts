@@ -23,6 +23,9 @@ export function getSupportReply(message) {
   if (has(/\b(crash|crashing|crashed|freeze|frozen|blank screen|bug|broken|data loss|file gone|corrupt|malware|virus|compromised)\b/))
     return "That needs a closer look. Please try reopening Droply once and note your operating system, app version and the exact error. Then select “Create support ticket” so the team can investigate. Don't include private keys or file contents.";
 
+  if (has(/\b(offline transfer|send offline|both online|same time|other person online)\b/))
+    return "Both people must be online at the same time for a direct transfer. Droply doesn't upload your file to a cloud account for someone to collect later.";
+
   if (has(/\b(offline|not online|not showing|not appear|can't see|cannot see|can't find|cannot find|unavailable|friend.*(disappear|missing)|peer.*(disappear|missing))\b/))
     return "Both people need Droply open and an internet connection. Check that both have approved each other's public keys, neither device is asleep, and the connection is stable. Is the other person still showing as offline?";
 
@@ -40,9 +43,6 @@ export function getSupportReply(message) {
 
   if (has(/\b(qr|scan|public key|exchange|approve|trusted|pair|pairing|connect with|add (a|my) (friend|person|contact)|invite|friend)\b/))
     return "On first launch, Droply creates your device identity. Exchange PUBLIC keys with the person you want to connect to, then approve each other's key. When you're both online, you can choose them as a recipient. Never share your private key.";
-
-  if (has(/\b(offline transfer|send offline|both online|same time|other person online)\b/))
-    return "Both people must be online at the same time for a direct transfer. Droply doesn't upload your file to a cloud account for someone to collect later.";
 
   if (has(/\b(size|limit|large|gigabyte|gb|terabyte|tb|file type|folder|format|any file|too big)\b/))
     return "Droply doesn't impose a server-side file size limit. The practical limits come from the available disk space, network quality and transfer time. You can send different file types; if a specific transfer fails, tell me what happened.";
