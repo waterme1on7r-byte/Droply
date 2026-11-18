@@ -1,3 +1,8 @@
+# DROPLY 2.8.5
+
+- Added a Device access recovery screen for one-time replacement invitations when a device's saved connection key is missing or no longer accepted.
+- Updated the identity-conflict message to direct users to Settings → Device access. Normal automatic connection and transfer steps are unchanged.
+
 # DROPLY 2.8.2
 
 - Desktop app, signaling server and future releases now share the public Droply repository.

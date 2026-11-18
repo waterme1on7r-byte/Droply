@@ -1,4 +1,4 @@
-const settingsSections = ['Profile', 'Downloads', 'Notifications', 'App behavior', 'Appearance', 'Updates & About', 'Transfer history', 'Troubleshooting'];
+const settingsSections = ['Profile', 'Downloads', 'Notifications', 'App behavior', 'Appearance', 'Updates & About', 'Transfer history', 'Troubleshooting', 'Device access'];
 let accessState = { text: 'Enter an invitation to connect this device.' };
 let settingsState = {}, historyItems = [], connectionText = 'Connecting to the signaling server…';
 let updateState = { text: 'Check for a newer version of DROPLY.' };
@@ -78,10 +78,30 @@ function renderSettings(section) {
   } else if (section === 'Transfer history') {
     intro('The latest 300 events are saved on this device. Retry failed sends from their transfer card while DROPLY remains open.');
     const row = actions(); settingAction(row, 'Clear history', async () => { await api.clearHistory(); historyItems = []; renderSettings(section); }); renderHistory(body);
-  } else {
+  } else if (section === 'Troubleshooting') {
     intro('Connection information and tools to help investigate a problem.');
     const detail = h('p', '', connectionText); detail.id = 'connectionDetail'; body.append(detail);
     const row = actions(); settingAction(row, 'Open diagnostic log', () => api.openLog()); settingAction(row, 'Copy diagnostics', async () => { await api.copyDiagnostics(); settingsFeedback('Basic diagnostics copied. Device codes and credentials are excluded.'); });
+  } else if (section === 'Device access') {
+    intro('DROPLY normally connects this device automatically. Use recovery only if this device’s saved connection key is missing or no longer accepted.');
+    const detail = h('p', '', accessState.text || 'Checking device connection…'); detail.id = 'accessDetail'; body.append(detail);
+    if (['locked', 'enrollment-required'].includes(accessState.state)) {
+      const recovery = h('div', 'access-recovery');
+      recovery.append(h('b', '', 'Recover this device'));
+      recovery.append(h('p', 'intro', 'Enter the one-time replacement invitation created for this device. It restores access to your existing profile.'));
+      const codeField = h('div', 'field settings-code'), codeBox = h('div', 'codebox'), code = h('code'), copy = h('button', 'cp ghost');
+      codeField.append(h('small', '', 'Device code')); copy.innerHTML = ICON.copy; copy.setAttribute('aria-label', 'Copy device code');
+      deviceCode(me.id).then(value => { code.textContent = value; copy.onclick = () => copyCode(copy, value); }); codeBox.append(code, copy); codeField.append(codeBox); recovery.append(codeField);
+      const field = h('label', 'access-field'); field.append(h('span', '', 'One-time invitation'));
+      const invitation = document.createElement('input'); invitation.type = 'text'; invitation.maxLength = 43; invitation.autocomplete = 'off'; invitation.spellcheck = false; invitation.placeholder = 'Paste the invitation from your administrator'; invitation.setAttribute('aria-label', 'One-time replacement invitation');
+      field.append(invitation); recovery.append(field);
+      const row = h('div', 'settings-actions');
+      settingAction(row, 'Recover this device', async () => {
+        await api.enrollDevice(invitation.value.trim()); invitation.value = '';
+        settingsFeedback('Invitation accepted. Reconnecting securely…');
+      }, true);
+      recovery.append(row); body.append(recovery);
+    }
   }
 }
 async function initSettings() {
