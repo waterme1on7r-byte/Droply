@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'sha256-bIykCxfb9AQrP2zFayP+6qlKoli5pA+oLo9gUIu89BM='; style-src 'sha256-hgDnJgQPYJVzDixV0dM6FFPHsLwxkKBQSjmGN1kwwDI=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'sha256-7j5vCsO094upgHlXJZc5CZ3ywCc8bxRQptZl7E3mFAI='; style-src 'sha256-rgCe92O5isnjRrgXZ+Ba0X8+LB1+UNcJTs6eWvOz2V8=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -702,8 +702,6 @@
     .newsletter-submit { flex: 0 0 auto; min-height: 52px; padding: 11px 19px; border-radius: 13px; border-color: #FFE36E; color: #10213a; background: #FFE36E; box-shadow: 0 8px 22px #00000025; }
     .newsletter-submit:hover { background: #fff0a7; border-color: #fff0a7; box-shadow: 0 10px 27px #ffe36e30; }
     .newsletter-submit svg { width: 17px; height: 17px; }
-    .newsletter-optin { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; font-size: .78rem; line-height: 1.6; color: #d5d9e2; cursor: pointer; }
-    .newsletter-optin input { flex-shrink: 0; width: 17px; height: 17px; accent-color: #ffe36e; margin: 2px 0 0; cursor: pointer; }
     .newsletter-note { margin: 14px 0 0; color: #bfcce0; font-size: .75rem; line-height: 1.55; }
     .newsletter-feedback { margin: 12px 0 0; color: #ffea9b; font-size: .78rem; line-height: 1.5; }
     .newsletter-feedback:empty { display: none; }
@@ -932,13 +930,12 @@
               <div class="newsletter-input-row">
                 <input id="newsletter-email" class="newsletter-email" type="email" name="email" placeholder="you@example.com" autocomplete="email" inputmode="email" maxlength="254" required aria-describedby="newsletter-note">
                 <button class="btn newsletter-submit" type="submit">
-                  Join the list
+                  Sign up
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
                 </button>
               </div>
-              <label class="newsletter-optin"><input id="newsletter-consent" type="checkbox" required><span>Yes, I want to receive occasional email updates about Droply.</span></label>
               <div class="newsletter-hp" aria-hidden="true"><label for="newsletter-website">Leave this field blank</label><input type="text" id="newsletter-website" name="website" tabindex="-1" autocomplete="off"></div>
-              <p id="newsletter-note" class="newsletter-note">We only use your email for Droply updates. You can opt out anytime. <a href="newsletter-privacy.html">How we protect your email</a>.</p>
+              <p id="newsletter-note" class="newsletter-note">By clicking <strong>Sign up</strong>, you agree to receive occasional Droply news and product updates by email. Unsubscribe anytime. <a href="newsletter-privacy.html">Newsletter privacy</a>.</p>
               <p id="newsletter-feedback" class="newsletter-feedback" role="status" aria-live="polite" aria-atomic="true"></p>
             </form>
           </div>
@@ -1085,7 +1082,6 @@
       // limits and stores consent server-side; the database is never exposed.
       const newsletterForm = document.getElementById('newsletter-form');
       const newsletterEmail = document.getElementById('newsletter-email');
-      const newsletterConsent = document.getElementById('newsletter-consent');
       const newsletterFeedback = document.getElementById('newsletter-feedback');
       const newsletterSubmit = newsletterForm.querySelector('button[type="submit"]');
       const newsletterEndpoint = 'https://zyppzqwqacvdnfiajbpp.supabase.co/functions/v1/newsletter-subscribe';
@@ -1097,7 +1093,7 @@
         newsletterSubmit.disabled = true;
         newsletterSubmit.setAttribute('aria-busy', 'true');
         newsletterFeedback.dataset.state = '';
-        newsletterFeedback.textContent = 'Sending your signup…';
+        newsletterFeedback.textContent = 'Signing you up…';
         try {
           const response = await fetch(newsletterEndpoint, {
             method: 'POST',
@@ -1108,7 +1104,8 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               email: newsletterEmail.value.trim(),
-              consent: newsletterConsent.checked,
+              // The dedicated "Sign up" click is the explicit newsletter opt-in.
+              consent: true,
               website: newsletterForm.elements.namedItem('website')?.value || ''
             }),
             signal: controller.signal
@@ -1120,7 +1117,7 @@
               : 'Unable to save your signup right now. Please try again.');
           }
           newsletterFeedback.dataset.state = 'success';
-          newsletterFeedback.textContent = 'Thanks! Your newsletter signup request has been received.';
+          newsletterFeedback.textContent = "You're signed up! Thanks for joining Droply.";
           newsletterForm.reset();
         } catch (error) {
           newsletterFeedback.dataset.state = 'error';
