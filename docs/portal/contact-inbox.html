@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0b1426">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'sha256-k0B3y0uyrKr1NCh3vYr96txel50EiOSpYyIgP/nY6kw='; style-src 'sha256-q/NsNr4pSrl6zXw6HfLW6eR80zaQU4xPQjBCIjd7k40='; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; img-src 'none'; font-src 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'sha256-O0tU3ewwk5eHR0zkFpo1VvQK20B+CC3g66Fm+mY0C1I='; style-src 'sha256-PkabUfu1HFoOiPgsc+g910dXKxiAHhgG4eboVT/Bw8I='; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; img-src 'none'; font-src 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
 <title>Droply · Private inbox</title>
 <style>
 :root{color-scheme:dark;--bg:#091428;--surface:#102542;--border:#80baff2b;--yellow:#ffe36e;--muted:#bdcbe0;--blue:#559dff;--green:#9bf0ce;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -70,6 +70,31 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
 @media(max-width:790px){.workspace{grid-template-columns:1fr}.message-list{max-height:450px}.detail{min-height:350px}.cards{gap:10px}.stat{padding:17px}.stat strong{font-size:1.8rem}}
 @media(max-width:480px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.stat{padding:13px}.stat span{font-size:.72rem}.stat strong{font-size:1.5rem}.app{padding:15px}.panel-head{padding:17px}.message-item{padding:15px}.detail{padding:19px}.user-pill{font-size:.76rem}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Resolution notes remain private to authenticated administrators. */
+.resolution-summary{margin:0 0 25px;padding:21px;border:1px solid #8fc2ff40;border-radius:15px;background:linear-gradient(140deg,#173960a0,#101f38)}
+.resolution-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;color:#e8eefa;font-size:.94rem;margin:12px 0 9px}
+.resolution-meta{margin:0;color:#acc7df}
+.resolution-dialog{max-width:min(530px,calc(100vw - 26px));width:calc(100% - 26px);max-height:calc(100dvh - 26px);padding:0;margin:auto;border:1px solid #84c3ff73;border-radius:23px;overflow:auto;color:var(--yellow);background:radial-gradient(ellipse at 90% 0%,#2c67b055,transparent 60%),linear-gradient(140deg,#132c4f,#0a1930);box-shadow:0 30px 100px #000b}
+.resolution-dialog::backdrop{background:#030a19db;backdrop-filter:blur(7px)}
+.resolution-dialog[open]{animation:resolution-appear .2s ease-out}
+@keyframes resolution-appear{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.resolution-dialog-inner{padding:clamp(23px,5vw,37px)}
+.resolution-dialog-header{display:flex;align-items:start;justify-content:space-between;gap:14px}
+.resolution-dialog h2{font-size:clamp(2rem,5vw,2.7rem);line-height:1.1;letter-spacing:-.045em;margin:8px 0 12px}
+.resolution-dialog-description{color:#cfdded;line-height:1.65;margin:3px 0 22px}
+.resolution-close{width:37px;height:37px;flex:0 0 37px;display:grid;place-items:center;border-radius:50%;border:1px solid #92c5fa63;color:var(--yellow);background:#1c3e68;cursor:pointer;font-size:1.38rem;line-height:1}
+.resolution-close:hover{background:#285388}
+.resolution-label{display:block;font-size:.86rem;font-weight:750;margin-bottom:9px;color:#ffecae}
+.resolution-input{display:block;width:100%;min-height:165px;resize:vertical;padding:15px;border-radius:13px;border:1px solid #9bc7ff71;background:#08182d;color:#ffe36e;font:inherit;line-height:1.65;outline:none}
+.resolution-input::placeholder{color:#acbed3}
+.resolution-input:focus-visible{outline:2px solid #9bd1ff;outline-offset:2px}
+.resolution-count{text-align:right;color:#b5c9de;font-size:.75rem;margin:7px 0 0}
+.resolution-feedback{min-height:1.2em;color:#ffd7bc;font-size:.82rem;margin:10px 0 0}
+.resolution-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:20px}
+.resolution-actions button{min-height:45px;min-width:120px}
+@media(max-width:500px){.resolution-dialog-inner{padding:24px 20px}.resolution-actions button{flex:1}}
+@media(prefers-reduced-motion:reduce){.resolution-dialog[open]{animation:none}}
 </style>
 </head>
 <body>
@@ -118,6 +143,11 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
         <a class="detail-email" id="detail-email" href="#"></a>
         <div class="detail-meta"><span id="detail-date"></span><span id="detail-status" class="status"></span></div>
         <div class="detail-body" id="detail-body"></div>
+        <section class="resolution-summary" id="resolution-summary" aria-label="Latest resolution note" hidden>
+          <span class="detail-kicker" id="resolution-heading">Resolution note</span>
+          <p class="resolution-text" id="resolution-text"></p>
+          <p class="helper resolution-meta" id="resolution-meta"></p>
+        </section>
         <div class="detail-actions">
           <button type="button" class="ghost" id="mark-new">Mark new</button>
           <button type="button" class="ghost" id="mark-read">Mark read</button>
@@ -129,6 +159,23 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
   </section>
   <p class="footer">Private Droply administration · Messages are stored in Supabase, not automatically forwarded to email.</p>
 </div>
+<dialog id="resolution-dialog" class="resolution-dialog" aria-labelledby="resolution-dialog-title" aria-describedby="resolution-dialog-description">
+  <form id="resolution-form" class="resolution-dialog-inner">
+    <div class="resolution-dialog-header">
+      <div><span class="eyebrow">Finish this conversation</span><h2 id="resolution-dialog-title">Resolve message.</h2></div>
+      <button type="button" id="resolution-close" class="resolution-close" aria-label="Close resolution note">×</button>
+    </div>
+    <p class="resolution-dialog-description" id="resolution-dialog-description">Add a private note explaining how you handled <strong id="resolution-target"></strong>'s message. The note is visible only to Droply administrators.</p>
+    <label class="resolution-label" for="resolution-input">Resolution note</label>
+    <textarea id="resolution-input" class="resolution-input" name="resolutionNote" required minlength="5" maxlength="2000" rows="6" placeholder="Describe the outcome, what you did, or any relevant follow-up…"></textarea>
+    <p class="resolution-count" id="resolution-count">0 / 2000 characters</p>
+    <p id="resolution-feedback" class="resolution-feedback" role="status" aria-live="polite"></p>
+    <div class="resolution-actions">
+      <button type="button" class="ghost" id="resolution-cancel">Cancel</button>
+      <button type="submit" class="primary" id="resolution-save">Save &amp; resolve</button>
+    </div>
+  </form>
+</dialog>
 <script>
 (() => {
   'use strict';
@@ -215,6 +262,15 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
     $('detail-status').textContent=m.status;
     $('detail-status').className='status status-'+m.status;
     $('detail-body').textContent=m.body;
+    // Include earlier notes even if someone has reopened a resolved message.
+    const note=typeof m.resolution_note==='string'?m.resolution_note.trim():'';
+    const showResolution=Boolean(note)||m.status==='resolved';
+    $('resolution-summary').hidden=!showResolution;
+    $('resolution-heading').textContent=m.status==='resolved'?'Resolution note':'Previous resolution';
+    $('resolution-text').textContent=note||'This message was resolved before resolution notes were enabled.';
+    $('resolution-meta').textContent=note
+      ? [m.resolved_by ? 'Resolved by '+m.resolved_by : 'Resolved',m.resolved_at ? fmt(m.resolved_at) : ''].filter(Boolean).join(' · ')
+      : '';
     $('detail-feedback').textContent='';
     $('mark-new').disabled=m.status==='new';
     $('mark-read').disabled=m.status==='read';
@@ -251,7 +307,65 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5
   }
   $('mark-new').addEventListener('click',()=>updateStatus('new'));
   $('mark-read').addEventListener('click',()=>updateStatus('read'));
-  $('mark-resolved').addEventListener('click',()=>updateStatus('resolved'));
+  // Clicking Resolve opens a focused in-page note editor, not an immediate status change.
+  const resolutionDialog=$('resolution-dialog');
+  const resolutionInput=$('resolution-input');
+  const resolutionSave=$('resolution-save');
+  const resolutionFeedback=$('resolution-feedback');
+  $('mark-resolved').addEventListener('click',()=>{
+    const current=all.find(message=>message.id===selectedId);
+    if(!current||current.status==='resolved')return;
+    $('resolution-target').textContent=current.sender_name;
+    resolutionInput.value='';
+    $('resolution-count').textContent='0 / 2000 characters';
+    resolutionFeedback.textContent='';
+    resolutionDialog.showModal();
+    resolutionInput.focus();
+  });
+  resolutionInput.addEventListener('input',()=>{
+    $('resolution-count').textContent=resolutionInput.value.length+' / 2000 characters';
+    resolutionFeedback.textContent='';
+  });
+  $('resolution-close').addEventListener('click',()=>resolutionDialog.close());
+  $('resolution-cancel').addEventListener('click',()=>resolutionDialog.close());
+  resolutionDialog.addEventListener('click',event=>{
+    if(event.target===resolutionDialog)resolutionDialog.close();
+  });
+  resolutionDialog.addEventListener('close',()=>{
+    if(!$('detail-content').hidden && !$('mark-resolved').disabled)$('mark-resolved').focus();
+  });
+  $('resolution-form').addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(resolutionSave.disabled||!selectedId||!$('resolution-form').reportValidity())return;
+    const note=resolutionInput.value.trim();
+    if(note.length<5){
+      resolutionFeedback.textContent='Please write at least 5 characters.';
+      resolutionInput.focus();
+      return;
+    }
+    const id=selectedId;
+    resolutionSave.disabled=true;
+    $('resolution-cancel').disabled=true;
+    resolutionFeedback.textContent='Saving resolution…';
+    try{
+      const result=await call('status','POST',{id,status:'resolved',resolutionNote:note});
+      const existing=all.find(m=>m.id===id);
+      if(existing){
+        existing.status='resolved';
+        existing.resolution_note=result.message?.resolution_note??note;
+        existing.resolved_by=result.message?.resolved_by??'';
+        existing.resolved_at=result.message?.resolved_at??'';
+      }
+      resolutionDialog.close();
+      await loadMessages(false);
+      if(id===selectedId && !$('detail-content').hidden)$('detail-feedback').textContent='Resolution saved.';
+    }catch(error){
+      resolutionFeedback.textContent=error?.message||'Could not save the resolution. Try again.';
+    }finally{
+      resolutionSave.disabled=false;
+      $('resolution-cancel').disabled=false;
+    }
+  });
   try{token=sessionStorage.getItem(KEY)}catch{}
   if(token){
     // The server validates this token; client-side possession alone grants nothing.
