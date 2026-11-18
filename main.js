@@ -20,6 +20,7 @@ const iconFile = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
 const iconPath = () => app.isPackaged ? path.join(process.resourcesPath, iconFile) : path.join(__dirname, 'build', iconFile);
 
 let desktop, tray, quitting = false;
+const pendingDialogs = new Map(); let dialogId = 0;
 let win, profile = { id: crypto.randomUUID(), name: '', avatar: '' };
 const pf = () => path.join(app.getPath('userData'), 'profile.json');
 // Atomic write (temp file + rename) so a crash mid-write can't corrupt the profile / lose the identity
@@ -63,6 +64,14 @@ const savedPaths = new Set();  // files we saved ourselves (the only ones "show 
 // Only accept IPC coming from our own window
 const fromUI = e => !!win && !win.isDestroyed() && e.sender === win.webContents;
 const toUI = (ch, data) => { if (win && !win.isDestroyed()) win.webContents.send(ch, data); };
+function showAppDialog(options = {}) {
+  const id = ++dialogId;
+  return new Promise(resolve => { pendingDialogs.set(id, resolve); toUI('app-dialog', { id, title: options.title || 'Droply', message: options.message || '', detail: options.detail || '', buttons: options.buttons || ['OK'] }); });
+}
+ipcMain.handle('dialog-response', (e, id, response) => {
+  if (!fromUI(e) || !Number.isInteger(id) || !pendingDialogs.has(id)) return false;
+  const resolve = pendingDialogs.get(id); pendingDialogs.delete(id); resolve({ response: Number.isInteger(response) ? response : 0 }); return true;
+});
 
 // The file name comes from the other person: never trust it as a path
 function safeName(name) {
@@ -218,7 +227,7 @@ function start() {
   win.webContents.on('render-process-gone', (_e, d) => { log('render-process-gone', JSON.stringify(d)); show(); });
   win.webContents.on('preload-error', (_e, file, err) => log('preload-error', file, err));
   const updates = require('./updater').createUpdater({
-    app, dialog, onStatus: status => toUI('update-status', status), getUpdater: () => require('electron-updater').autoUpdater, log,
+    app, showDialog: showAppDialog, onStatus: status => toUI('update-status', status), getUpdater: () => require('electron-updater').autoUpdater, log,
     isBusy: async () => {
       if (open.size) return true;
       try { return await win.webContents.executeJavaScript('Object.keys(sess).length > 0 || asks.length > 0'); }

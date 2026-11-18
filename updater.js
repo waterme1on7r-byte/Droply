@@ -1,10 +1,7 @@
 // GitHub feed is embedded by electron-builder; never ship a GitHub token to clients.
-function createUpdater({ app, dialog, getUpdater, isBusy, onStatus = () => {}, log = () => {} }) {
+function createUpdater({ app, showDialog, getUpdater, isBusy, onStatus = () => {}, log = () => {} }) {
   let updater, running = false, ready = false, prompt = false;
-  const message = (message, detail = '', buttons = ['OK']) => dialog.showMessageBox({
-    type: 'info', title: 'DROPLY updates', message, detail, buttons,
-    defaultId: 0, cancelId: buttons.length - 1
-  });
+  const message = (message, detail = '', buttons = ['OK']) => showDialog({ title: 'DROPLY updates', message, detail, buttons });
   async function install() {
     if (await isBusy()) {
       await message('Finish your transfers first.', 'The update is ready. Use Check for updates when your transfers are finished.');

@@ -150,11 +150,17 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
 #addFriend .pk-msg{padding:8px 0 0;min-height:26px;text-align:left}
 #addFriend .codebox code{font-size:13px}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+html[data-theme=light] #titlebar{color:var(--accent2)}
+#appDialog{background:rgba(4,8,18,.58);backdrop-filter:blur(7px);z-index:50}
+#appDialog .box{width:min(390px,calc(100vw - 40px));padding:28px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.35);animation:tin .18s ease}
+#appDialog h2{font-size:24px;color:var(--accent)}#appDialog p{margin:0;color:var(--text);line-height:1.55;white-space:pre-wrap}
+#appDialog .btns{justify-content:center;margin-top:4px}
 </style>
 </head>
 <body>
 <div id="titlebar">Droply · Transfers</div>
 <div id="tl"></div><div id="br"></div>
+<div id="appDialog" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle"><div class="box"><h2 id="appDialogTitle">Droply</h2><p id="appDialogText"></p><div class="btns" id="appDialogButtons"></div></div></div>
 
 <div id="setup" class="overlay hidden"><button id="setupX" class="closeX hidden" aria-label="Close" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="box">
   <h2 style="font-size:26px;letter-spacing:-.02em">Welcome to Droply</h2>
@@ -229,6 +235,21 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <script src="config.js"></script>
 <script>
 const $ = s => document.querySelector(s);
+const dialogQueue = [];
+function renderAppDialog(item) {
+  const root = $('#appDialog'), buttons = $('#appDialogButtons');
+  if (!item) { root.classList.add('hidden'); return; }
+  $('#appDialogTitle').textContent = item.title || 'Droply'; $('#appDialogText').textContent = [item.message, item.detail].filter(Boolean).join('\n\n');
+  buttons.replaceChildren();
+  (item.buttons?.length ? item.buttons : ['OK']).forEach((label, index) => {
+    const button = document.createElement('button'); button.textContent = label;
+    if (index > 0) button.className = 'ghost';
+    button.onclick = () => { api.dialogResponse(item.id, index); dialogQueue.shift(); renderAppDialog(dialogQueue[0]); };
+    buttons.append(button);
+  });
+  root.classList.remove('hidden'); buttons.querySelector('button')?.focus();
+}
+api.on('app-dialog', item => { dialogQueue.push(item); if (dialogQueue.length === 1) renderAppDialog(item); });
 const { SERVER_URL, ICE = [] } = window.CONFIG || {};
 const WIN = 16 * 1024 * 1024;            // max bytes the sender may have in flight that the receiver hasn't written yet
 const STALL_MS = 45000, CONNECT_MS = 30000;
