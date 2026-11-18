@@ -1,25 +1,20 @@
 /**
- * Public newsletter signup endpoint for the Droply marketing website only.
- *
- * POST {"email":"name@example.com","consent":true,"website":"","turnstileToken":""}
- * The "website" field is an invisible honeypot; Turnstile can be enabled later.
- *
- * No service-role or secret key ever goes into docs/index.html.
+ * Public marketing newsletter endpoint; never used by the desktop app.
+ * Receives anonymous POSTs from the Droply website, applies abuse quotas,
+ * records affirmative consent, and never returns subscriber identity data.
  */
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.119.0";
 import { CONSENT_VERSION, parseSignupPayload } from "../_shared/newsletter.ts";
 
-const DEFAULT_ORIGIN = "https://waterme1on7r-byte.github.io";
-const MAX_PAYLOAD_BYTES = 2048;
+const MAX_BYTES = 2048;
+const HOME_ORIGIN = "https://waterme1on7r-byte.github.io";
+const enc = new TextEncoder();
+const allowed = new Set(
+  (Deno.env.get("NEWSLETTER_ALLOWED_ORIGINS") || HOME_ORIGIN)
+    .split(",").map((s) => s.trim()).filter(Boolean)
+);
 
-function getAllowedOrigins(): Set<string> {
-  return new Set(
-    (Deno.env.get("NEWSLETTER_ALLOWED_ORIGINS") || DEFAULT_ORIGIN)
-      .split(",").map((value) => value.trim()).filter(Boolean),
-  );
-}
-
-function headersFor(origin: string | null, allowedOrigins: Set<string>): Headers {
+function responseHeaders(origin: string | null): Headers {
   const headers = new Headers({
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store",
@@ -27,126 +22,152 @@ function headersFor(origin: string | null, allowedOrigins: Set<string>): Headers
     "Vary": "Origin",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "content-type",
+    "Referrer-Policy": "no-referrer",
   });
-  if (origin && allowedOrigins.has(origin)) {
-    headers.set("Access-Control-Allow-Origin", origin);
-  }
+  if (origin && allowed.has(origin)) headers.set("Access-Control-Allow-Origin", origin);
   return headers;
 }
-
-function json(status: number, body: Record<string, unknown>, headers: Headers): Response {
-  return new Response(JSON.stringify(body), { status, headers });
+function reply(status: number, message: string, headers: Headers, ok = false): Response {
+  return new Response(JSON.stringify({ ok, message }), { status, headers });
 }
-
-function getServerKey(): string | undefined {
-  // Supabase's newer secret API keys are preferred. Legacy service-role keys
-  // remain supported while the Supabase project is being configured.
+function serverKey(): string | undefined {
   try {
-    const keys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}");
-    if (typeof keys.default === "string" && keys.default) return keys.default;
-  } catch {
-    // Fall through to the legacy environment variable.
-  }
+    const map = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}");
+    if (typeof map.default === "string" && map.default) return map.default;
+  } catch { /* use legacy key if available */ }
   return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || undefined;
 }
-
+async function fingerprint(key: CryptoKey, value: string): Promise<string> {
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(value)));
+  return Array.from(mac, (n) => n.toString(16).padStart(2, "0")).join("");
+}
+async function quota(
+  admin: ReturnType<typeof createClient>,
+  hmac: CryptoKey,
+  label: string,
+  max: number,
+  ttl: number
+): Promise<boolean> {
+  const bucket = await fingerprint(hmac, label);
+  const { data, error } = await admin.rpc("newsletter_take_quota", {
+    p_bucket: bucket, p_max_attempts: max, p_ttl_seconds: ttl,
+  });
+  // Fail closed when the quota store or its permissions are unavailable.
+  if (error) {
+    console.error("newsletter quota unavailable:", error.code || "unknown");
+    return false;
+  }
+  return data === true;
+}
 async function verifyTurnstile(token: string, secret: string): Promise<boolean> {
   if (!token) return false;
-  const body = new URLSearchParams({ secret, response: token });
-  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+  const result = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
     method: "POST",
-    body,
+    body: new URLSearchParams({ secret, response: token }),
     signal: AbortSignal.timeout(7000),
   });
-  if (!response.ok) return false;
-  const result = await response.json();
-  return result?.success === true;
+  if (!result.ok) return false;
+  return (await result.json()).success === true;
 }
 
 Deno.serve(async (request: Request): Promise<Response> => {
   const origin = request.headers.get("Origin");
-  const allowedOrigins = getAllowedOrigins();
-  const headers = headersFor(origin, allowedOrigins);
+  const headers = responseHeaders(origin);
 
-  // Origin allowlisting is a browser CORS control, not an authentication system.
-  if (origin && !allowedOrigins.has(origin)) {
-    return json(403, { ok: false, message: "Origin not allowed." }, headers);
+  // Reject absent and unexpected Origins. This deters casual cross-site abuse
+  // but is NOT treated as authentication; scripts can forge the Origin header.
+  if (!origin || !allowed.has(origin)) {
+    return reply(403, "This signup source is not allowed.", headers);
   }
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers });
-  }
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
   if (request.method !== "POST") {
     headers.set("Allow", "POST, OPTIONS");
-    return json(405, { ok: false, message: "Method not allowed." }, headers);
+    return reply(405, "Method not allowed.", headers);
   }
-  if (!(request.headers.get("content-type") || "").toLowerCase().includes("application/json")) {
-    return json(415, { ok: false, message: "Send JSON." }, headers);
+  if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get("Content-Type") || "")) {
+    return reply(415, "Send a JSON request.", headers);
   }
-  if (Number(request.headers.get("content-length") || 0) > MAX_PAYLOAD_BYTES) {
-    return json(413, { ok: false, message: "Request too large." }, headers);
+  const declared = request.headers.get("Content-Length");
+  if (declared && Number(declared) > MAX_BYTES) {
+    return reply(413, "Request too large.", headers);
   }
 
   try {
     const raw = await request.text();
-    if (new TextEncoder().encode(raw).length > MAX_PAYLOAD_BYTES) {
-      return json(413, { ok: false, message: "Request too large." }, headers);
+    if (enc.encode(raw).byteLength > MAX_BYTES) {
+      return reply(413, "Request too large.", headers);
     }
-
     let body: unknown;
-    try {
-      body = JSON.parse(raw);
-    } catch {
-      return json(400, { ok: false, message: "Invalid JSON." }, headers);
-    }
-
+    try { body = JSON.parse(raw); }
+    catch { return reply(400, "Invalid request.", headers); }
     const signup = parseSignupPayload(body);
     if (!signup) {
-      return json(422, { ok: false, message: "Enter a valid email and agree to receive updates." }, headers);
+      return reply(422, "Enter a valid email address and agree to receive updates.", headers);
     }
-
-    // Trap for automated submissions; avoid storing obvious spam.
+    // Ignore bot honeypot submissions without creating any records.
     if (signup.honeypotFilled) {
-      return json(200, { ok: true, message: "Thanks for your interest." }, headers);
+      return reply(200, "Thanks. Your request has been received.", headers, true);
     }
 
-    // Optional Cloudflare Turnstile protection for production. When a secret is
-    // configured, every signup must include a valid token from the web widget.
+    const secret = serverKey();
+    const url = Deno.env.get("SUPABASE_URL");
+    if (!secret || !url) {
+      return reply(503, "Signups are temporarily unavailable. Please try again later.", headers);
+    }
+    const admin = createClient(url, secret, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const hmac = await crypto.subtle.importKey(
+      "raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+    );
+    const now = Date.now();
+    // Global circuit breaker (80/hour), per-IP soft limit (6/hour) and per
+    // address (3/day). Store only HMAC fingerprints. Each bucket is atomic.
+    // Gateway-provided IP headers are advisory/spoofable; the global cap is
+    // independent of IP and prevents unbounded database writes.
+    const hour = Math.floor(now / 3_600_000);
+    const day = Math.floor(now / 86_400_000);
+    const ip = (request.headers.get("cf-connecting-ip")
+      || request.headers.get("x-real-ip")
+      || request.headers.get("x-forwarded-for")?.split(",")[0]
+      || "").trim().slice(0, 64);
+
+    if (!await quota(admin, hmac, "global:" + hour, 80, 3600)) {
+      return reply(429, "Too many signups right now. Please try again later.", headers);
+    }
+    if (ip && !await quota(admin, hmac, "ip:" + ip + ":" + hour, 6, 3600)) {
+      return reply(429, "Too many requests. Please try again later.", headers);
+    }
+    if (!await quota(admin, hmac, "email:" + signup.email + ":" + day, 3, 86400)) {
+      return reply(429, "Too many requests. Please try again tomorrow.", headers);
+    }
+
+    // Only enforce Turnstile when a private secret and corresponding public
+    // widget have both been configured. The rate limits work independently.
     const turnstileSecret = Deno.env.get("TURNSTILE_SECRET_KEY");
     if (turnstileSecret) {
       let valid = false;
-      try {
-        valid = await verifyTurnstile(signup.turnstileToken, turnstileSecret);
-      } catch {
-        valid = false;
-      }
-      if (!valid) return json(400, { ok: false, message: "Please complete the anti-spam check." }, headers);
+      try { valid = await verifyTurnstile(signup.turnstileToken, turnstileSecret); }
+      catch { valid = false; }
+      if (!valid) return reply(400, "Please complete the anti-spam check.", headers);
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceKey = getServerKey();
-    if (!supabaseUrl || !serviceKey) {
-      // Never return details about server-side credentials.
-      return json(503, { ok: false, message: "Newsletter signups are temporarily unavailable." }, headers);
-    }
-
-    const admin = createClient(supabaseUrl, serviceKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
     const { error } = await admin.from("newsletter_subscribers").insert({
       email: signup.email,
       status: "subscribed",
-      consent_version: CONSENT_VERSION,
       source: "droply-website",
+      consent_version: CONSENT_VERSION,
     });
 
-    // A repeated signup receives the same response and does not re-subscribe
-    // an address that someone previously unsubscribed.
+    // Duplicate signup and unsubscribed addresses receive an identical reply.
+    // We never disclose whether a particular email was already on the list.
     if (error && error.code !== "23505") {
-      console.error("Newsletter insert failed", error.code || "unknown");
-      return json(503, { ok: false, message: "Could not save your signup. Please try again later." }, headers);
+      console.error("newsletter storage unavailable:", error.code || "unknown");
+      return reply(503, "Couldn't save your request. Please try again later.", headers);
     }
-    return json(200, { ok: true, message: "Thanks! Your signup has been received." }, headers);
-  } catch {
-    return json(503, { ok: false, message: "Newsletter signups are temporarily unavailable." }, headers);
+    return reply(200, "Thanks! Your email has been added to the Droply newsletter.", headers, true);
+  } catch (err) {
+    console.error("newsletter request failed:", err instanceof Error ? err.name : "unknown");
+    return reply(503, "Signups are temporarily unavailable. Please try again later.", headers);
   }
 });
