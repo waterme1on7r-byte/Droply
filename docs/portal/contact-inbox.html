@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0b1426">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'sha256-k0B3y0uyrKr1NCh3vYr96txel50EiOSpYyIgP/nY6kw='; style-src 'sha256-q/NsNr4pSrl6zXw6HfLW6eR80zaQU4xPQjBCIjd7k40='; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; img-src 'none'; font-src 'none'; form-action 'none'; frame-src 'none'; upgrade-insecure-requests">
+<title>Droply · Private inbox</title>
+<style>
+:root{color-scheme:dark;--bg:#091428;--surface:#102542;--border:#80baff2b;--yellow:#ffe36e;--muted:#bdcbe0;--blue:#559dff;--green:#9bf0ce;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 87% 0%,#22508b 0%,#0b1d37 32%,#081225 73%);color:var(--yellow);font-size:14px}
+button,input{font:inherit}button{cursor:pointer}a{color:var(--yellow)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #a2d5ff;outline-offset:3px}
+[hidden]{display:none!important}
+.brand{display:flex;align-items:center;gap:12px;font-size:1.48rem;font-weight:800;letter-spacing:-.05em}.logo{width:40px;height:40px;flex:0 0 auto}
+.eyebrow{display:block;color:#9fc9ff;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.16em}
+.signin-layout{min-height:100vh;display:grid;place-items:center;padding:28px 18px}
+.signin-card{width:min(100%,455px);padding:clamp(26px,6vw,44px);border:1px solid #84b6f74a;border-radius:26px;background:linear-gradient(145deg,#163257,#0c1c34 68%);box-shadow:0 27px 75px #0007,inset 0 1px #ffffff11}
+.signin-card h1{font-size:clamp(2.3rem,6vw,3rem);letter-spacing:-.06em;margin:35px 0 10px;line-height:1.06}
+.muted{color:var(--muted);line-height:1.7}.signin-intro{margin:0 0 28px}
+.field{display:grid;gap:8px;margin:17px 0}.field label{font-size:.8rem;font-weight:700;color:#ffe9a1}.field input{width:100%;min-height:50px;border:1px solid #9bbbe15b;border-radius:12px;background:#07182f;color:var(--yellow);padding:13px 15px;outline:none}.field input::placeholder{color:#a8b7cb}
+.field input:focus{border-color:#97cfff;box-shadow:0 0 0 3px #579bff24}
+.primary{background:var(--yellow);color:#0c1d38;border:1px solid #ffe36e;font-weight:800;border-radius:999px;min-height:47px;padding:12px 20px;transition:transform .18s,box-shadow .18s}
+.primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 28px #ffe36e25}.primary:disabled{opacity:.6;cursor:wait}
+.wide{width:100%;margin-top:12px}.feedback{min-height:22px;margin:14px 0 0;color:#ffd4bd;font-size:.85rem}
+.private-note{font-size:.77rem;margin:24px 0 0;color:#a9bfd6}
+.app{max-width:1480px;margin:0 auto;padding:clamp(15px,3vw,38px)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:0 0 32px;border-bottom:1px solid var(--border)}
+.top-right{display:flex;align-items:center;gap:13px;flex-wrap:wrap}.user-pill{background:#122d50;border:1px solid #80bcff4a;color:#c8deee;border-radius:99px;padding:9px 15px;font-weight:650}
+.ghost{border:1px solid #91c0fc5c;background:#133051;color:#dbeaff;border-radius:99px;padding:9px 17px;font-weight:700}
+.ghost:hover{background:#214675}.ghost:disabled{opacity:.5;cursor:wait}
+.titlebar{margin:32px 0 24px;display:flex;align-items:end;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.titlebar h1{font-size:clamp(2.4rem,5vw,4rem);letter-spacing:-.06em;line-height:1.1;margin:8px 0 6px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:20px 0 25px}
+.stat{padding:23px 24px;border:1px solid var(--border);border-radius:20px;background:linear-gradient(140deg,#15355b,#0d2340);box-shadow:inset 0 1px #ffffff0d}
+.stat strong{display:block;margin-top:8px;font-size:2.3rem;letter-spacing:-.05em;color:var(--yellow)}
+.stat span{color:#bad0e6;font-size:.85rem;font-weight:600}
+.workspace{display:grid;grid-template-columns:minmax(290px,.94fr) minmax(0,1.06fr);min-height:500px;gap:18px}
+.panel{min-width:0;border:1px solid var(--border);border-radius:22px;background:#0c1d35de;overflow:hidden}
+.panel-head{padding:20px 22px;border-bottom:1px solid var(--border)}
+.panel-head h2{font-size:1.06rem;margin:0 0 12px;color:#ffebad}
+.search{width:100%;background:#091a33;border:1px solid #8cb8ee4e;border-radius:12px;padding:12px 13px;color:var(--yellow);outline:none}
+.search::placeholder{color:#9faec4}.search:focus{border-color:#89c4ff}
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.filter{background:transparent;border:1px solid #8fbdfa38;color:#c2d5e6;border-radius:99px;padding:6px 12px;font-size:.78rem;font-weight:700}
+.filter[aria-pressed="true"]{background:#2d64a86b;border-color:#85c4ff;color:#ffe36e}
+.message-list{min-height:260px;max-height:720px;overflow:auto}
+.message-item{width:100%;display:block;text-align:left;padding:17px 20px;border:0;border-bottom:1px solid #91b9f920;background:transparent;color:inherit}
+.message-item:hover{background:#22487356}.message-item[aria-current="true"]{background:#23508578;border-left:3px solid #ffe36e;padding-left:17px}
+.item-top{display:flex;align-items:center;justify-content:space-between;gap:7px}
+.item-name{font-weight:800;color:#ffe36e;max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-date{font-size:.72rem;color:#a6c2d9;flex-shrink:0}
+.item-email{display:block;color:#abc9e7;font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:5px 0}
+.item-preview{color:#c4d1e0;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:6px 0 7px}
+.status{display:inline-block;font-size:.7rem;font-weight:800;padding:4px 9px;border:1px solid #8bbaf444;background:#123153;border-radius:99px;color:#bcd4eb}
+.status-new{border-color:#ffe36e6d;color:#ffe36e;background:#ffe36e12}
+.status-read{color:#a5d4ff}
+.status-resolved{color:#9cf1cd;border-color:#6ac59c6a}
+.load-more{display:block;margin:13px auto 17px}.empty{padding:44px 25px;text-align:center;color:#bed1e6;line-height:1.65}
+.detail{padding:clamp(22px,3vw,35px);min-height:450px}
+.detail-kicker{font-size:.72rem;font-weight:800;color:#9fc9ff;letter-spacing:.14em;text-transform:uppercase}
+.detail-title{font-size:clamp(1.85rem,3vw,2.45rem);letter-spacing:-.04em;margin:13px 0 6px;color:#ffe36e;overflow-wrap:anywhere}
+.detail-email{font-size:.94rem;color:#a6d1ff;overflow-wrap:anywhere}
+.detail-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;color:#b5cbe1;font-size:.82rem}
+.detail-body{margin:27px 0 28px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:26px 0;color:#e2e9f2;font-size:1.02rem;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;min-height:160px}
+.detail-actions{display:flex;gap:9px;flex-wrap:wrap}.detail-actions button{min-width:114px}
+.helper{font-size:.78rem;color:#a9bdd3;line-height:1.65}
+.feedback-good{color:#a7efc8}.feedback-bad{color:#ffd6b9}
+.footer{margin-top:28px;color:#9badc3;font-size:.75rem;text-align:center;line-height:1.6}
+@media(max-width:790px){.workspace{grid-template-columns:1fr}.message-list{max-height:450px}.detail{min-height:350px}.cards{gap:10px}.stat{padding:17px}.stat strong{font-size:1.8rem}}
+@media(max-width:480px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.stat{padding:13px}.stat span{font-size:.72rem}.stat strong{font-size:1.5rem}.app{padding:15px}.panel-head{padding:17px}.message-item{padding:15px}.detail{padding:19px}.user-pill{font-size:.76rem}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<section id="login-view" class="signin-layout">
+  <main class="signin-card">
+    <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7C6CFF"/><stop offset="1" stop-color="#4F8EFF"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#lg)"/><path d="M32 13C29.4 17.1 20 28.5 20 37a12 12 0 0 0 24 0c0-8.5-9.4-19.9-12-24Z" fill="#fff"/></svg>Droply</div>
+    <h1>Private inbox.</h1>
+    <p class="muted signin-intro">Contact messages, all in one place. Sign in with an approved administrator account.</p>
+    <form id="login-form">
+      <div class="field"><label for="username">Username</label><input id="username" name="username" autocomplete="username" maxlength="24" required placeholder="Username" autocapitalize="none" spellcheck="false"></div>
+      <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required placeholder="Password"></div>
+      <button class="primary wide" id="login-button" type="submit">Sign in to inbox</button>
+      <p class="feedback" id="login-feedback" role="status" aria-live="polite"></p>
+    </form>
+    <p class="private-note">Authorized Droply administrators only. Your access expires automatically.</p>
+  </main>
+</section>
+<div id="app-view" class="app" hidden>
+  <header class="topbar">
+    <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7C6CFF"/><stop offset="1" stop-color="#4F8EFF"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#lg2)"/><path d="M32 13C29.4 17.1 20 28.5 20 37a12 12 0 0 0 24 0c0-8.5-9.4-19.9-12-24Z" fill="#fff"/></svg>Droply</div>
+    <div class="top-right"><span class="user-pill" id="signed-user"></span><button type="button" class="ghost" id="refresh">Refresh</button><button type="button" class="ghost" id="sign-out">Sign out</button></div>
+  </header>
+  <div class="titlebar"><div><span class="eyebrow">Private workspace</span><h1>Contact inbox.</h1><span class="muted">Read, organize, and resolve messages sent through Droply.</span></div><div class="status status-resolved">Secured access</div></div>
+  <section class="cards" aria-label="Inbox statistics">
+    <div class="stat"><span>All messages</span><strong id="count-all">—</strong></div>
+    <div class="stat"><span>New</span><strong id="count-new">—</strong></div>
+    <div class="stat"><span>Resolved</span><strong id="count-resolved">—</strong></div>
+  </section>
+  <section class="workspace" aria-label="Message browser">
+    <div class="panel">
+      <div class="panel-head"><h2>Messages</h2><label for="search" class="eyebrow">Search loaded messages</label><input id="search" class="search" type="search" placeholder="Search names, email, message…" autocomplete="off">
+        <div class="filters" role="group" aria-label="Filter messages">
+          <button type="button" class="filter" data-status="all" aria-pressed="true">All</button>
+          <button type="button" class="filter" data-status="new" aria-pressed="false">New</button>
+          <button type="button" class="filter" data-status="read" aria-pressed="false">Read</button>
+          <button type="button" class="filter" data-status="resolved" aria-pressed="false">Resolved</button>
+        </div>
+      </div>
+      <div id="message-list" class="message-list" aria-label="Inbox messages"><div class="empty">Loading inbox…</div></div>
+      <button id="load-more" type="button" class="ghost load-more" hidden>Load older messages</button>
+    </div>
+    <div class="panel detail">
+      <div id="detail-empty"><span class="detail-kicker">Message details</span><h2 class="detail-title">Choose a message.</h2><p class="muted">Select a message on the left to review it here.</p></div>
+      <div id="detail-content" hidden>
+        <span class="detail-kicker">Message details</span><h2 class="detail-title" id="detail-name"></h2>
+        <a class="detail-email" id="detail-email" href="#"></a>
+        <div class="detail-meta"><span id="detail-date"></span><span id="detail-status" class="status"></span></div>
+        <div class="detail-body" id="detail-body"></div>
+        <div class="detail-actions">
+          <button type="button" class="ghost" id="mark-new">Mark new</button>
+          <button type="button" class="ghost" id="mark-read">Mark read</button>
+          <button type="button" class="primary" id="mark-resolved">Resolve</button>
+        </div>
+        <p class="helper" id="detail-feedback" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+  <p class="footer">Private Droply administration · Messages are stored in Supabase, not automatically forwarded to email.</p>
+</div>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const KEY = 'droply-contact-admin-session';
+  const API_ENDPOINT = 'https://zyppzqwqacvdnfiajbpp.supabase.co/functions/v1/contact-admin';
+  let token = null, all = [], selectedId = null, currentFilter = 'all', offset = 0, totalFilter = 0;
+  const PAGE_SIZE = 50;
+  const fmt = value => {try{return new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}catch{return String(value||'')}};
+  const short = str => String(str||'').replace(/\s+/g,' ').slice(0,130);
+  async function call(mode, method, body) {
+    const headers = {'Content-Type':'application/json','X-Droply-Admin':'1'};
+    if (token) headers.Authorization = 'Bearer ' + token;
+    const url = new URL(API_ENDPOINT);url.search = '?mode=' + encodeURIComponent(mode);
+    if (mode === 'messages') { url.searchParams.set('offset',String(offset));url.searchParams.set('status',currentFilter); }
+    const res = await fetch(url.href,{method:method||'GET',headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});
+    let data={};try{data=await res.json()}catch{}
+    if (!res.ok) {
+      if (res.status===401 && mode!=='login') { signOut('Your session expired. Please sign in again.');throw Error('Session expired'); }
+      throw Error(data.message || (res.status===429?'Too many attempts. Please try later.':'Request failed'));
+    }
+    return data;
+  }
+  function signOut(message) {
+    token=null;try{sessionStorage.removeItem(KEY)}catch{}
+    $('app-view').hidden=true;$('login-view').hidden=false;
+    $('password').value='';
+    $('login-feedback').textContent=message||'';
+    all=[];selectedId=null;$('username').focus();
+  }
+  function reveal(user) {
+    $('signed-user').textContent = user + ' · Admin';
+    $('login-view').hidden=true;$('app-view').hidden=false;
+  }
+  $('sign-out').addEventListener('click',()=>signOut('Signed out securely.'));
+  $('login-form').addEventListener('submit',async ev=>{
+    ev.preventDefault();
+    const btn=$('login-button');if(btn.disabled)return;
+    const user=$('username').value.trim().toLowerCase(), password=$('password').value;
+    $('login-feedback').textContent='Signing in…';btn.disabled=true;
+    try {
+      const data=await call('login','POST',{username:user,password});
+      if (!data.token)throw Error('Login failed');
+      token=data.token; try{sessionStorage.setItem(KEY,token)}catch{}
+      $('password').value='';$('login-feedback').textContent='';
+      reveal(data.username);currentFilter='all';offset=0;all=[];
+      await loadMessages(false);
+    } catch(e) {
+      $('login-feedback').textContent=e.message||'Unable to sign in.';
+    } finally {btn.disabled=false;}
+  });
+  $('refresh').addEventListener('click',()=>{offset=0;loadMessages(false)});
+  $('load-more').addEventListener('click',async()=>{offset+=PAGE_SIZE;await loadMessages(true)});
+  document.querySelectorAll('[data-status]').forEach(btn=>btn.addEventListener('click',()=>{
+    currentFilter=btn.dataset.status;offset=0;selectedId=null;
+    document.querySelectorAll('[data-status]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+    loadMessages(false);
+  }));
+  $('search').addEventListener('input',renderList);
+  const txt=(tag,cls,value)=>{const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=String(value||'');return el;};
+  function renderList(){
+    const holder=$('message-list');holder.replaceChildren();
+    const q=$('search').value.trim().toLowerCase();
+    const items=all.filter(m=>!q||[m.sender_name,m.sender_email,m.body].some(v=>String(v||'').toLowerCase().includes(q)));
+    if (!items.length){holder.append(txt('div','empty',q?'No loaded messages match your search.':'No messages in this view.'));return;}
+    for (const m of items){
+      const btn=txt('button','message-item','');btn.type='button';
+      btn.setAttribute('aria-current',String(m.id===selectedId));
+      const top=txt('div','item-top','');
+      top.append(txt('strong','item-name',m.sender_name),txt('span','item-date',fmt(m.created_at)));
+      btn.append(top,txt('span','item-email',m.sender_email),txt('p','item-preview',short(m.body)));
+      const st=txt('span','status status-'+m.status,m.status);btn.append(st);
+      btn.addEventListener('click',()=>select(m.id));holder.append(btn);
+    }
+  }
+  function select(id){
+    selectedId=id;const m=all.find(x=>x.id===id);
+    if(!m){$('detail-empty').hidden=false;$('detail-content').hidden=true;renderList();return;}
+    $('detail-empty').hidden=true;$('detail-content').hidden=false;
+    $('detail-name').textContent=m.sender_name;
+    $('detail-email').textContent=m.sender_email;
+    $('detail-email').href='mailto:'+encodeURIComponent(m.sender_email);
+    $('detail-date').textContent=fmt(m.created_at);
+    $('detail-status').textContent=m.status;
+    $('detail-status').className='status status-'+m.status;
+    $('detail-body').textContent=m.body;
+    $('detail-feedback').textContent='';
+    $('mark-new').disabled=m.status==='new';
+    $('mark-read').disabled=m.status==='read';
+    $('mark-resolved').disabled=m.status==='resolved';
+    renderList();
+  }
+  async function loadMessages(append){
+    $('refresh').disabled=true;$('load-more').disabled=true;
+    if (!append){$('message-list').replaceChildren(txt('div','empty','Loading messages…'));all=[];}
+    try{
+      const result=await call('messages','GET');
+      totalFilter=result.totalFiltered||0;
+      all=append?all.concat(result.messages||[]):(result.messages||[]);
+      $('count-all').textContent=result.total||0;
+      $('count-new').textContent=result.newCount||0;
+      $('count-resolved').textContent=result.resolvedCount||0;
+      $('load-more').hidden=all.length>=totalFilter;
+      if (selectedId && all.some(x=>x.id===selectedId))select(selectedId);
+      else {selectedId=null;$('detail-empty').hidden=false;$('detail-content').hidden=true;renderList();}
+    }catch(e){if(token){$('message-list').replaceChildren(txt('div','empty',e.message||'Could not load inbox.'));}}
+    finally{$('refresh').disabled=false;$('load-more').disabled=false;}
+  }
+  async function updateStatus(status){
+    if(!selectedId)return;
+    const id=selectedId;
+    for(const button of [$('mark-new'),$('mark-read'),$('mark-resolved')])button.disabled=true;
+    $('detail-feedback').textContent='Saving…';
+    try{
+      await call('status','POST',{id,status});
+      const m=all.find(x=>x.id===id);if(m)m.status=status;
+      $('detail-feedback').textContent='Saved.';
+      await loadMessages(false);
+    }catch(e){$('detail-feedback').textContent=e.message||'Could not update message.';select(id);}
+  }
+  $('mark-new').addEventListener('click',()=>updateStatus('new'));
+  $('mark-read').addEventListener('click',()=>updateStatus('read'));
+  $('mark-resolved').addEventListener('click',()=>updateStatus('resolved'));
+  try{token=sessionStorage.getItem(KEY)}catch{}
+  if(token){
+    // The server validates this token; client-side possession alone grants nothing.
+    call('whoami','GET').then(data=>{reveal(data.username);loadMessages(false)}).catch(()=>signOut('Please sign in again.'));
+  }
+})();
+</script>
+</body>
+</html>
