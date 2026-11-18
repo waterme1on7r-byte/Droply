@@ -215,7 +215,7 @@ Deno.serve(async (req:Request):Promise<Response>=>{
          (typeof incomingNote!=="string" ||
           incomingNote.trim().length<5 ||
           incomingNote.trim().length>2000 ||
-          /[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f]/.test(incomingNote))) {
+          /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(incomingNote))) {
         return fail(422,"Please provide a resolution note (5 to 2000 characters).");
       }
       if(status!=="resolved" && incomingNote!==undefined) {
