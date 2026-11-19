@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-CxZSYgzasqMpULpMwex+RKUBD5sAf459bFzdq40kY0Q='; style-src 'self' 'sha256-BPOx5mr6P8Krc+LLYoxOmvCl6Z0FPSS6+BUwrJhSKHA=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-CxZSYgzasqMpULpMwex+RKUBD5sAf459bFzdq40kY0Q='; style-src 'self' 'sha256-SqdBk23/OOSM/yl/fKUWVmclbd7iFS3JDPa/2T6vuEA=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -47,7 +47,7 @@
     .container { width: min(var(--container), calc(100% - 48px)); margin-inline: auto; }
     .gradient-text { color: #a5d0ff; background: var(--gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
     .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: #abd3ff; text-transform: uppercase; letter-spacing: .17em; font-size: .73rem; font-weight: 750; }
-    .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 100%; background: #82bfff; box-shadow: 0 0 16px #75b8ff91; }
+
     .section { padding: 108px 0; position: relative; }
     .section-title { font-size: clamp(2.15rem, 4.2vw, 3.55rem); font-weight: 760; line-height: 1.12; letter-spacing: -.055em; margin: 15px 0 18px; }
     .section-copy { max-width: 600px; margin: 0; color: var(--muted); font-size: 1.045rem; line-height: 1.83; }
@@ -84,13 +84,11 @@
     /* Hero */
     .hero { isolation: isolate; overflow: hidden; padding: 90px 0 105px; position: relative; }
     .hero::before { content: ""; position: absolute; z-index: -2; inset: 0; background-image: linear-gradient(#ffffff04 1px, transparent 1px), linear-gradient(90deg,#ffffff04 1px,transparent 1px); background-size: 76px 76px; mask-image: linear-gradient(to bottom,transparent 3%,black 32%,transparent 100%); pointer-events: none; }
-    .hero-glow { position: absolute; z-index: -1; pointer-events: none; filter: blur(72px); border-radius: 50%; opacity: .62; }
-    .hero-glow.one { width: 460px; height: 410px; background: radial-gradient(circle,#4a8ed659 5%,transparent 69%); left: 20%; top: -13%; }
-    .hero-glow.two { width: 640px; height: 620px; background: radial-gradient(circle,#3676ec4b 3%,transparent 65%); right: -9%; top: 6%; }
+
     .hero-grid { display: grid; grid-template-columns: .94fr 1.06fr; align-items: center; gap: 44px; }
     .hero-copy { position: relative; z-index: 2; }
-    .hero-pill { display: inline-flex; align-items: center; gap: 9px; border: 1px solid #90c6ff45; border-radius: 40px; background: #79baff11; padding: 8px 13px; color: #c9e3ff; font-weight: 650; font-size: .77rem; margin-bottom: 28px; box-shadow: inset 0 1px 0 #ffffff08; }
-    .pill-spark { width: 8px; height: 8px; border-radius: 50%; background: #9cccff; box-shadow: 0 0 12px #9cccffb0; }
+    .hero-pill { display: inline-flex; align-items: center; border: 1px solid #90c6ff45; border-radius: 40px; background: #79baff11; padding: 8px 13px; color: #c9e3ff; font-weight: 650; font-size: .77rem; margin-bottom: 28px; box-shadow: inset 0 1px 0 #ffffff08; }
+
     h1 { margin: 0; font-size: clamp(3.3rem, 5.7vw, 5.65rem); font-weight: 790; letter-spacing: -.079em; line-height: 1.075; max-width: 620px; }
     h1 .line { display: block; }
     .hero-lead { font-size: clamp(1.035rem, 1.55vw, 1.16rem); color: var(--muted); line-height: 1.87; max-width: 490px; margin: 26px 0 30px; }
@@ -102,7 +100,7 @@
     .trust-mark { display: grid; place-items: center; width: 29px; height: 29px; color: #9dccff; background: #75b8ff1c; border: 1px solid #7eb8f53a; border-radius: 50%; }
     .trust-mark svg { width: 15px; height: 15px; }
     .hero-art { position: relative; min-width: 0; padding: 28px 6px 28px 0; }
-    .art-halo { position: absolute; z-index: -1; width: 83%; aspect-ratio: 1; inset: 12% 6% auto auto; border-radius: 50%; border: 1px solid #85c0ff15; box-shadow: 0 0 0 47px #7cbafc08,0 0 0 98px #7cbafc04; }
+
     .orbit-dot { position: absolute; z-index: 2; display: grid; place-items: center; width: 39px; height: 39px; border-radius: 13px; border: 1px solid #ffffff24; box-shadow: 0 9px 28px #0006; backdrop-filter: blur(12px); animation: float 5.5s ease-in-out infinite; }
     .orbit-dot svg { width: 22px; height: 22px; }
     .orbit-dot.a { top: -14px; right: 18%; background: #679bd27e; transform: rotate(15deg); }
@@ -133,7 +131,7 @@
     .peer-status { color: #aaa9b5; font-size: .60rem; display: block; }
     .peer-link { display: flex; align-items: center; justify-content: center; position: relative; height: 36px; color: #a2cfff; }
     .peer-link::before { content: ""; position: absolute; width: 100%; top: 50%; border-top: 1px dashed #94c8ff8a; animation: glow-line 2.8s ease-in-out infinite; }
-    .peer-link::after { content: ""; position: absolute; width: 31px; height: 31px; border: 1px solid #85c0ff5c; border-radius: 50%; box-shadow: 0 0 0 8px #85c0ff0e; animation: ripple 3s ease-out infinite; }
+
     .peer-link svg { z-index: 1; background: #252435; border-radius: 50%; padding: 6px; width: 31px; height: 31px; }
     .drop-zone { position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; margin-top: 19px; border: 1px dashed #92c7ff78; border-radius: 13px; background: radial-gradient(ellipse at center,#7abaff13,transparent 70%),#6bb1fb07; height: 119px; }
     .drop-zone::before { content: ""; position: absolute; inset: 5px; border-radius: 10px; border: 1px solid #ffffff07; pointer-events: none; }
@@ -195,7 +193,7 @@
     .features-section { background: linear-gradient(180deg,#151519,#121214); border-block: 1px solid #ffffff07; }
     .features-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 17px; margin-top: 50px; }
     .feature-card { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 19px; background: #1c1c21; padding: 28px 26px 30px; min-height: 225px; transition: transform .25s,border-color .25s,background .25s; }
-    .feature-card::after { content: ""; position: absolute; width: 155px; height: 155px; border-radius: 50%; background: #70b5ff11; top: -85px; right: -80px; pointer-events: none; }
+
     .feature-card:hover { transform: translateY(-5px); background: #222129; border-color: #8bc3ff5a; }
     .feature-icon { width: 46px; height: 46px; border-radius: 13px; margin-bottom: 23px; }
     .feature-icon svg { width: 23px; height: 23px; }
@@ -208,8 +206,7 @@
     .security-list svg { flex: 0 0 auto; width: 20px; height: 20px; color: #9ecdff; margin-top: 3px; }
     .security-list b { color: #f1efff; font-weight: 700; }
     .security-visual { padding: 35px; position: relative; min-height: 394px; border: 1px solid #ffffff1b; border-radius: 24px; background: radial-gradient(circle at 50% 25%,#5a92cd2a,transparent 57%),linear-gradient(145deg,#24242a,#19191e); display: flex; align-items: center; flex-direction: column; justify-content: center; overflow: hidden; box-shadow: inset 0 1px 0 #ffffff14,0 20px 50px #0004; }
-    .security-visual::before,.security-visual::after { content: ""; position: absolute; width: 290px; height: 290px; border: 1px solid #9ecdff15; border-radius: 50%; pointer-events: none; }
-    .security-visual::after { width: 390px; height: 390px; }
+
     .keys-row { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; width: 100%; gap: 14px; }
     .key-token { width: 118px; height: 137px; flex: 0 1 auto; border-radius: 18px; border: 1px solid #8dc4ff49; background: linear-gradient(155deg,#6faef230,#3142557d); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
     .key-token.other { border-color: #659cfb55; background: linear-gradient(155deg,#528cff2c,#27374976); }
@@ -228,8 +225,7 @@
     /* Download */
     .download-section { padding-top: 100px; padding-bottom: 100px; }
     .download-panel { position: relative; isolation: isolate; overflow: hidden; border: 1px solid #ffffff24; border-radius: 30px; padding: 59px 62px 62px; background: linear-gradient(155deg,#24232e 0%,#19191f 53%,#1b202c 100%); box-shadow: inset 0 1px 0 #ffffff13,0 25px 65px #0004; }
-    .download-panel::before { content: ""; position: absolute; z-index: -1; width: 570px; height: 340px; left: 50%; top: -230px; transform: translateX(-50%); background: #6eb4ff62; filter: blur(90px); border-radius: 50%; }
-    .download-panel::after { content: ""; position: absolute; z-index: -1; inset: 0; opacity: .15; background: radial-gradient(circle at 88% 90%,#4d8aff5c,transparent 39%); }
+
     .download-panel-head { text-align: center; }
     .download-panel-head .brand-icon { width: 65px; height: 65px; margin: 0 auto 20px; filter: drop-shadow(0 15px 20px #73b7ff50); }
     .download-panel-head h2 { margin: 0; font-size: clamp(2.15rem,4.5vw,3.15rem); letter-spacing: -.06em; line-height: 1.18; }
@@ -296,7 +292,7 @@
     @keyframes file-drop { 0%,8% { opacity: 0; transform: translate(15px,-39px) rotate(-11deg); } 20% { opacity: .9; } 46% { opacity: .9; transform: translate(-2px,25px) rotate(6deg); } 56%,100% { opacity: 0; transform: translate(-6px,39px); } }
     @keyframes float { 0%,100% { translate: 0 0; } 50% { translate: 0 -11px; } }
     @keyframes icon-bob { 0%,100% { transform: translateY(2px); } 50% { transform: translateY(-5px); } }
-    @keyframes ripple { 0% { box-shadow: 0 0 0 2px #85c0ff39; } 70%,100% { box-shadow: 0 0 0 13px #85c0ff00; } }
+    
     @keyframes signal { 0% { left: 0; opacity: 0; } 13% { opacity: 1; } 85% { opacity: 1; } 100% { left: calc(100% - 8px); opacity: 0; } }
     @keyframes glow-line { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
 
@@ -332,7 +328,7 @@
       font-weight: 500;
     }
     .eyebrow { letter-spacing: .105em; font-size: .70rem; color: #85baff; }
-    .eyebrow::before { width: 6px; height: 6px; background: #378dff; box-shadow: 0 0 14px #2b8aff8f; }
+
     .step-number { font-size: .76rem; letter-spacing: .04em; }
     .hero-meta { font-size: .72rem; letter-spacing: -.026em; color: #a2b3ce; }
     .btn { font-family: 'IBM Plex Sans', 'Lato', sans-serif; font-weight: 600; letter-spacing: -.012em; }
@@ -346,10 +342,9 @@
     .nav-links a.active { color: #93c3ff; text-shadow: 0 0 20px #348aff4d; }
     .hero { background: radial-gradient(ellipse 62% 73% at 90% 46%, #1266e64f 0%, #0c3f9950 34%, transparent 75%), radial-gradient(ellipse 50% 58% at 8% 0%, #0b49b638, transparent 78%); }
     .hero::before { background-image: linear-gradient(#6d9bff09 1px,transparent 1px),linear-gradient(90deg,#6d9bff09 1px,transparent 1px); }
-    .hero-glow.one { left: 0%; top: -20%; width: 620px; height: 570px; background: radial-gradient(circle,#1367f775 0%,#126aff36 37%,transparent 75%); opacity: .78; }
-    .hero-glow.two { right: -19%; top: 0%; width: 830px; height: 800px; background: radial-gradient(circle,#127bffb3 0%,#1257c45b 39%,transparent 74%); opacity: .90; }
+
     .hero-pill { background: #0c2c55af; border-color: #4d9bff65; color: #c7e3ff; }
-    .pill-spark { background: #53aaff; box-shadow: 0 0 13px #449bffff; }
+
     .hero-lead { line-height: 1.75; }
     .hero-trust { color: #b6c8e0; }
     .trust-mark { background: #1e6bc92b; border-color: #478dff55; color: #93c3ff; }
@@ -358,7 +353,7 @@
     .btn-outline { background: #111d2ab8; border-color: #83b3f34d; }
     .btn-outline:hover { background: #133052ae; border-color: #83beff; box-shadow: 0 12px 32px #187bff38; }
     .brand-icon { filter: drop-shadow(0 7px 15px #377aff47); }
-    .art-halo { border-color: #7eb7ff51; box-shadow: 0 0 0 47px #2c83ff16,0 0 0 98px #1d79ff0d, 0 0 90px 60px #1369eb30; }
+
     .app-window { background: linear-gradient(145deg,#1b3555,#101d33 76%); border: 1px solid #68b0ff83; box-shadow: 0 40px 98px #0009,0 0 110px #237fff59,inset 0 1px 0 #ffffff21; }
     .window-top { background: linear-gradient(90deg,#15253b,#151b28); border-bottom-color: #629eff30; }
     .app-sidebar { background: #0b1425c9; }
@@ -386,7 +381,7 @@
     .step-icon, .feature-icon { background: linear-gradient(140deg,#2467d344,#1d42692c); color: #9ccaff; border-color: #4a9fff66; }
     .features-section { background: linear-gradient(180deg,#102846,#0d1a30); }
     .feature-card { background: linear-gradient(151deg,#193557,#11253e 80%); border-color: #5e9bee3b; }
-    .feature-card::after { background: #277dff1c; }
+
     .feature-card:hover { background: #1b2c44; border-color: #5da8ff73; }
     .security-visual { background: radial-gradient(circle at 50% 26%,#168bff7a,transparent 65%),linear-gradient(145deg,#1c3c65,#10213b); border-color: #6aaeff66; }
     .key-token { background: linear-gradient(155deg,#2f7ff954,#172c4e); border-color: #66a7ff80; }
@@ -394,8 +389,7 @@
     .key-token .token-icon { background: #327ce948; color: #c3e0ff; }
     .key-join svg { background: #18365a; }
     .download-panel { background: linear-gradient(148deg,#164d8c 0%,#12345e 37%,#0e2544 100%); border-color: #79beff77; box-shadow: inset 0 1px 0 #ffffff23,0 30px 80px #0005,0 0 85px #126de05a; }
-    .download-panel::before { background: #258cffd9; filter: blur(100px); top: -220px; }
-    .download-panel::after { opacity: .28; background: radial-gradient(circle at 88% 90%,#2788ff83,transparent 41%); }
+
     .download-panel-head .brand-icon { filter: drop-shadow(0 12px 25px #2c82ff80); }
     .download-card { background: #0e1a2cdb; border-color: #6f9fff3d; }
     .download-card:hover { border-color: #74b9ffb3; }
@@ -648,7 +642,7 @@
       opacity:0; transition:opacity .48s ease; overflow:hidden;
     }
     .app-screenshot-window.is-peer-connected .demo-active-zone { opacity:1; }
-    .demo-active-zone::before { content:"";position:absolute; width:36cqw;height:36cqw;border:1px solid #55a4ff25;border-radius:50%;box-shadow:0 0 0 8cqw #2d85ef0b;animation: screenshot-zone-ripple 4s ease-out infinite; }
+
     .demo-ready-prompt { position: relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:1.6cqw; transition:opacity .35s ease, transform .35s ease; }
     .demo-ready-prompt svg { width:6.3cqw;height:6.3cqw;color:#89bdff;animation:icon-bob 3s ease-in-out infinite; }
     .demo-ready-prompt strong { color:#ffe16b;font-size:2.15cqw;font-weight:700; }
@@ -669,11 +663,10 @@
     .demo-progress-track {height:.95cqw;background:#26496c;border-radius:99px;margin-top:2.6cqw;overflow:hidden;}
     .demo-progress-track #progress-fill {display:block;width:0%;height:100%;background:linear-gradient(90deg,#2487ff,#5dbfff);border-radius:inherit;box-shadow:0 0 10px #47a2ff99;}
     .demo-transfer-footer {display:flex;align-items:center;justify-content:space-between;gap:1cqw;font-family:'IBM Plex Mono',monospace;color:#a7bfdc;font-size:1.35cqw;margin-top:1.3cqw;}
-    .demo-shield-ripple {position:absolute;top:20%;left:53.6%;width:5.5%;aspect-ratio:1;border-radius:50%;border:1px solid #7dc4ff90;box-shadow:0 0 0 1.5cqw #4ba2ff12;opacity:0;pointer-events:none;}
-    .app-screenshot-window.is-peer-connected .demo-shield-ripple {animation:screenshot-shield-pulse 2.8s ease-out infinite;}
+
     @keyframes screenshot-status-pulse {50%{box-shadow:0 0 12px 4px #55eac550;}}
-    @keyframes screenshot-zone-ripple {0%{transform:scale(.7);opacity:.65}100%{transform:scale(1.6);opacity:0}}
-    @keyframes screenshot-shield-pulse {0%{opacity:.8;transform:scale(.9)}90%,100%{opacity:0;transform:scale(2)}}
+    
+    
     @keyframes screenshot-file-fall {0%{opacity:0;transform:translate(8cqw,-5cqw) rotate(11deg) scale(1.1)}15%{opacity:1}65%{opacity:1}100%{opacity:0;transform:translate(-6cqw,28cqw) rotate(-9deg) scale(.65)}}
     @media(max-width:900px){ .app-screenshot-window { transform:none; } }
     @media(prefers-reduced-motion:reduce){ .app-screenshot-window .demo-peer-ready,.app-screenshot-window .demo-active-zone {opacity:0!important;} .app-screenshot-window .demo-shield-ripple,.app-screenshot-window .demo-file-flight {display:none!important;} }
@@ -684,8 +677,7 @@
        opt-in email addressed to the Droply team, never an unverified success state. */
     .newsletter-section { padding: 0 0 108px; overflow: hidden; }
     .newsletter-panel { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1fr); align-items: center; gap: clamp(28px, 5vw, 76px); padding: clamp(30px, 5.6vw, 66px); background: linear-gradient(123deg, #10213d 2%, #13396c 53%, #10294c 100%); border: 1px solid rgba(120,187,255,.38); border-radius: 26px; box-shadow: 0 25px 75px #0003, inset 0 1px #ffffff1e; }
-    .newsletter-panel::before { content: ''; position: absolute; z-index: -1; width: 480px; height: 480px; border-radius: 50%; right: -210px; top: -250px; background: radial-gradient(circle, #498eff3b 0%, transparent 68%); pointer-events: none; }
-    .newsletter-panel::after { content: ''; position: absolute; z-index: -1; width: 160px; height: 160px; right: 10%; bottom: -112px; border: 1px solid #98caff2c; border-radius: 50%; box-shadow: 0 0 0 35px #86bdff09, 0 0 0 75px #86bdff07; pointer-events: none; }
+
     .newsletter-heading { margin-top: 17px; margin-bottom: 14px; font-size: clamp(2.05rem, 4.2vw, 3.7rem); line-height: 1.07; letter-spacing: -.055em; }
     .newsletter-copy { max-width: 430px; color: #e0d2aa; line-height: 1.75; margin: 0; }
     .newsletter-tags { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
@@ -785,10 +777,10 @@
 
   <main id="main">
     <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-glow one"></div><div class="hero-glow two"></div>
+      
       <div class="container hero-grid">
         <div class="hero-copy">
-          <div class="hero-pill"><span class="pill-spark"></span>A better way to share</div>
+          <div class="hero-pill">A better way to share</div>
           <h1 id="hero-title"><span class="line">Send files</span><span class="line gradient-text">directly.</span><span class="line">No cloud.</span><span class="line gradient-text">No limits.</span></h1>
           <p class="hero-lead">Send anything straight from your device to someone else's. No cloud detours, no distance worries—just two people, online and ready to share.</p>
           <div class="hero-actions" aria-label="Download options">
@@ -802,7 +794,7 @@
           <div class="hero-trust"><span class="trust-mark"><svg class="icon-stroke" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>Your files stay between you and the person you choose.</div>
         </div>
         <div class="hero-art" role="img" aria-label="Actual Droply desktop screenshot with an animated demonstration of selecting a friend and sending a file">
-          <div class="art-halo"></div>
+          
           <div class="orbit-dot a" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 13C29.4 17.1 20 28.5 20 37a12 12 0 0 0 24 0c0-8.5-9.4-19.9-12-24Z" fill="#fff"/></svg></div>
           <div class="orbit-dot b" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 13C29.4 17.1 20 28.5 20 37a12 12 0 0 0 24 0c0-8.5-9.4-19.9-12-24Z" fill="#fff"/></svg></div>
           <!-- REAL PRODUCT SCREENSHOT: Update this base64 data image when the desktop UI changes.
@@ -832,7 +824,7 @@
                 <div class="demo-transfer-footer"><span>Direct, private transfer</span><span id="transfer-speed">18.6 MB/s</span></div>
               </div>
             </div>
-            <span class="demo-shield-ripple" aria-hidden="true"></span>
+            
           </div>
           <div class="mini-float connected" aria-hidden="true"><svg class="icon-stroke" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/><circle cx="12" cy="12" r="10"/></svg><div><strong>Peer connected</strong><span>Ready to share</span></div></div>
           <div class="mini-float privacy" aria-hidden="true"><svg class="icon-stroke" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><div><strong>End-to-end encrypted</strong><span>Just between you two</span></div></div>
