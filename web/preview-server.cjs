@@ -145,7 +145,13 @@ function createPreviewServer(options = {}) {
     const origin = req.headers.origin;
     if (origin && origin !== 'null' && !validOrigin(req)) return false;
     const site = req.headers['sec-fetch-site'];
-    return !site || site === 'same-origin' || site === 'none';
+    if (site && !['same-origin', 'none'].includes(site)) return false;
+    const ref = req.headers.referer;
+    if (!ref) return true; // no-referrer is intentional and common in Safari
+    const host = req.headers.host;
+    if (!host || /[\s/\\@]/.test(host)) return false;
+    const expected = (env.PREVIEW_LOCAL_HTTP === '1' ? 'http://' : 'https://') + host;
+    try { return new URL(ref).origin === expected; } catch { return false; }
   };
   async function readBody(req, limit = MAX_BODY) {
     const chunks = [];
