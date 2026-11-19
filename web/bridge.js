@@ -50,10 +50,13 @@
         'Server status: ' + status.state + '\nFile System Access: ' + (typeof showDirectoryPicker === 'function'));
     },
     notify: (kind, body) => {
-      if (!['friend', 'incoming', 'completed'].includes(kind) || typeof body !== 'string') return;
-      if ('Notification' in window && Notification.permission === 'granted') {
-        try { new Notification('Droply', { body: body.slice(0, 240) }); } catch {}
-      }
+      const preference = { friend: 'friendNotifications', incoming: 'incomingNotifications',
+        completed: 'completedNotifications' }[kind];
+      if (!preference || typeof body !== 'string'
+        || !('Notification' in window) || Notification.permission !== 'granted') return;
+      store.settings().then(settings => {
+        if (settings[preference]) new Notification('Droply', { body: body.slice(0, 240) });
+      }).catch(() => {});
     },
     openGithub: () => window.open('https://github.com/waterme1on7r-byte/Droply', '_blank', 'noopener,noreferrer'),
     openLog: () => window.alert('Browser diagnostics are available in the developer console. Do not share browser storage or credentials.'),
