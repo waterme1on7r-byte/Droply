@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#121214">
+  <meta name="theme-color" content="#0c1018">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-EEzof+SPuCJvWF7qOPKyFEPRACFJnLU7gLKqagqIRM4='; style-src 'self' 'sha256-E3F1QRAqgsI41zZf8061IALB9CJdJ87ME8UuBpr80Zk=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-XInSV9diZRmQ1v8fddxcHeG3TfOCQxaGbKDBX17HSTs='; style-src 'self' 'sha256-ecVqxx2VNg8tUdAQ5oxLws6w8PWK48UqbFGKpml5uE4=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -1696,6 +1696,22 @@ html[data-theme="light"] .droply-chat-status.error {
   color: #a33d37;
 }
 
+    /* iOS Safari can sample the sticky header for the status-bar tint. */
+    @supports (-webkit-touch-callout: none) {
+      html { background-color: #0c1018; }
+      html[data-theme="light"] { background-color: #eff4fb; }
+      html .site-header,
+      html .site-header.is-scrolled {
+        background: #0c1018;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        transition: box-shadow .2s;
+      }
+      html[data-theme="light"] .site-header,
+      html[data-theme="light"] .site-header.is-scrolled {
+        background: #eff4fb;
+      }
+    }
   </style>
   <!-- Droply support widget. No provider or database secret is exposed here. -->
   <link rel="stylesheet" href="chat-widget.css">
@@ -1995,6 +2011,8 @@ html[data-theme="light"] .droply-chat-status.error {
       // Explicit website theme switch: respects a saved user choice, not only OS settings.
       const themeToggle = document.getElementById('theme-toggle');
       const themeKey = 'droply-website-theme';
+      const themeColor = document.querySelector('meta[name="theme-color"]');
+      const isIOSWebKit = CSS.supports('-webkit-touch-callout', 'none');
       let selectedTheme = 'dark';
       try {
         if (window.localStorage.getItem(themeKey) === 'light') selectedTheme = 'light';
@@ -2003,6 +2021,7 @@ html[data-theme="light"] .droply-chat-status.error {
         const light = theme === 'light';
         document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
         document.documentElement.style.colorScheme = light ? 'light' : 'dark';
+        themeColor.content = light ? '#eff4fb' : '#0c1018';
         themeToggle.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to bright theme');
         themeToggle.setAttribute('aria-pressed', String(light));
         themeToggle.title = light ? 'Switch to dark theme' : 'Switch to bright theme';
@@ -2027,6 +2046,11 @@ html[data-theme="light"] .droply-chat-status.error {
           try { window.localStorage.setItem(themeKey, nextTheme); } catch (_) { /* Optional storage. */ }
         };
         try {
+          // Let iOS sample the live header immediately instead of a page snapshot.
+          if (isIOSWebKit) {
+            applyAndStore();
+            return;
+          }
           await themeImagesReady;
           if (themeMotion.matches || typeof document.startViewTransition !== 'function') {
             applyAndStore(); // Older browsers and reduced-motion: no delayed image.
