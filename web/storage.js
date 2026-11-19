@@ -124,9 +124,14 @@
     await writeCredential(token, origin, id, false);
     return { token, registered: false };
   }
-  async function writeCredential(token, origin, id, registered = true) {
+  async function writeCredential(token, origin, id, registered = true, recovery = false) {
     if (!/^[A-Za-z0-9_-]{43}$/.test(token)) throw Error('Invalid credential');
-    const key = await get('credential-key');
+    let key = await get('credential-key');
+    // Only an explicit administrator-approved recovery may replace a lost key.
+    if (!key && recovery) {
+      key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+      await set('credential-key', key);
+    }
     if (!key) throw Error('Browser encryption key is missing; identity has been preserved');
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(token));
