@@ -43,7 +43,11 @@ test('private preview protects assets and proxies authenticated API and WebSocke
   const preview = base + '/internal/preview/';
   const unauth = await fetch(preview);
   assert.equal(unauth.status, 200);
-  assert.match(await unauth.text(), /Test access password/);
+  const loginHtml = await unauth.text();
+  assert.match(loginHtml, /Test access password/);
+  assert.equal(unauth.headers.get('referrer-policy'), 'no-referrer');
+  const csrf = loginHtml.match(/name="csrf" value="([^"]+)"/)?.[1];
+  assert.ok(csrf, 'Login form must have a signed CSRF token');
   assert.equal(unauth.headers.get('x-robots-tag'), 'noindex, nofollow, noarchive');
   assert.equal(unauth.headers.get('cache-control'), 'private, no-store, max-age=0');
   const blockedAsset = await fetch(preview + 'network.js');
@@ -52,15 +56,15 @@ test('private preview protects assets and proxies authenticated API and WebSocke
   assert.doesNotMatch(await blockedAsset.text(), /test asset|<html/);
   const noLogin = await fetch(preview + 'login', { method: 'POST', redirect: 'manual',
     headers: { Origin: base, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'password=incorrect' });
+    body: new URLSearchParams({ password: 'incorrect', csrf }) });
   assert.equal(noLogin.status, 401);
   const badOrigin = await fetch(preview + 'login', { method: 'POST', redirect: 'manual',
     headers: { Origin: 'https://attacker.example', 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ password }) });
+    body: new URLSearchParams({ password, csrf }) });
   assert.equal(badOrigin.status, 403);
   const login = await fetch(preview + 'login', { method: 'POST', redirect: 'manual',
     headers: { Origin: base, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ password }) });
+    body: new URLSearchParams({ password, csrf }) });
   assert.equal(login.status, 200);
   assert.match(login.headers.get('content-type'), /text\/html/);
   assert.match(await login.text(), /Access granted/);
@@ -106,19 +110,37 @@ test('private preview protects assets and proxies authenticated API and WebSocke
   });
   assert.equal(echo, 'test-hello');
 
-  // Safari may omit Origin for a same-origin form POST. Referer is only a
-  // fallback for the password form, never for auth API or WebSocket upgrades.
+  // Safari may send neither Origin nor Referer, especially when the page
+  // explicitly sets Referrer-Policy: no-referrer.
   const safariLogin = await fetch(preview + 'login', { method: 'POST',
-    headers: { Referer: preview, 'Sec-Fetch-Site': 'same-origin',
+    headers: { 'Sec-Fetch-Site': 'same-origin',
       'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ password }) });
+    body: new URLSearchParams({ password, csrf }) });
   assert.equal(safariLogin.status, 200);
   assert.match(await safariLogin.text(), /Access granted/);
+  const safariNullOrigin = await fetch(preview + 'login', { method: 'POST',
+    headers: { Origin: 'null', 'Sec-Fetch-Site': 'same-origin',
+      'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ password, csrf }) });
+  assert.equal(safariNullOrigin.status, 200);
+  const missingToken = await fetch(preview + 'login', { method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ password }) });
+  assert.equal(missingToken.status, 403);
+  const tamperedToken = await fetch(preview + 'login', { method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ password, csrf: csrf.slice(0, -1) + (csrf.endsWith('A') ? 'B' : 'A') }) });
+  assert.equal(tamperedToken.status, 403);
   const rejectedReferer = await fetch(preview + 'login', { method: 'POST',
     headers: { Referer: 'https://attacker.example/page', 'Sec-Fetch-Site': 'same-origin',
       'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ password }) });
+    body: new URLSearchParams({ password, csrf }) });
   assert.equal(rejectedReferer.status, 403);
+  const rejectedCrossSite = await fetch(preview + 'login', { method: 'POST',
+    headers: { 'Sec-Fetch-Site': 'cross-site',
+      'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ password, csrf }) });
+  assert.equal(rejectedCrossSite.status, 403);
 });
 
 test('private preview refuses weak credentials and insecure remote signaling', () => {
