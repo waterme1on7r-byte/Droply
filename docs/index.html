@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-YyQ86PrmFnsb9UWkmQJ7QhnJCo0Futj56na532yXcW8='; style-src 'self' 'sha256-dAl/9CJNvyujYqW5QldA8/F8g4iohDBr/Ba+C/REGl4=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-YyQ86PrmFnsb9UWkmQJ7QhnJCo0Futj56na532yXcW8='; style-src 'self' 'sha256-u1ek83iQPNo/ZKjvj+obJfcIvRpN20l2oa0NTy/N2JI=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -881,9 +881,10 @@
         box-shadow: 0 16px 38px rgba(128, 145, 170, .14);
       }
     html[data-theme="light"] .hero-art .orbit-dot {
-        background: rgba(255,255,255,.92);
-        border-color: rgba(70, 90, 120, .14);
-        box-shadow: 0 10px 28px rgba(110, 126, 150, .18);
+        /* Keep the white droplet visible against a blue tile. */
+        background: linear-gradient(145deg, #3886f4, #245dce);
+        border-color: rgba(135, 181, 246, .75);
+        box-shadow: 0 10px 28px rgba(43, 93, 177, .23);
       }
     html[data-theme="light"] .connection-wire {
         background: linear-gradient(90deg, rgba(84,164,255,.45), rgba(84,164,255,.9), rgba(84,164,255,.45));
