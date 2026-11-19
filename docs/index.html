@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-YyQ86PrmFnsb9UWkmQJ7QhnJCo0Futj56na532yXcW8='; style-src 'self' 'sha256-tjSDxlIU5DB+r6kvTH879zlibaCRrdFbO3PoUMRsHro=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-EEzof+SPuCJvWF7qOPKyFEPRACFJnLU7gLKqagqIRM4='; style-src 'self' 'sha256-DzPxIZ4VgX5qUSDdo1bFwQbl0UPURRNxZgWV9sRWcRE=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -996,9 +996,13 @@
     .theme-toggle:hover { background:rgba(154,190,239,.10); color:#fff0bf; }
     .theme-toggle:active { background:rgba(154,190,239,.16); }
     .theme-toggle:focus-visible { outline:2px solid #80b8fc; outline-offset:2px; }
-    .theme-toggle-icon { font-size:1.1rem; line-height:1; display:block; }
+    .theme-toggle-icon { display:grid; place-items:center; width:22px; height:22px; }
+    .theme-toggle-icon svg { display:block; width:21px; height:21px; }
+    .theme-toggle-icon .theme-icon-moon { display:none; }
+    html[data-theme="light"] .theme-toggle-icon .theme-icon-sun { display:none; }
+    html[data-theme="light"] .theme-toggle-icon .theme-icon-moon { display:block; }
     html[data-theme="light"] .theme-toggle {
-      color:#3a6db6; background:transparent; border:0; box-shadow:none;
+      color:#2058b4; background:transparent; border:0; box-shadow:none;
     }
     html[data-theme="light"] .theme-toggle:hover { background:rgba(57,111,195,.09); color:#27539a; }
     html[data-theme="light"] .theme-toggle:active { background:rgba(57,111,195,.14); }
@@ -1008,9 +1012,9 @@
     }
     @media(max-width:900px) { .nav-links { gap:10px; } }
     @media(max-width:700px) {
-      .nav-cta { order:2; margin-left:auto; }
-      .menu-toggle { order:3; }
-      .theme-toggle { order:4; margin-left:0; }
+      .theme-toggle { order:2; margin-left:auto; }
+      .nav-cta { order:3; margin-left:0; }
+      .menu-toggle { order:4; }
     }
     @media(max-width:500px) {
       .nav-wrap { gap:9px; }
@@ -1296,13 +1300,17 @@
         <a href="#download">Download</a>
         <a href="#contact" data-open-contact aria-controls="contact-dialog" aria-haspopup="dialog">Contact</a>
       </div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to bright theme" aria-pressed="false" title="Switch to bright theme">
+        <span class="theme-toggle-icon" aria-hidden="true">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24"><path d="M20.985 12.486A9 9 0 0 1 11.514 3.015a9 9 0 1 0 9.47 9.47Z" fill="currentColor" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/></svg>
+        </span>
+      </button>
       <a class="btn btn-primary nav-cta" href="#download">Download <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m-4-4 4 4 4-4M4 19h16"/></svg></a>
       <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-nav">
         <svg class="menu-lines" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
-      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to bright theme" aria-pressed="false" title="Switch to bright theme">
-        <span class="theme-toggle-icon" aria-hidden="true">☀</span>
-      </button>
+
     </nav>
   </header>
 
@@ -1562,7 +1570,6 @@
 
       // Explicit website theme switch: respects a saved user choice, not only OS settings.
       const themeToggle = document.getElementById('theme-toggle');
-      const themeIcon = themeToggle.querySelector('.theme-toggle-icon');
       const themeKey = 'droply-website-theme';
       let selectedTheme = 'dark';
       try {
@@ -1572,7 +1579,6 @@
         const light = theme === 'light';
         document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
         document.documentElement.style.colorScheme = light ? 'light' : 'dark';
-        themeIcon.textContent = light ? '☾' : '☀';
         themeToggle.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to bright theme');
         themeToggle.setAttribute('aria-pressed', String(light));
         themeToggle.title = light ? 'Switch to dark theme' : 'Switch to bright theme';
