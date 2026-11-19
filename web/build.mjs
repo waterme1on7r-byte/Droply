@@ -38,7 +38,7 @@ const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 if (inline.length !== 1) throw Error('Expected exactly one renderer inline script');
 const hash = createHash('sha256').update(inline[0][1]).digest('base64');
 replaceOnce("script-src 'self' 'unsafe-inline'", "script-src 'self' 'sha256-" + hash + "'");
-replaceOnce("connect-src 'self' ws: wss:", "connect-src 'self' " + url.origin + ' ' + httpUrl.origin);
+replaceOnce("connect-src 'self' ws: wss:", "connect-src 'self' " + url.origin + ' ' + httpUrl.origin + (process.env.DROPLY_PRIVATE_PREVIEW === '1' ? ' wss:' : ''));
 replaceOnce("a.textContent = 'Show in folder';", "a.textContent = window.DroplyWeb ? 'Download file' : 'Show in folder';");
 await mkdir(output, { recursive: true });
 await writeFile(join(output, 'index.html'), html);
