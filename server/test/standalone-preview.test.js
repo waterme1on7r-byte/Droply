@@ -46,9 +46,10 @@ test('private preview protects assets and proxies authenticated API and WebSocke
   assert.match(await unauth.text(), /Test access password/);
   assert.equal(unauth.headers.get('x-robots-tag'), 'noindex, nofollow, noarchive');
   assert.equal(unauth.headers.get('cache-control'), 'private, no-store, max-age=0');
-  assert.equal((await fetch(preview + 'network.js')).status, 200);
-  // Without a session, the file path serves the login page, not app bytes.
-  assert.match(await (await fetch(preview + 'network.js')).text(), /Test access password/);
+  const blockedAsset = await fetch(preview + 'network.js');
+  assert.equal(blockedAsset.status, 401);
+  assert.match(blockedAsset.headers.get('content-type'), /text\/plain/);
+  assert.doesNotMatch(await blockedAsset.text(), /test asset|<html/);
   const noLogin = await fetch(preview + 'login', { method: 'POST', redirect: 'manual',
     headers: { Origin: base, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'password=incorrect' });
@@ -60,7 +61,10 @@ test('private preview protects assets and proxies authenticated API and WebSocke
   const login = await fetch(preview + 'login', { method: 'POST', redirect: 'manual',
     headers: { Origin: base, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ password }) });
-  assert.equal(login.status, 303);
+  assert.equal(login.status, 200);
+  assert.match(login.headers.get('content-type'), /text\/html/);
+  assert.match(await login.text(), /Access granted/);
+  assert.match(login.headers.get('set-cookie'), /HttpOnly; SameSite=Lax/);
   const cookie = login.headers.get('set-cookie').split(';')[0];
   assert.match(cookie, /^droply_preview_session=/);
   const headers = { Cookie: cookie };
@@ -101,6 +105,20 @@ test('private preview protects assets and proxies authenticated API and WebSocke
     setTimeout(() => { ws.terminate(); reject(Error('Timed out')); }, 3000).unref();
   });
   assert.equal(echo, 'test-hello');
+
+  // Safari may omit Origin for a same-origin form POST. Referer is only a
+  // fallback for the password form, never for auth API or WebSocket upgrades.
+  const safariLogin = await fetch(preview + 'login', { method: 'POST',
+    headers: { Referer: preview, 'Sec-Fetch-Site': 'same-origin',
+      'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ password }) });
+  assert.equal(safariLogin.status, 200);
+  assert.match(await safariLogin.text(), /Access granted/);
+  const rejectedReferer = await fetch(preview + 'login', { method: 'POST',
+    headers: { Referer: 'https://attacker.example/page', 'Sec-Fetch-Site': 'same-origin',
+      'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ password }) });
+  assert.equal(rejectedReferer.status, 403);
 });
 
 test('private preview refuses weak credentials and insecure remote signaling', () => {
