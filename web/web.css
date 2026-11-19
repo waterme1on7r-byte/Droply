@@ -1,0 +1,49 @@
+html.droply-web body{height:100dvh}
+html.droply-web #titlebar{-webkit-app-region:unset}
+html.droply-web main{overflow:hidden}
+html.droply-web .web-note{font-size:12px;line-height:1.5;color:var(--mute);background:var(--card);border-left:2px solid var(--accent);border-radius:4px 10px 10px 4px;padding:10px 14px;flex:none}
+html.droply-web #sig{opacity:.45}
+@media (max-width:760px){
+  html.droply-web body{padding-top:50px;flex-direction:column;overflow:hidden}
+  html.droply-web #titlebar{height:50px;font-size:12px}
+  html.droply-web .rail{order:2;width:100%;min-height:65px;max-height:65px;padding:7px 10px;gap:8px;border-right:0;border-top:1px solid var(--line);flex-direction:row;justify-content:space-around}
+  html.droply-web .rail .rsep{display:none}
+  html.droply-web #frList{flex:1;min-width:0;min-height:0;flex-direction:row;overflow-x:auto;overflow-y:hidden;gap:10px;padding:4px}
+  html.droply-web .rail .rbtn{width:43px;height:43px;border-radius:12px}
+  html.droply-web .rail #railAv,html.droply-web .rail .fav,html.droply-web .rail .fr{width:39px;height:39px;border-radius:11px}
+  html.droply-web main{order:1;min-height:0;flex:1;padding:14px 16px 10px;gap:13px;overflow-y:auto}
+  html.droply-web .head{align-items:center}
+  html.droply-web h1{font-size:30px;line-height:36px;height:auto}
+  html.droply-web .head p{font-size:12px;margin-top:3px}
+  html.droply-web #status{margin-top:0;font-size:11px;padding:6px 9px;max-width:46vw;white-space:normal}
+  html.droply-web .web-note{font-size:11px;padding:8px 10px}
+  html.droply-web #pair{gap:8px}
+  html.droply-web #pair .link{width:43px}
+  html.droply-web .link>span{width:36px;height:36px;border-width:4px}
+  html.droply-web .link>span svg{width:17px;height:17px}
+  html.droply-web .pcard{padding:10px 8px;gap:7px;min-width:0;border-radius:12px}
+  html.droply-web .pcard .av{width:35px;height:35px;min-width:35px}
+  html.droply-web .pcard b{font-size:12px}
+  html.droply-web .pcard small{font-size:10px}
+  html.droply-web #drop{flex-shrink:0;min-height:150px;padding:18px 10px}
+  html.droply-web #drop h2{font-size:15px}
+  html.droply-web #drop p{font-size:12px}
+  html.droply-web #transferFeed{min-height:75px;max-height:unset}
+  html.droply-web #log{max-height:unset;overflow:visible}
+  html.droply-web .row{padding:13px}
+  html.droply-web #sig{display:none}
+  html.droply-web .overlay{inset:50px 0 65px}
+  html.droply-web #setup .box,html.droply-web #ask .box{max-width:calc(100vw - 32px)}
+  html.droply-web #friendRequests .request-box{max-width:calc(100vw - 24px)}
+  html.droply-web #settingsPane{inset:50px 0 65px}
+  html.droply-web #picker{max-width:calc(100vw - 35px)}
+}
+@media(max-width:390px){
+  html.droply-web .head p{display:none}
+  html.droply-web .pcard .av{display:none}
+  html.droply-web #pair .link{width:35px}
+  html.droply-web .rail{gap:3px;padding-inline:4px}
+}
+@media(prefers-reduced-motion:reduce){
+  html.droply-web *,html.droply-web *::before,html.droply-web *::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
