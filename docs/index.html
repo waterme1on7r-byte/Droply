@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-JXITz5/+3JTns9tJtofj9sqbIyFo8dM3Vu2cuxyWGzQ='; style-src 'self' 'sha256-JoJl5ENaby1k8Wt1bMaU/U0+oeKUKYVx7yhecURK1eU=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-JXITz5/+3JTns9tJtofj9sqbIyFo8dM3Vu2cuxyWGzQ='; style-src 'self' 'sha256-t41tJ/Ja75ogxxYKjxBuV0CZnBkKKsTr1omkKFG6wh8=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -1022,15 +1022,15 @@
     /* App demo footer matching both supplied desktop screenshots.
        The live demo image stays untouched; footer credit is rendered above it. */
     .demo-footer-brand {
-      position:absolute; z-index:5; left:50%; bottom:2.15%;
-      transform:translateX(-50%); padding:0 8px;
-      background:#13162a; color:#71809f;
-      font:700 1.5cqw/1.4 'IBM Plex Mono',monospace;
-      letter-spacing:.18em; text-transform:lowercase;
+      position:absolute; z-index:5; left:50%; bottom:1.9%;
+      transform:translateX(-50%); padding:3px 15px;
+      background:#10192b; color:#7483a1;
+      font:700 clamp(8px,1.45cqw,11px)/1.2 'IBM Plex Mono',monospace;
+      letter-spacing:.16em; text-transform:lowercase;
       white-space:nowrap; pointer-events:none;
     }
     html[data-theme="light"] .demo-footer-brand {
-      background:#ecf1fd; color:#7e94b9;
+      background:#eef3fb; color:#8499ba;
     }
 
     /* The bright palette follows the supplied desktop app: cobalt blue type,
@@ -1323,6 +1323,7 @@
               <img class="app-screenshot demo-shot-dark" src="assets/droply-dark-original.png" alt="Dark Droply Transfers desktop app screenshot" width="762" height="721" decoding="async">
               <img class="app-screenshot demo-shot-light" src="assets/droply-light-original.png" alt="Light Droply Transfers desktop app screenshot" width="766" height="737" decoding="async">
             </div>
+            <span class="demo-footer-brand" aria-hidden="true">h o w l</span>
             
             <!-- Animated illustration of choosing a peer and sending a sample file;
                  this is a visual demo, not an interactive file transfer. -->
