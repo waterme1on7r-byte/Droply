@@ -12,8 +12,7 @@ Environment variables:
 - ADMIN_TOKEN: a random server-only administrator token of at least 32 characters, used for recovery and revocation. Never package it with the desktop app or put it in Git.
 - PORT: supplied by Render.
 - WEB_ALLOWED_ORIGINS: comma-separated exact HTTPS origins allowed to use browser auth and WebSockets. Public browser origins should **not** be enabled until launch. For local testing only, add `http://localhost:4173`. No paths, wildcards or trailing slashes; Electron/Android without Origin headers remain unaffected.
-- WEB_PREVIEW_ORIGIN: exact HTTPS origin of this server, e.g. `https://droply-server-91kh.onrender.com`. Required together with WEB_PREVIEW_PASSWORD for the private test page.
-- WEB_PREVIEW_PASSWORD: unique high-entropy secret of 24–256 characters, set in Render's server-side secrets only. Required together with WEB_PREVIEW_ORIGIN. Used for HTTPS Basic auth on every preview asset. Never include it in the repo, desktop bundle, or browser assets.
+- No private preview password or preview hostname is configured on this production signaling service. The standalone private test gateway has its own `WEB_PREVIEW_PASSWORD` and `SIGNALING_UPSTREAM_URL` variables.
 - Legacy WebSocket access is removed. Every connection must authenticate with a registered device credential. Older app versions that use legacy signaling must be updated before deploying this server version.
 
 Coordinate the server rollout with an app update so users can install the new client first. The production server must use the existing Neon database and device records; do not reset them during deployment.
@@ -47,6 +46,8 @@ Run npm test from this directory. GitHub Actions additionally starts PostgreSQL 
 
 ## Browser client
 
-The browser app is built from the existing renderer using `node web/build.mjs` and is served only at the **password-protected** `/internal/preview/` on the signaling server while private testing is enabled. Public GitHub Pages continues serving only the marketing website. It reuses the same WebRTC and friend-signaling protocol, but browser storage is **not** the operating-system-protected Electron safeStorage. Device credentials are encrypted with a non-extractable browser Web Crypto key stored in IndexedDB. Scripts running on the same origin may still access that key, so avoid untrusted browser extensions and never clear site data without understanding identity recovery.
+The browser app reuses the existing renderer and WebRTC friend-signaling protocol. Private testing runs in a **separate Render web service**, not in this signaling process. See [web/README.md](../web/README.md) for the standalone protected gateway, its build/start commands and the test URL.
 
-The preview server requires `WEB_PREVIEW_PASSWORD` and `WEB_PREVIEW_ORIGIN` to expose the page, challenges every asset with HTTPS Basic authentication, and automatically allows its own configured origin for browser authentication and WebSocket connections. Generate a random secret (e.g. `openssl rand -base64 36`) and share it privately with testers (username `droply`). The browser build is generated during server startup when the preview is enabled. Clearing either preview setting disables the page after redeploy. Future public browser hosts require an explicit `WEB_ALLOWED_ORIGINS` entry. Never reset the existing PostgreSQL identities, or expose `ADMIN_TOKEN` in client assets.
+The private gateway authenticates users on its own HTTPS hostname and forwards only browser registration requests and WebSocket signaling to the existing server, so no production server origin changes or credentials are required. It does not relay the P2P file bytes. The live PostgreSQL database remains in use for registrations and known devices; never reset it for testing.
+
+Browser credentials use IndexedDB Web Crypto rather than OS-protected Electron safeStorage. Treat browser test identities as separate installations. For an eventual public browser release, configure explicit `WEB_ALLOWED_ORIGINS` entries on the signaling server and test CORS first.
