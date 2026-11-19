@@ -14,7 +14,7 @@
 
 The web app reuses Droply's desktop interface, friend requests, and peer-to-peer WebRTC transfers. **For now, it is available only through a separate, password-protected server preview**, not through the public marketing website.
 
-- Private test path: `/internal/preview/` on the existing signaling server (enabled only after setting private server environment variables).
+- Private test path: `/internal/preview/` on a **separate Render test service**, protected by a server-side password. The production signaling service remains unchanged.
 - Local preview: `npm run web:dev`, then open `http://localhost:4173/app/`.
 - Build and test: `npm run web:build` and `npm run web:test`.
 - GitHub Pages publishes the marketing website only. The browser app is **not publicly deployed** during private testing.
