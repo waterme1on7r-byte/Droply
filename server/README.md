@@ -38,6 +38,6 @@ For a browser-based local tool, run `Start-Droply-Recovery.cmd` on Windows or `n
 
 ## Security and tests
 
-Signaling fixes the sender identity from the authenticated connection and limits rates, payloads, output buffering and authentication time. PostgreSQL transactions and a row lock protect shared authentication state. Transfers now pause until both people compare and confirm the six-digit WebRTC fingerprint code through another trusted channel. Both devices need the updated app. Bearer credentials can still be stolen by malware running as the same OS user.
+Signaling fixes the sender identity from the authenticated connection and limits rates, payloads, output buffering and authentication time. PostgreSQL transactions and a row lock protect shared authentication state. The client requires the receiver to approve each transfer; WebRTC encrypts the peer-to-peer connection automatically, without a manual fingerprint-code comparison. Bearer credentials can still be stolen by malware running as the same OS user.
 
 Run npm test from this directory. GitHub Actions additionally starts PostgreSQL to verify atomic concurrent enrollment across store instances. Local integration checks have exercised two native Electron devices, real WebRTC transfers, restart persistence and revocation. A deployed migration must also verify /auth/status and device connectivity before deleting the old server repository.

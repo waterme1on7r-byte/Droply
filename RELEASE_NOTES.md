@@ -1,3 +1,12 @@
+# DROPLY 2.8.10
+
+- Remove the manual six-digit connection-code step. Transfers start after the receiver accepts; WebRTC still encrypts the peer-to-peer connection.
+- Keep the `DRP-` friend-code prefix fixed in the entry field and add separators automatically as the code is typed.
+- Send the authenticated device identity before announcing a live connection, so pending friend requests are subscribed to immediately on desktop and Android.
+- Fix Android tablet settings and dialog layouts so content fits the screen and long dialogs can scroll.
+- Use a solid `#3c7fe8` background with a white initial for default avatars, and add a one-click remove-photo control to profile editing.
+- Keep the transfer animation moving while idle in blue, during transfers in green, and after errors in red.
+
 # DROPLY 2.8.9
 
 - Require both people to compare and confirm the six-digit WebRTC connection code before file data is sent.

@@ -16,7 +16,6 @@
 2. Share your device code with a friend, or enter theirs in **Add friend**.
 3. Accept the friend request on the receiving device.
 4. Choose a friend, select files or a folder, and send. The receiver approves the transfer and chooses where files are saved.
-5. Both people compare the six-digit connection code through another trusted channel and confirm it in Droply before any file data is sent.
 
 Droply does not require a user account, email address, phone number, or administrator approval for normal setup. Device codes identify devices in Droply; they are not passwords.
 
@@ -44,7 +43,7 @@ Official release builds currently target Windows and macOS. Linux packaging is n
 ## Privacy and security
 
 - File contents travel directly between the two devices over WebRTC; the signaling server is used to connect devices and share presence and connection details, not to store or relay file contents.
-- The receiver approves every incoming transfer. Both people also confirm a matching six-digit connection code before file data is sent.
+- The receiver approves every incoming transfer. WebRTC encrypts the peer-to-peer connection automatically; there is no extra code to compare before sending.
 - Device credentials are generated per installation and encrypted using Electron `safeStorage` before they are saved. The renderer does not receive the credential; the server stores a hash.
 - The signaling service shares names, photos and online status only between devices that have mutually accepted each other as friends. Friend-code lookup reveals only the matched device ID to the person who entered the code.
 - Desktop configuration contains public connection settings only. Server administrator tokens and database credentials belong only in the server host's secret environment and must never be committed or packaged with the desktop app.

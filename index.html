@@ -67,8 +67,9 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 #pair .packet.p3{animation-delay:.84s!important}
 @keyframes packet-right{0%{opacity:0;transform:translate(0,0) scale(.78)}12%{opacity:1;transform:translate(8px,-2px) scale(.78)}42%,58%{opacity:1;transform:translate(36px,-10px) scale(.78)}88%{opacity:1;transform:translate(68px,-2px) scale(.78)}100%{opacity:0;transform:translate(76px,0) scale(.78)}}
 @keyframes packet-left{0%{opacity:0;transform:translate(76px,0) scale(.78)}12%{opacity:1;transform:translate(68px,-2px) scale(.78)}42%,58%{opacity:1;transform:translate(36px,-10px) scale(.78)}88%{opacity:1;transform:translate(8px,-2px) scale(.78)}100%{opacity:0;transform:translate(0,0) scale(.78)}}
-#pair.flow-error .packet{animation:none!important;opacity:0!important;transform:none!important;color:var(--err)!important}
-#pair.flow-error .packet.out.p1{left:42px;top:-25px;opacity:1!important}
+#pair.flow-error .packet.out{color:var(--err);animation:packet-right 1.8s ease-in-out infinite;opacity:1}
+#pair.flow-error.flow-in:not(.flow-out) .packet.out{display:block;animation:packet-left 1.8s ease-in-out infinite;opacity:1}
+#pair.flow-error .packet.in{display:none}
 @media(prefers-reduced-motion:reduce){#pair .packet.out,#pair.flow-in .packet.in{animation:none;opacity:1}#pair.flow-in:not(.flow-out) .packet.out{display:none}#pair.flow-in .packet.in{left:auto;right:8px}}
 #pair:not(.live) .link{color:var(--mute)}
 .peer{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;border:1px solid transparent;transition:.15s;font-weight:600;color:var(--gold)}
@@ -76,7 +77,11 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 .peer::after{content:'';margin-left:auto;width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.15)}
 .peer.off{color:var(--mute)}.peer.off::after{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.12)}
 .pk-add{display:flex;gap:8px;padding:4px 4px 0}
-.pk-add input[type=text]{flex:1;min-width:0;width:auto;text-align:left;font-family:var(--mono);font-size:12.5px;padding:10px 12px;letter-spacing:.02em}
+.pk-add .friend-code-input{display:flex;align-items:center;flex:1 1 auto;min-width:0;border:1px solid var(--line);border-radius:12px;background:var(--card2);transition:.15s}
+.pk-add .friend-code-input:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.18)}
+.pk-add .friend-code-prefix{flex:none;padding:10px 0 10px 12px;color:var(--mute);font:600 12.5px var(--mono);letter-spacing:.02em;user-select:none}
+.pk-add .friend-code-input input[type=text]{flex:1 1 auto;min-width:0;width:0;border:0;border-radius:0;box-shadow:none;background:transparent;text-align:left;font-family:var(--mono);font-size:12.5px;padding:10px 8px 10px 0;letter-spacing:.02em}
+.pk-add .friend-code-input input[type=text]:focus{border:0;box-shadow:none;outline:none}
 .pk-add button{padding:10px 16px;flex:none}
 .pk-msg{font-size:12.5px;color:var(--mute);padding:8px 8px 4px;min-height:14px;line-height:1.4}.pk-msg.bad{color:var(--err)}.pk-msg.good{color:var(--ok)}
 .sect{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:10px 8px 4px}
@@ -89,6 +94,9 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 .av{width:50px;height:50px;border-radius:14px;color:var(--gold);font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
 .peer .av{width:40px;height:40px;font-size:15px}
 .av img{width:100%;height:100%;object-fit:cover}.av.big{width:104px;height:104px;border-radius:24px;font-size:40px;cursor:pointer;box-shadow:0 0 0 4px rgba(59,130,246,.22)}
+#setupAvatarWrap{position:relative;flex:none}
+#removeAvatar{position:absolute;top:-8px;right:-8px;width:28px;height:28px;padding:0;border:2px solid var(--win);border-radius:50%;background:#26334d;color:#fff;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 4px 14px rgba(0,0,0,.32)}
+#removeAvatar:hover{background:#be3542;filter:none}
 #drop{position:relative;flex:1;min-height:170px;border:1.2px dashed rgba(100,170,255,.65);border-radius:18px;background:radial-gradient(ellipse at 50% 60%,rgba(30,100,220,.24),transparent 72%),rgba(20,40,80,.28);box-shadow:inset 0 0 0 4px rgba(100,170,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--mute);text-align:center;transition:.2s;padding:24px;cursor:pointer}
 #drop:hover:not(.off){background:radial-gradient(ellipse at 50% 60%,rgba(30,100,220,.32),transparent 72%),rgba(20,40,80,.35)}
 #drop.over{border-color:#7fb4ff;background:radial-gradient(ellipse at 50% 60%,rgba(40,120,240,.4),transparent 75%),rgba(20,50,100,.4);color:var(--text)}
@@ -113,7 +121,6 @@ button:hover{filter:brightness(1.1)}button.ghost{background:var(--card2);border:
 .bar i{display:block;height:100%;background:linear-gradient(90deg,#1a5cff,#2f8cff);width:0;transition:width .15s;border-radius:8px}
 .enc{display:flex;justify-content:space-between;font-size:13px;color:var(--mute)}
 .enc span:first-child{font-family:var(--mono);font-size:12px}
-.verifyRow{display:none;align-items:center;gap:8px;flex-wrap:wrap;color:var(--mute);font-size:12px}.verifyRow.show{display:flex}.verifyRow input{width:112px;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--text);font:600 13px var(--mono);letter-spacing:.08em}.verifyRow button{padding:7px 11px;border-radius:8px;font-size:12px}.verifyRow .verifyMsg{flex-basis:100%;min-height:14px}.verifyRow .verifyMsg.error{color:var(--err)}
 .done .bar i{background:var(--ok)}.done .st{color:var(--ok)}
 .error .bar i{background:var(--err);width:100%}.error .st{color:var(--err)}.error .enc{display:none}
 .row a{color:#9cc4ff;cursor:pointer;font-weight:500;font-size:13px}
@@ -191,7 +198,7 @@ html[data-theme=light] body.rightWindowControls #titlebar::after{right:138px}
 <div id="setup" class="overlay hidden"><button id="setupX" class="closeX hidden" aria-label="Close" title="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="box">
   <h2 style="font-size:26px;letter-spacing:-.02em">Welcome to Droply</h2>
   <p>Pick a username. Add a photo if you like.</p>
-  <div id="setupAv" class="av big" title="Choose photo">?</div>
+  <div id="setupAvatarWrap"><div id="setupAv" class="av big" title="Choose photo">?</div><button id="removeAvatar" type="button" class="hidden" title="Remove photo" aria-label="Remove profile photo"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
   <input id="nameInput" type="text" maxlength="24" placeholder="Username">
   <div id="codeRow" class="field hidden"><small>Your device code</small><div class="codebox"><code id="myCode">…</code><button class="cp ghost" id="copyBtn" title="Copy code" aria-label="Copy code"></button></div><small class="hint">Give this code to a friend so they can add you. It belongs to this device and never changes.</small></div>
   <button id="saveBtn">Get started</button>
@@ -213,7 +220,7 @@ html[data-theme=light] body.rightWindowControls #titlebar::after{right:138px}
     <h2 id="addFriendTitle">Add a friend</h2>
     <p>Share your code or enter a friend's code.</p>
     <div class="field"><small>Your device code</small><div class="codebox"><code id="shareCode">…</code><button id="shareCopy" class="cp ghost" title="Copy code" aria-label="Copy your device code"></button></div><small class="hint">Share this code so a friend can add you.</small></div>
-    <div class="field"><label for="codeIn">Friend's device code</label><div class="pk-add"><input id="codeIn" type="text" maxlength="32" placeholder="DRP-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false"><button id="addBtn">Add</button></div><div id="addMsg" class="pk-msg" role="status" aria-live="polite"></div></div>
+    <div class="field"><label for="codeIn">Friend's device code</label><div class="pk-add"><div class="friend-code-input"><span class="friend-code-prefix" aria-hidden="true">DRP-</span><input id="codeIn" type="text" maxlength="18" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="Friend's device code after DRP prefix"></div><button id="addBtn">Add</button></div><div id="addMsg" class="pk-msg" role="status" aria-live="polite"></div></div>
   </div>
 </div>
 
@@ -295,14 +302,13 @@ function syncTransferFlow() {
 }
 const fmt = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.ceil(b / 1e3) + ' KB';
 const plural = n => n + (n === 1 ? ' file' : ' files');
-const GRADS = ['linear-gradient(135deg,#3b8cff,#2563eb)', 'linear-gradient(135deg,#2f7be0,#4db6c9)', 'linear-gradient(135deg,#5b6cf0,#8b5cf6)', 'linear-gradient(135deg,#0ea5a4,#38bdf8)', 'linear-gradient(135deg,#3b82f6,#6366f1)'];
 
 /* ---------- UI ---------- */
 function avatar(src, name, big, self) {
   const d = document.createElement('div'); d.className = 'av' + (big ? ' big' : '');
   if (!src && name === '+') d.classList.add('placeholder');
   d.textContent = (name || '?')[0].toUpperCase();
-  d.style.background = GRADS[self ? 0 : 1 + ((name || '?').charCodeAt(0) + 3) % (GRADS.length - 1)];
+  d.style.background = '#3c7fe8'; d.style.color = '#fff';
   if (src) { const i = new Image(); i.onload = () => { d.textContent = ''; d.appendChild(i); }; i.src = src; }
   return d;
 }
@@ -410,8 +416,7 @@ function row(id, d) {
   let r = document.getElementById(id);
   if (!r) {
     r = document.createElement('div'); r.id = id;
-    r.innerHTML = '<div class="rt"><div class="ri"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div><div class="rx"><div class="nm"></div><div class="sub"></div></div><div class="st"></div><button class="x" title="Cancel transfer" aria-label="Cancel transfer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 18L6 6"/></svg></button></div><div class="bar"><i></i></div><div class="enc"><span>Secure connection</span><span class="spd"></span></div><div class="verifyRow"><span>Compare this code with your friend, then enter it:</span><input class="verifyInput" inputmode="numeric" maxlength="7" autocomplete="off" aria-label="Verification code from friend"><button class="verifyBtn">Verify</button><small class="verifyMsg" aria-live="polite"></small></div>';
-    r.querySelector('.verifyBtn').onclick = () => confirmTransferCode(id, r.querySelector('.verifyInput').value);
+    r.innerHTML = '<div class="rt"><div class="ri"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div><div class="rx"><div class="nm"></div><div class="sub"></div></div><div class="st"></div><button class="x" title="Cancel transfer" aria-label="Cancel transfer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 18L6 6"/></svg></button></div><div class="bar"><i></i></div><div class="enc"><span>Secure connection</span><span class="spd"></span></div>';
     r.querySelector('.x').onclick = () => cancelTransfer(id);
     $('#log').prepend(r);
     transferCards.set(id, { element: r, state: d.state || '' });
@@ -421,7 +426,6 @@ function row(id, d) {
   if (d.state != null || !r.className) r.className = 'row ' + (d.state || '');
   if (d.label) r.querySelector('.nm').textContent = d.label;
   if (d.sub != null) r.querySelector('.sub').textContent = d.sub;
-  if (d.code) r.querySelector('.enc span').textContent = 'Encrypted · code ' + d.code;
   if (d.spd != null) r.querySelector('.spd').textContent = d.spd;
   const st = r.querySelector('.st');
   if (d.path) { st.textContent = ''; const a = document.createElement('a'); a.textContent = 'Show in folder'; a.onclick = () => api.showFile(d.path); st.append(a); }
@@ -448,7 +452,6 @@ function notify(title, sub, lock) {
   $(lock ? '#br' : '#tl').appendChild(t);
   setTimeout(() => t.classList.add('out'), 3200); setTimeout(() => t.remove(), 3700);
 }
-const notifyEnc = () => notify('Encrypted connection', 'Compare the code to be sure', true);
 function notifyNew() {
   const ids = new Set(peers.map(p => p.id));
   if (known && peers.some(p => !known.has(p.id))) notify('Friend online', 'Ready to share');
@@ -497,6 +500,27 @@ function normCode(v) {
   if (t.startsWith('DRP')) t = t.slice(3);
   if (!/^[0-9A-HJKMNP-TV-Z]{12}$/.test(t)) return null;
   return 'DRP-' + t.match(/.{4}/g).join('-');
+}
+function friendCodeDigits(value) {
+  let text = String(value || '').trim().toUpperCase();
+  if (text.startsWith('DRP-')) text = text.slice(4);
+  return text.replace(/[^A-Z0-9]/g, '').slice(0, 12);
+}
+function formatFriendCode(value) {
+  const digits = friendCodeDigits(value), groups = digits.match(/.{1,4}/g) || [];
+  let formatted = groups.join('-');
+  if (digits.length > 0 && digits.length < 12 && digits.length % 4 === 0) formatted += '-';
+  return formatted;
+}
+function formatFriendCodeInput(input) {
+  const caret = input.selectionStart ?? input.value.length;
+  const typed = friendCodeDigits(input.value.slice(0, caret));
+  const formatted = formatFriendCode(input.value);
+  if (formatted === input.value) return;
+  input.value = formatted;
+  const boundaryDash = typed.length > 0 && typed.length < 12 && typed.length % 4 === 0 ? 1 : 0;
+  const nextCaret = typed.length ? typed.length + Math.floor((typed.length - 1) / 4) + boundaryDash : 0;
+  input.setSelectionRange(nextCaret, nextCaret);
 }
 const cleanName = n => Array.from(String(n || '').trim()).slice(0, 40).join('') || 'Friend';
 const cleanAv = a => typeof a === 'string' && a.length < 60000 && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(a) ? a : '';
@@ -622,17 +646,15 @@ async function sendFiles(files) {
   s.timer = setTimeout(() => !s.pc && fail(s, 'No response', 'error', 'Request expired'), 60000);
 }
 async function startSender(s) {
-  notifyEnc();
   const pc = makePc(s), ch = pc.createDataChannel('f');
   ch.binaryType = 'arraybuffer'; ch.bufferedAmountLowThreshold = 256 * 1024;
   s.timer = setTimeout(() => !s.open && fail(s, 'Could not connect', 'error', 'Connection timed out'), CONNECT_MS);
-  ch.onopen = () => { s.open = true; clearTimeout(s.timer); sendVerification(s); maybeStartTransfer(s); };
+  ch.onopen = () => { s.open = true; clearTimeout(s.timer); maybeStartTransfer(s); };
   ch.onmessage = e => {
     if (s.fin || typeof e.data !== 'string') return;
     if (e.data === 'ok') { s.fin = true; row(s.tid, { msg: 'Sent ✓', pct: 100, state: 'done', spd: '' }); cleanup(s); return; }
     if (e.data.length > 1024) return fail(s, 'Invalid transfer acknowledgement');
     let m; try { m = JSON.parse(e.data); } catch { return; }
-    if (m && m.t === 'verify') { s.peerVerified = true; finishVerification(s); maybeStartTransfer(s); return; }
     if (m && m.t === 'ack') {
       if (!Number.isSafeInteger(m.n) || m.n <= 0 || m.n > s.sent - s.acked) return fail(s, 'Invalid transfer acknowledgement');
       s.acked += m.n; s.last = Date.now(); s.wake && s.wake();
@@ -684,8 +706,6 @@ function recv(s, ch) {
       if (e.data.length > 8192) return bad();
       let m; try { m = JSON.parse(e.data); } catch { return bad(); }
       if (!m || typeof m !== 'object') return bad();
-      if (m.t === 'verify') { s.peerVerified = true; finishVerification(s); return; }
-      if (!s.localVerified || !s.peerVerified) return bad();
       if (m.t === 'file') {
         const exp = s.files[idx++];                       // only accept what the user accepted
         if (cur || !exp || m.size !== exp.size || m.name !== exp.name) return bad();
@@ -746,7 +766,7 @@ async function accept(from, d) {
   let free = null; try { free = await api.freeSpace(d.tid); } catch {}
   if (s.fin) return;                                                   // cancelled while we checked
   if (free != null && size > free - 50e6) return fail(s, 'Not enough disk space', 'error', 'Not enough disk space on the receiving side');
-  sig(from, { t: 'acc', tid: d.tid, v: 3 }); notifyEnc();             // v:2 = I send write-acks, you may use a send window
+  sig(from, { t: 'acc', tid: d.tid, v: 3 });                         // v:2 = I send write-acks, you may use a send window
 }
 $('#accBtn').onclick = () => answer(true);
 $('#rejBtn').onclick = () => answer(false);
@@ -811,9 +831,9 @@ async function handle(s, d) {
     };
     await pc.setRemoteDescription(d.sdp); await flush(s);
     await pc.setLocalDescription(await pc.createAnswer());
-    sig(s.peerId, { t: 'answer', tid: s.tid, sdp: pc.localDescription }); return showCode(s);
+    sig(s.peerId, { t: 'answer', tid: s.tid, sdp: pc.localDescription }); return;
   }
-  if (d.t === 'answer') { if (s.dir !== 'out' || !s.pc || s.pc.remoteDescription) return; await s.pc.setRemoteDescription(d.sdp); await flush(s); return showCode(s); }
+  if (d.t === 'answer') { if (s.dir !== 'out' || !s.pc || s.pc.remoteDescription) return; await s.pc.setRemoteDescription(d.sdp); await flush(s); return; }
   if (d.t === 'ice') {
     if (!validCandidate(d.c)) return fail(s, 'Invalid connection details');
     const bytes = JSON.stringify(d.c).length;
@@ -822,52 +842,20 @@ async function handle(s, d) {
     if (s.pc && s.pc.remoteDescription) await s.pc.addIceCandidate(d.c); else (s.pend = s.pend || []).push(d.c);
   }
 }
-function sendVerification(s) {
-  if (!s.localVerified || s.verifySent || s.ch?.readyState !== 'open') return;
-  try { s.ch.send(JSON.stringify({ t: 'verify' })); s.verifySent = true; } catch {}
-}
-function finishVerification(s) {
-  if (!s.localVerified || !s.peerVerified) return;
-  clearTimeout(s.verifyTimer); if (s.dir === 'in') watch(s);
-}
 function maybeStartTransfer(s) {
-  if (s.dir !== 'out' || !s.open || !s.localVerified || !s.peerVerified || s.pumping || s.fin) return;
-  s.pumping = true; finishVerification(s); watch(s); pump(s, s.ch);
-}
-function confirmTransferCode(tid, value) {
-  const s = sess[tid], rowEl = document.getElementById(tid);
-  if (!s || !s.code || s.fin || !rowEl) return false;
-  const expected = s.code.replace(/\D/g, ''), entered = String(value || '').replace(/\D/g, '');
-  const msg = rowEl.querySelector('.verifyMsg'); msg.classList.remove('error');
-  if (entered.length !== 6 || entered !== expected) { msg.textContent = 'The codes do not match. Check with your friend before continuing.'; msg.classList.add('error'); return false; }
-  s.localVerified = true; rowEl.querySelector('.verifyInput').disabled = true; rowEl.querySelector('.verifyBtn').disabled = true;
-  msg.textContent = s.peerVerified ? 'Verified. Starting transfer…' : 'Code confirmed. Waiting for your friend to confirm…'; finishVerification(s);
-  sendVerification(s); maybeStartTransfer(s); return true;
-}
-// Short code derived from both sides' DTLS fingerprints. Both users must compare it out of band before bytes flow.
-async function showCode(s) {
-  try {
-    const fp = d => (/a=fingerprint:\S+ (\S+)/.exec((d && d.sdp) || '') || [])[1];
-    const a = fp(s.pc.localDescription), b = fp(s.pc.remoteDescription);
-    if (!a || !b) return fail(s, 'Could not verify the secure connection');
-    const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode([a, b].sort().join('|')));
-    if (s.fin) return;
-    const c = String(new DataView(h).getUint32(0) % 1e6).padStart(6, '0');
-    s.code = c.slice(0, 3) + ' ' + c.slice(3); row(s.tid, { code: s.code });
-    const rowEl = document.getElementById(s.tid); if (rowEl) { rowEl.querySelector('.verifyRow').classList.add('show'); rowEl.querySelector('.verifyMsg').textContent = 'Compare by phone or another trusted channel. Transfer waits for both confirmations.'; }
-    s.verifyTimer = setTimeout(() => { if (!s.localVerified || !s.peerVerified) fail(s, 'Verification was not completed', 'cancelled', true); }, 120000);
-  } catch { if (!s.fin) fail(s, 'Could not verify the secure connection'); }
+  if (s.dir !== 'out' || !s.open || s.pumping || s.fin) return;
+  s.pumping = true; watch(s); pump(s, s.ch);
 }
 function cleanup(s) {
   if (s.dir === 'out') api.notify?.('completed', `Files sent to ${s.peerName}`);
   recordSession(s, 'done');
   api.finishReceive?.(s.tid);
   s.pend = [];
-  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); clearTimeout(s.verifyTimer); setTimeout(() => s.pc && s.pc.close(), 1500); delete sess[s.tid]; syncTransferFlow(); }
+  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); setTimeout(() => s.pc && s.pc.close(), 1500); delete sess[s.tid]; syncTransferFlow(); }
 // state: 'error' | 'cancelled'. tell: null = don't notify the other side, true = "cancelled by me", string = custom reason
 function fail(s, msg, state = 'error', tell = null) {
   if (s.fin) return; s.fin = true;
-  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); clearTimeout(s.verifyTimer); s.wake && s.wake();
+  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); s.wake && s.wake();
   s.pend = [];
   row(s.tid, { msg, state, spd: '' });
   recordSession(s, state, msg);
@@ -920,7 +908,7 @@ drop.onclick = () => sel && $('#fi').click();
 $('#fi').onchange = e => { sendFiles([...e.target.files]); e.target.value = ''; };
 
 /* ---------- Profile ---------- */
-function setupAv(src) { const n = avatar(src, $('#nameInput').value || me.name, true, true); n.id = 'setupAv'; n.onclick = () => $('#avFile').click(); $('#setupAv').replaceWith(n); }
+function setupAv(src) { const n = avatar(src, $('#nameInput').value || me.name, true, true); n.id = 'setupAv'; n.onclick = () => $('#avFile').click(); $('#setupAv').replaceWith(n); $('#removeAvatar').classList.toggle('hidden', !src); }
 function openSetup(edit) {
   $('#setup').classList.remove('hidden'); $('#nameInput').value = edit ? me.name : ''; pendAv = null; setupAv(me.avatar);
   $('#codeRow').classList.toggle('hidden', !edit); $('#setupX').classList.toggle('hidden', !edit); $('#saveBtn').textContent = edit ? 'Save' : 'Get started';
@@ -966,12 +954,19 @@ $('#addFriend').addEventListener('keydown', e => {
 });
 async function submitCode() {
   const inp = $('#codeIn'), msg = $('#addMsg'); if (!inp.value.trim()) return inp.focus();
-  const r = await addByCode(inp.value); msg.textContent = r.msg; msg.className = 'pk-msg ' + (r.ok ? 'good' : 'bad'); if (r.ok) inp.value = '';
+  const r = await addByCode('DRP-' + inp.value); msg.textContent = r.msg; msg.className = 'pk-msg ' + (r.ok ? 'good' : 'bad'); if (r.ok) inp.value = '';
 }
 $('#addBtn').onclick = submitCode;
+$('#codeIn').addEventListener('input', e => formatFriendCodeInput(e.target));
+$('#codeIn').addEventListener('keydown', e => {
+  const input = e.currentTarget, start = input.selectionStart, end = input.selectionEnd;
+  if (e.key !== 'Backspace' || start !== end || start <= 0 || input.value[start - 1] !== '-') return;
+  e.preventDefault(); input.setRangeText('', Math.max(0, start - 2), end, 'end'); formatFriendCodeInput(input);
+});
 $('#codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(); });
 $('#setupAv').onclick = () => $('#avFile').click();
 $('#avFile').onchange = async e => { if (e.target.files[0]) { pendAv = await resizeImage(e.target.files[0]); setupAv(pendAv); } };
+$('#removeAvatar').onclick = e => { e.stopPropagation(); pendAv = ''; setupAv(''); };
 $('#saveBtn').onclick = async () => {
   const name = $('#nameInput').value.trim(); if (!name) return $('#nameInput').focus();
   me = await api.saveProfile({ name, avatar: pendAv ?? me.avatar });

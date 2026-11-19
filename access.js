@@ -36,7 +36,7 @@ function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,
   const deadline=setTimeout(()=>{if(socket===current&&!authenticated)current.terminate();},15000);deadline.unref();
   current.on('message',raw=>{if(socket!==current)return;let m;try{m=JSON.parse(raw);}catch{return;}if(m.t==='access-denied'){denied=true;authenticated=false;emit('enrollment-required','This device could not connect. Please contact support if it persists.');current.close();return;}if(m.t==='authenticated'){
    if(m.id!==getProfile().id){denied=true;current.close();emit('locked','Server identity mismatch. Ask the administrator for help.');return;}
-   clearTimeout(deadline);authenticated=true;attempt=0;emit('connected','Connected securely');const p=getProfile();current.send(JSON.stringify({t:'hello',id:p.id,name:p.name,av:p.avatar}));
+   clearTimeout(deadline);authenticated=true;attempt=0;const p=getProfile();current.send(JSON.stringify({t:'hello',id:p.id,name:p.name,av:p.avatar}));emit('connected','Connected securely');
   }else if(authenticated&&(m.t==='peers'||m.t==='sig'||m.t==='resolved'))toUI('server-event',{t:'message',message:m});});
   current.on('error',()=>{});
   current.on('close',code=>{clearTimeout(deadline);if(socket!==current)return;socket=null;authenticated=false;if(code===4401){denied=true;emit('enrollment-required','This device could not connect. Please contact support if it persists.');}if(!stopped&&!denied)schedule();});
