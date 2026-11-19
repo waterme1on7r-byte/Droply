@@ -49,7 +49,7 @@ function loadRenderer() {
   };
   vm.createContext(ctx);
   vm.runInContext(js + `
-;globalThis.__t = { sess, asks, fail, cancelTransfer, onSig, answer, recv, pump, maybeFinish, showCode, WIN,
+;globalThis.__t = { sess, asks, fail, cancelTransfer, onSig, answer, recv, pump, maybeFinish, showCode, confirmTransferCode, maybeStartTransfer, handleResolved, WIN,
   setMe: (id = 'me', name = 'Me') => { me = { id, name, avatar: '' }; },
   setPeers: p => { peers = p; sel = p[0].id; friends = p.map(x => ({ id: x.id, name: x.name, av: '', code: 'DRP-0000-0000-0000' })); },
   friendSig, addByCode, acceptReq, declineReq, removeFriend, setOnline, applyOnline, deviceCode, normCode, isFriend,

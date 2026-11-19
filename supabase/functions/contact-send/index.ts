@@ -146,18 +146,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
       ""
     ).trim().slice(0, 64);
 
-    if (!await quota(admin, hmac, "contact:all:" + hour, 100, 3600) ||
-        (ip && !await quota(admin, hmac, "contact:ip:" + ip + ":" + hour, 6, 3600)) ||
-        !await quota(admin, hmac, "contact:email:" + form.email + ":" + day, 4, 86400)) {
-      return reply(429, "Too many messages. Please try again later.", headers);
-    }
-
     const turnstileSecret = Deno.env.get("CONTACT_TURNSTILE_SECRET_KEY");
     if (turnstileSecret) {
       let passed = false;
       try { passed = await turnstileOk(form.token, turnstileSecret); }
       catch { passed = false; }
       if (!passed) return reply(400, "Please complete the anti-spam check.", headers);
+    }
+
+    // Challenge and per-caller limits run before the shared capacity guard so
+    // one rejected caller cannot spend the allowance available to everyone.
+    if ((ip && !await quota(admin, hmac, "contact:ip:" + ip + ":" + hour, 6, 3600)) ||
+        !await quota(admin, hmac, "contact:email:" + form.email + ":" + day, 4, 86400) ||
+        !await quota(admin, hmac, "contact:all:" + hour, 100, 3600)) {
+      return reply(429, "Too many messages. Please try again later.", headers);
     }
     const { error } = await admin.from("contact_messages").insert({
       sender_name: form.name, sender_email: form.email, body: form.message

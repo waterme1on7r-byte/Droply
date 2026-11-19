@@ -65,7 +65,7 @@ test('receiver: oversize data, unannounced files and incomplete files are reject
   for (const evil of ['oversize', 'unannounced', 'incomplete', 'chunk-before-file']) {
     const r = loadRenderer(), { t } = r;
     t.onSig('bob', req('v', [{ name: 'ok.bin', size: 4 }])); t.answer(true);
-    const ch = fakeCh(), s = t.sess.v; t.recv(s, ch);
+    const ch = fakeCh(), s = t.sess.v; s.localVerified = s.peerVerified = true; t.recv(s, ch);
     if (evil === 'oversize') { ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'ok.bin', size: 4 }) }); ch.onmessage({ data: r.arrayBuffer(5) }); }
     if (evil === 'unannounced') ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'other', size: 99 }) });
     if (evil === 'incomplete') { ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'ok.bin', size: 4 }) }); ch.onmessage({ data: r.arrayBuffer(2) }); ch.onmessage({ data: JSON.stringify({ t: 'eof' }) }); }
@@ -77,7 +77,7 @@ test('receiver: oversize data, unannounced files and incomplete files are reject
 test('receiver only confirms after the file is really on disk', () => {
   const r = loadRenderer(), { t } = r;
   t.onSig('bob', req('ok1', [{ name: 'a.bin', size: 3 }])); t.answer(true);
-  const ch = fakeCh(), s = t.sess.ok1; t.recv(s, ch);
+  const ch = fakeCh(), s = t.sess.ok1; s.localVerified = s.peerVerified = true; t.recv(s, ch);
   ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'a.bin', size: 3 }) }); ch.onmessage({ data: r.arrayBuffer(3) });
   ch.onmessage({ data: JSON.stringify({ t: 'eof' }) }); ch.onmessage({ data: JSON.stringify({ t: 'done' }) });
   assert(!ch.sent.includes('ok'), 'not yet: write may still be pending');
@@ -87,7 +87,7 @@ test('receiver only confirms after the file is really on disk', () => {
 test('disk error after "done" reaches the user instead of a fake success', () => {
   const r = loadRenderer(), { t } = r;
   t.onSig('bob', req('de', [{ name: 'a.bin', size: 1 }])); t.answer(true);
-  const ch = fakeCh(), s = t.sess.de; t.recv(s, ch);
+  const ch = fakeCh(), s = t.sess.de; s.localVerified = s.peerVerified = true; t.recv(s, ch);
   ch.onmessage({ data: JSON.stringify({ t: 'file', name: 'a.bin', size: 1 }) }); ch.onmessage({ data: r.arrayBuffer(1) });
   ch.onmessage({ data: JSON.stringify({ t: 'eof' }) }); ch.onmessage({ data: JSON.stringify({ t: 'done' }) });
   r.handlers['save-error']({ tid: 'de', message: 'Disk is full' });
@@ -132,4 +132,15 @@ test('verification code: same on both sides, different if a fingerprint is swapp
   assert.match(alice, /^Encrypted · code \d{3} \d{3}$/);
   assert.strictEqual(alice, bob);
   assert.notStrictEqual(alice, mitm);
+});
+test('sender requires a correct local code and peer confirmation before sending bytes', async () => {
+  const r = loadRenderer(), { t } = r, subtle = require('node:crypto').webcrypto.subtle;
+  r.ctx.crypto.subtle = subtle; r.ctx.TextEncoder = TextEncoder;
+  const ch = fakeCh(), s = { tid: 'verify', peerId: 'bob', peerName: 'Bob', dir: 'out', open: true, ch, files: [], sent: 0, acked: 0, total: 1, pc: { close() {}, localDescription: { sdp: 'a=fingerprint:sha-256 AA:11\r\n' }, remoteDescription: { sdp: 'a=fingerprint:sha-256 BB:22\r\n' } } };
+  t.sess.verify = s; await t.showCode(s); const code = s.code.replace(/\D/g, '');
+  const wrong = code === '000000' ? '000001' : '000000';
+  assert.equal(t.confirmTransferCode('verify', wrong), false); assert.equal(s.localVerified, undefined); assert.equal(s.pumping, undefined);
+  assert.equal(t.confirmTransferCode('verify', code), true); assert.equal(s.localVerified, true); assert.equal(s.pumping, undefined);
+  s.peerVerified = true; t.maybeStartTransfer(s); await tick();
+  assert.equal(s.pumping, true); assert(ch.sent.some(x => x === JSON.stringify({ t: 'verify' })));
 });

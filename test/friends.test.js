@@ -35,7 +35,7 @@ test('full handshake: request, accept, both sides become friends and can transfe
   const codeB = await B.t.deviceCode('bob');
   A.t.setRaw([{ id: 'bob', name: 'Bob' }]);
   const res = await A.t.addByCode(codeB);
-  assert.match(res.msg, /Request sent/);
+  assert.match(res.msg, /Saved/); await A.t.handleResolved({ id: 'bob', code: codeB });
   const msgs = relay(A, 'alice', B); assert(msgs.some(m => m.t === 'fr' && m.name === 'Alice'));
   await tick(20);
   assert.strictEqual(B.t.pendIn.length, 1); assert.strictEqual(B.t.friends.length, 0, 'not friends before accepting');
@@ -52,18 +52,19 @@ test('full handshake: request, accept, both sides become friends and can transfe
   });
 test('a request to someone offline is kept and delivered when they show up', async () => {
   const A = withId(user('alice', 'Alice'), 'alice'), code = await A.t.deviceCode('carol');
-  A.t.setRaw([]); assert.match((await A.t.addByCode(code)).msg, /delivered as soon as/);
-  assert(!A.sig.some(m => m.data.t === 'fr'));
-  await A.t.setOnline([{ id: 'carol', name: 'Carol' }]);
-  assert.strictEqual(A.sig.filter(m => m.to === 'carol' && m.data.t === 'fr').length, 1);
-  await A.t.setOnline([{ id: 'carol', name: 'Carol' }]);   // list refreshed while she stays online: no duplicate
-  assert.strictEqual(A.sig.filter(m => m.data.t === 'fr').length, 1);
+  A.t.setRaw([]); assert.match((await A.t.addByCode(code)).msg, /delivered when that person is online/);
+  assert(!A.sig.some(m => m.t === 'sig' && m.data.t === 'fr'));
+  await A.t.handleResolved({ id: 'carol', code });
+  assert.strictEqual(A.sig.filter(m => m.t === 'sig' && m.to === 'carol' && m.data.t === 'fr').length, 1);
+  await A.t.handleResolved({ id: 'carol', code });   // duplicate resolution is ignored
+  assert.strictEqual(A.sig.filter(m => m.t === 'sig' && m.data.t === 'fr').length, 1);
 });
 test('both people add each other: matched without extra clicks', async () => {
   const A = withId(user('alice', 'Alice'), 'alice'), B = withId(user('bob', 'Bob'), 'bob');
   A.t.setRaw([{ id: 'bob', name: 'Bob' }]); B.t.setRaw([{ id: 'alice', name: 'Alice' }]);
-  await A.t.addByCode(await B.t.deviceCode('bob'));          // A asks B
-  await B.t.addByCode(await A.t.deviceCode('alice'));        // B asks A before seeing A's request
+  const codeA = await A.t.deviceCode('alice'), codeB = await B.t.deviceCode('bob');
+  await A.t.addByCode(codeB); await A.t.handleResolved({ id: 'bob', code: codeB });          // A asks B
+  await B.t.addByCode(codeA); await B.t.handleResolved({ id: 'alice', code: codeA });        // B asks A before seeing A's request
   relay(B, 'bob', A); await tick(20);                         // A receives B's request while A is waiting for B
   assert.strictEqual(A.t.friends.length, 1);
   relay(A, 'alice', B); await tick(20);
@@ -71,7 +72,7 @@ test('both people add each other: matched without extra clicks', async () => {
 });
 test('declining: nothing is added and the requester is told', async () => {
   const A = withId(user('alice', 'Alice'), 'alice'), B = withId(user('bob', 'Bob'), 'bob');
-  A.t.setRaw([{ id: 'bob', name: 'Bob' }]); await A.t.addByCode(await B.t.deviceCode('bob'));
+  A.t.setRaw([{ id: 'bob', name: 'Bob' }]); const codeB = await A.t.deviceCode('bob'); await A.t.addByCode(codeB); await A.t.handleResolved({ id: 'bob', code: codeB });
   relay(A, 'alice', B); await tick(20); B.t.declineReq('alice'); relay(B, 'bob', A); await tick(20);
   assert.strictEqual(A.t.friends.length + B.t.friends.length, 0); assert.strictEqual(A.t.pendOut.length, 0);
 });
@@ -105,7 +106,7 @@ test('removing a friend: told right away if online, otherwise when they come bac
   await t.setOnline([{ id: 'bob', name: 'bob' }]); A.sig.length = 0;
   t.removeFriend('bob'); assert(A.sig.some(m => m.to === 'bob' && m.data.t === 'fx'));
   t.removeFriend('carol'); assert.deepStrictEqual(plain(t.gone), ['carol']);
-  A.sig.length = 0; await t.setOnline([{ id: 'carol', name: 'carol' }]);
+  A.sig.length = 0; await t.handleResolved({ id: 'carol' });
   assert(A.sig.some(m => m.to === 'carol' && m.data.t === 'fx')); assert.deepStrictEqual(plain(t.gone), []); assert.strictEqual(t.friends.length, 0);
 });
 test('being removed by a friend removes them from our list too', async () => {

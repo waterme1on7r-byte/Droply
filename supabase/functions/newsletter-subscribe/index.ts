@@ -41,6 +41,26 @@ async function fingerprint(key: CryptoKey, value: string): Promise<string> {
   const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(value)));
   return Array.from(mac, (n) => n.toString(16).padStart(2, "0")).join("");
 }
+async function readSmallBody(request: Request): Promise<string | null> {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_BYTES) { await reader.cancel(); return null; }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  try { return new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
+  catch { return null; }
+}
 async function quota(
   admin: ReturnType<typeof createClient>,
   hmac: CryptoKey,
@@ -93,10 +113,8 @@ Deno.serve(async (request: Request): Promise<Response> => {
   }
 
   try {
-    const raw = await request.text();
-    if (enc.encode(raw).byteLength > MAX_BYTES) {
-      return reply(413, "Request too large.", headers);
-    }
+    const raw = await readSmallBody(request);
+    if (raw === null) return reply(413, "Request too large.", headers);
     let body: unknown;
     try { body = JSON.parse(raw); }
     catch { return reply(400, "Invalid request.", headers); }
@@ -132,24 +150,25 @@ Deno.serve(async (request: Request): Promise<Response> => {
       || request.headers.get("x-forwarded-for")?.split(",")[0]
       || "").trim().slice(0, 64);
 
-    if (!await quota(admin, hmac, "global:" + hour, 80, 3600)) {
-      return reply(429, "Too many signups right now. Please try again later.", headers);
-    }
-    if (ip && !await quota(admin, hmac, "ip:" + ip + ":" + hour, 6, 3600)) {
-      return reply(429, "Too many requests. Please try again later.", headers);
-    }
-    if (!await quota(admin, hmac, "email:" + signup.email + ":" + day, 3, 86400)) {
-      return reply(429, "Too many requests. Please try again tomorrow.", headers);
-    }
-
-    // Only enforce Turnstile when a private secret and corresponding public
-    // widget have both been configured. The rate limits work independently.
+    // Reject failed anti-bot checks before they can consume any shared or
+    // per-caller quota. Rate limits remain active when Turnstile is unset.
     const turnstileSecret = Deno.env.get("TURNSTILE_SECRET_KEY");
     if (turnstileSecret) {
       let valid = false;
       try { valid = await verifyTurnstile(signup.turnstileToken, turnstileSecret); }
       catch { valid = false; }
       if (!valid) return reply(400, "Please complete the anti-spam check.", headers);
+    }
+
+    // Spend the shared circuit breaker only after the narrower caller gates.
+    if (ip && !await quota(admin, hmac, "ip:" + ip + ":" + hour, 6, 3600)) {
+      return reply(429, "Too many requests. Please try again later.", headers);
+    }
+    if (!await quota(admin, hmac, "email:" + signup.email + ":" + day, 3, 86400)) {
+      return reply(429, "Too many requests. Please try again tomorrow.", headers);
+    }
+    if (!await quota(admin, hmac, "global:" + hour, 80, 3600)) {
+      return reply(429, "Too many signups right now. Please try again later.", headers);
     }
 
     const { error } = await admin.from("newsletter_subscribers").insert({

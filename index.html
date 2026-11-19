@@ -113,6 +113,7 @@ button:hover{filter:brightness(1.1)}button.ghost{background:var(--card2);border:
 .bar i{display:block;height:100%;background:linear-gradient(90deg,#1a5cff,#2f8cff);width:0;transition:width .15s;border-radius:8px}
 .enc{display:flex;justify-content:space-between;font-size:13px;color:var(--mute)}
 .enc span:first-child{font-family:var(--mono);font-size:12px}
+.verifyRow{display:none;align-items:center;gap:8px;flex-wrap:wrap;color:var(--mute);font-size:12px}.verifyRow.show{display:flex}.verifyRow input{width:112px;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--text);font:600 13px var(--mono);letter-spacing:.08em}.verifyRow button{padding:7px 11px;border-radius:8px;font-size:12px}.verifyRow .verifyMsg{flex-basis:100%;min-height:14px}.verifyRow .verifyMsg.error{color:var(--err)}
 .done .bar i{background:var(--ok)}.done .st{color:var(--ok)}
 .error .bar i{background:var(--err);width:100%}.error .st{color:var(--err)}.error .enc{display:none}
 .row a{color:#9cc4ff;cursor:pointer;font-weight:500;font-size:13px}
@@ -284,7 +285,7 @@ let preferences = { friendNotifications: true, incomingNotifications: true, comp
 const retries = new Map();
 const fileName = f => f.webkitRelativePath || f.droplyPath || f.name;
 let me, ws, peers = [], sel = null, pendAv = null, known = null;   // peers = friends that are online right now
-let friends = [], pendIn = [], pendOut = [], gone = [], raw = [];  // raw = everyone the server lists as online
+let friends = [], pendIn = [], pendOut = [], gone = [], raw = [];  // raw = accepted friends who are online
 const MAX_FRIENDS = 200, MAX_REQ = 50;
 const sess = Object.create(null), asks = [];
 function syncTransferFlow() {
@@ -387,7 +388,7 @@ function updateDrop() {
   $('#dropTitle').textContent = p ? 'Drop files to send' : f ? f.name + ' is offline' : friends.length ? 'Pick a person first' : 'Add a friend to start';
   $('#peerName').textContent = shown ? shown.name : 'Pick a person';
   $('#peerSub').textContent = p ? 'Online' : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
-  const n = avatar(shown && shown.av, shown ? shown.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
+  const n = avatar(shown && (shown.av || f?.av), shown ? shown.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
 }
 function setStatus(on, text) {
   if (typeof connectionText !== 'undefined') { connectionText = on ? 'Connected to the signaling server. Friends appear when both devices are online.' : (text || 'Connecting to the signaling server...'); const detail = $('#connectionDetail'); if (detail) detail.textContent = connectionText; } $('#status').classList.toggle('on', on); $('#status span').textContent = text || (on ? 'Connected' : 'Connecting…'); }
@@ -409,7 +410,8 @@ function row(id, d) {
   let r = document.getElementById(id);
   if (!r) {
     r = document.createElement('div'); r.id = id;
-    r.innerHTML = '<div class="rt"><div class="ri"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div><div class="rx"><div class="nm"></div><div class="sub"></div></div><div class="st"></div><button class="x" title="Cancel transfer" aria-label="Cancel transfer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="bar"><i></i></div><div class="enc"><span>Secure connection</span><span class="spd"></span></div>';
+    r.innerHTML = '<div class="rt"><div class="ri"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div><div class="rx"><div class="nm"></div><div class="sub"></div></div><div class="st"></div><button class="x" title="Cancel transfer" aria-label="Cancel transfer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 18L6 6"/></svg></button></div><div class="bar"><i></i></div><div class="enc"><span>Secure connection</span><span class="spd"></span></div><div class="verifyRow"><span>Compare this code with your friend, then enter it:</span><input class="verifyInput" inputmode="numeric" maxlength="7" autocomplete="off" aria-label="Verification code from friend"><button class="verifyBtn">Verify</button><small class="verifyMsg" aria-live="polite"></small></div>';
+    r.querySelector('.verifyBtn').onclick = () => confirmTransferCode(id, r.querySelector('.verifyInput').value);
     r.querySelector('.x').onclick = () => cancelTransfer(id);
     $('#log').prepend(r);
     transferCards.set(id, { element: r, state: d.state || '' });
@@ -462,16 +464,17 @@ function connect() {
   api.on('server-event', event => {
     if (event.t === 'state') {
       const connected = event.state === 'connected'; ws.readyState = connected ? 1 : 3;
-      setStatus(connected, event.text); known = null;
+      setStatus(connected, event.text); known = null; if (connected) syncFriendState();
       if (!connected) { sentFr.clear(); setOnline([]); }
       if (typeof accessState !== 'undefined') { accessState = event; if (typeof renderSettings === 'function' && activeSettingsSection === 'Device access' && !$('#settingsPane').classList.contains('hidden')) renderSettings('Device access'); }
     } else if (event.t === 'message') {
       const m = event.message;
       if (m.t === 'peers' && Array.isArray(m.peers)) setOnline(m.peers.filter(p => p && typeof p.id === 'string' && typeof p.name === 'string' && p.id !== me.id));
       else if (m.t === 'sig') onSig(m.from, m.data);
+      else if (m.t === 'resolved') handleResolved(m).catch(() => {});
     }
   });
-  api.connectServer().catch(() => setStatus(false, 'Could not initialize secure connection'));
+  api.connectServer().then(state => { if (state?.state === 'connected') { ws.readyState = 1; syncFriendState(); setStatus(true, state.text); } }).catch(() => setStatus(false, 'Could not initialize secure connection'));
 }
 
 /* ---------- Friends ---------- */
@@ -498,44 +501,43 @@ function normCode(v) {
 const cleanName = n => Array.from(String(n || '').trim()).slice(0, 40).join('') || 'Friend';
 const cleanAv = a => typeof a === 'string' && a.length < 60000 && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(a) ? a : '';
 let saveT = 0;
-const persist = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { api.saveFriends({ friends, out: pendOut, inc: pendIn, gone }); } catch {} }, 150); };
+const persist = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { api.saveFriends({ friends, out: pendOut, inc: pendIn, gone }); } catch {} syncFriendState(); }, 150); };
+function syncFriendState() { send({ t: 'watch', friends: friends.map(f => f.id), codes: pendOut.map(o => o.code), notify: gone }); }
 function addFriend(rec) {
   friends = friends.filter(f => f.id !== rec.id); friends.push(rec); friends.sort(byName);
   pendIn = pendIn.filter(r => r.id !== rec.id); gone = gone.filter(g => g !== rec.id);
   peers = raw.filter(p => isFriend(p.id));   // the new friend may already be online: don't wait for the server's next update
   persist(); renderRail(); renderPeers(); updateDrop();
 }
-// Who is online, as listed by the server. Friends are matched here: names/photos stay fresh, pending requests get
-// delivered the moment the other person shows up, and "remove" notices reach friends who were offline.
+// The server returns only mutual friends. Pending codes and offline removals resolve privately when a target comes online.
 let syncQ = Promise.resolve();
 const setOnline = list => (syncQ = syncQ.then(() => applyOnline(list)).catch(() => {}));
 async function applyOnline(list) {
   raw = list; let dirty = false;
-  const byCode = new Map();
-  for (const p of list) byCode.set(await deviceCode(p.id), p);
-  for (const id of [...sentFr]) if (!list.some(p => p.id === id)) sentFr.delete(id);
   for (const f of friends) {
     const p = list.find(x => x.id === f.id); if (!p) continue;
-    const name = cleanName(p.name), av = cleanAv(p.av);
+    const name = cleanName(p.name), av = p.av === undefined ? f.av : cleanAv(p.av);
     if (f.name !== name || f.av !== av) { f.name = name; f.av = av; dirty = true; }
   }
-  for (const o of pendOut) {
-    const p = byCode.get(o.code);
-    if (p && !sentFr.has(p.id)) { sentFr.add(p.id); gone = gone.filter(g => g !== p.id); sig(p.id, { t: 'fr', name: me.name, av: me.avatar }); }
-  }
-  for (const id of [...gone]) if (list.some(p => p.id === id)) { sig(id, { t: 'fx' }); gone = gone.filter(g => g !== id); dirty = true; }
   peers = list.filter(p => isFriend(p.id));
   if (dirty) persist();
   updateDrop(); renderPeers(); renderRail(); notifyNew();
 }
+async function handleResolved(m) {
+  if (!m || typeof m.id !== 'string' || m.id === me?.id) return;
+  const code = await deviceCode(m.id);
+  if (m.code && m.code !== code) return;
+  if (gone.includes(m.id)) { sig(m.id, { t: 'fx' }); gone = gone.filter(id => id !== m.id); persist(); return; }
+  if (pendOut.some(o => o.code === code) && !sentFr.has(m.id)) { sentFr.add(m.id); sig(m.id, { t: 'fr', name: me.name, av: me.avatar }); }
+}
 async function friendSig(from, d) {
   if (typeof from !== 'string' || !me || from === me.id) return;
-  const code = await deviceCode(from), live = raw.find(p => p.id === from);
+  const code = await deviceCode(from);
   if (d.t === 'fr') {                                              // someone wants to add us
     const rec = { id: from, code, name: cleanName(d.name), av: cleanAv(d.av) };
-    if (isFriend(from)) return sig(from, { t: 'fa' });            // already friends: just confirm again
+    if (isFriend(from)) return sig(from, { t: 'fa', name: me.name, av: me.avatar });            // already friends: just confirm again
     const mine = pendOut.find(o => o.code === code);
-    if (mine) { pendOut = pendOut.filter(o => o !== mine); addFriend(rec); sig(from, { t: 'fa' }); return notify('Friend added', rec.name); }   // both asked: match
+    if (mine) { pendOut = pendOut.filter(o => o !== mine); addFriend(rec); sig(from, { t: 'fa', name: me.name, av: me.avatar }); return notify('Friend added', rec.name); }   // both asked: match
     const i = pendIn.findIndex(r => r.id === from);
     if (i >= 0) { pendIn[i] = rec; persist(); return renderPeers(); }
     if (pendIn.length >= MAX_REQ || friends.length >= MAX_FRIENDS) return;
@@ -543,7 +545,7 @@ async function friendSig(from, d) {
   } else if (d.t === 'fa') {                                       // they accepted our request
     const mine = pendOut.find(o => o.code === code); if (!mine || friends.length >= MAX_FRIENDS) return;
     pendOut = pendOut.filter(o => o !== mine);
-    const rec = { id: from, code, name: cleanName(live ? live.name : d.name), av: cleanAv(live ? live.av : '') };
+    const rec = { id: from, code, name: cleanName(d.name), av: cleanAv(d.av) };
     addFriend(rec); notify('Friend added', rec.name + ' accepted your request');
   } else if (d.t === 'fd') {                                       // they declined
     if (!pendOut.some(o => o.code === code)) return;
@@ -564,13 +566,12 @@ async function addByCode(input) {
   if (pendOut.some(o => o.code === code)) return { ok: false, msg: 'Request already sent. Waiting for a reply.' };
   if (friends.length + pendOut.length >= MAX_FRIENDS) return { ok: false, msg: 'Friend list is full.' };
   pendOut.push({ code }); persist(); renderPeers();
-  await setOnline(raw);
-  const onlineCodes = await Promise.all(raw.map(p => deviceCode(p.id)));
-  return { ok: true, msg: onlineCodes.includes(code) ? 'Request sent. It’s waiting for them to accept.' : 'Saved. The request is delivered as soon as that person opens Droply.' };
+  send({ t: 'lookup', code }); syncFriendState();
+  return { ok: true, msg: 'Saved. The request will be delivered when that person is online.' };
 }
 function acceptReq(id) {
   const r = pendIn.find(x => x.id === id); if (!r || friends.length >= MAX_FRIENDS) return;
-  addFriend(r); sig(id, { t: 'fa' });
+  addFriend(r); sig(id, { t: 'fa', name: me.name, av: me.avatar });
 }
 function declineReq(id) { pendIn = pendIn.filter(x => x.id !== id); sig(id, { t: 'fd' }); persist(); renderPeers(); }
 function removeFriend(id) {
@@ -625,12 +626,13 @@ async function startSender(s) {
   const pc = makePc(s), ch = pc.createDataChannel('f');
   ch.binaryType = 'arraybuffer'; ch.bufferedAmountLowThreshold = 256 * 1024;
   s.timer = setTimeout(() => !s.open && fail(s, 'Could not connect', 'error', 'Connection timed out'), CONNECT_MS);
-  ch.onopen = () => { s.open = true; clearTimeout(s.timer); watch(s); pump(s, ch); };
+  ch.onopen = () => { s.open = true; clearTimeout(s.timer); sendVerification(s); maybeStartTransfer(s); };
   ch.onmessage = e => {
     if (s.fin || typeof e.data !== 'string') return;
     if (e.data === 'ok') { s.fin = true; row(s.tid, { msg: 'Sent ✓', pct: 100, state: 'done', spd: '' }); cleanup(s); return; }
     if (e.data.length > 1024) return fail(s, 'Invalid transfer acknowledgement');
     let m; try { m = JSON.parse(e.data); } catch { return; }
+    if (m && m.t === 'verify') { s.peerVerified = true; finishVerification(s); maybeStartTransfer(s); return; }
     if (m && m.t === 'ack') {
       if (!Number.isSafeInteger(m.n) || m.n <= 0 || m.n > s.sent - s.acked) return fail(s, 'Invalid transfer acknowledgement');
       s.acked += m.n; s.last = Date.now(); s.wake && s.wake();
@@ -682,6 +684,8 @@ function recv(s, ch) {
       if (e.data.length > 8192) return bad();
       let m; try { m = JSON.parse(e.data); } catch { return bad(); }
       if (!m || typeof m !== 'object') return bad();
+      if (m.t === 'verify') { s.peerVerified = true; finishVerification(s); return; }
+      if (!s.localVerified || !s.peerVerified) return bad();
       if (m.t === 'file') {
         const exp = s.files[idx++];                       // only accept what the user accepted
         if (cur || !exp || m.size !== exp.size || m.name !== exp.name) return bad();
@@ -818,29 +822,52 @@ async function handle(s, d) {
     if (s.pc && s.pc.remoteDescription) await s.pc.addIceCandidate(d.c); else (s.pend = s.pend || []).push(d.c);
   }
 }
-// Short code derived from both sides' DTLS fingerprints. If the two people read the same code,
-// nobody (including the signaling server) swapped keys in between. It does NOT prove who the peer is.
+function sendVerification(s) {
+  if (!s.localVerified || s.verifySent || s.ch?.readyState !== 'open') return;
+  try { s.ch.send(JSON.stringify({ t: 'verify' })); s.verifySent = true; } catch {}
+}
+function finishVerification(s) {
+  if (!s.localVerified || !s.peerVerified) return;
+  clearTimeout(s.verifyTimer); if (s.dir === 'in') watch(s);
+}
+function maybeStartTransfer(s) {
+  if (s.dir !== 'out' || !s.open || !s.localVerified || !s.peerVerified || s.pumping || s.fin) return;
+  s.pumping = true; finishVerification(s); watch(s); pump(s, s.ch);
+}
+function confirmTransferCode(tid, value) {
+  const s = sess[tid], rowEl = document.getElementById(tid);
+  if (!s || !s.code || s.fin || !rowEl) return false;
+  const expected = s.code.replace(/\D/g, ''), entered = String(value || '').replace(/\D/g, '');
+  const msg = rowEl.querySelector('.verifyMsg'); msg.classList.remove('error');
+  if (entered.length !== 6 || entered !== expected) { msg.textContent = 'The codes do not match. Check with your friend before continuing.'; msg.classList.add('error'); return false; }
+  s.localVerified = true; rowEl.querySelector('.verifyInput').disabled = true; rowEl.querySelector('.verifyBtn').disabled = true;
+  msg.textContent = s.peerVerified ? 'Verified. Starting transfer…' : 'Code confirmed. Waiting for your friend to confirm…'; finishVerification(s);
+  sendVerification(s); maybeStartTransfer(s); return true;
+}
+// Short code derived from both sides' DTLS fingerprints. Both users must compare it out of band before bytes flow.
 async function showCode(s) {
   try {
     const fp = d => (/a=fingerprint:\S+ (\S+)/.exec((d && d.sdp) || '') || [])[1];
     const a = fp(s.pc.localDescription), b = fp(s.pc.remoteDescription);
-    if (!a || !b) return;
+    if (!a || !b) return fail(s, 'Could not verify the secure connection');
     const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode([a, b].sort().join('|')));
     if (s.fin) return;
     const c = String(new DataView(h).getUint32(0) % 1e6).padStart(6, '0');
-    row(s.tid, { code: c.slice(0, 3) + ' ' + c.slice(3) });
-  } catch {}
+    s.code = c.slice(0, 3) + ' ' + c.slice(3); row(s.tid, { code: s.code });
+    const rowEl = document.getElementById(s.tid); if (rowEl) { rowEl.querySelector('.verifyRow').classList.add('show'); rowEl.querySelector('.verifyMsg').textContent = 'Compare by phone or another trusted channel. Transfer waits for both confirmations.'; }
+    s.verifyTimer = setTimeout(() => { if (!s.localVerified || !s.peerVerified) fail(s, 'Verification was not completed', 'cancelled', true); }, 120000);
+  } catch { if (!s.fin) fail(s, 'Could not verify the secure connection'); }
 }
 function cleanup(s) {
   if (s.dir === 'out') api.notify?.('completed', `Files sent to ${s.peerName}`);
   recordSession(s, 'done');
   api.finishReceive?.(s.tid);
   s.pend = [];
-  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); setTimeout(() => s.pc && s.pc.close(), 1500); delete sess[s.tid]; syncTransferFlow(); }
+  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); clearTimeout(s.verifyTimer); setTimeout(() => s.pc && s.pc.close(), 1500); delete sess[s.tid]; syncTransferFlow(); }
 // state: 'error' | 'cancelled'. tell: null = don't notify the other side, true = "cancelled by me", string = custom reason
 function fail(s, msg, state = 'error', tell = null) {
   if (s.fin) return; s.fin = true;
-  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); s.wake && s.wake();
+  clearTimeout(s.timer); clearInterval(s.wd); clearTimeout(s.ackT); clearTimeout(s.verifyTimer); s.wake && s.wake();
   s.pend = [];
   row(s.tid, { msg, state, spd: '' });
   recordSession(s, state, msg);

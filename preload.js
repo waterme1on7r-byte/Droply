@@ -29,7 +29,7 @@ contextBridge.exposeInMainWorld('api', {
   getFriends: () => ipcRenderer.invoke('get-friends'),
   saveFriends: x => ipcRenderer.invoke('save-friends', x),
   copy: t => ipcRenderer.send('copy', t),
-  saveOpen: (tid, name) => ipcRenderer.send('save-open', tid, name),
+  saveOpen: (tid, name, size) => ipcRenderer.send('save-open', tid, name, size),
   saveChunk: (tid, u8) => ipcRenderer.send('save-chunk', tid, u8),
   saveClose: tid => ipcRenderer.send('save-close', tid),
   saveAbort: tid => ipcRenderer.send('save-abort', tid),

@@ -131,13 +131,13 @@ Deno.serve(async(req:Request):Promise<Response>=>{
       if(!form)return send(422,{error:"Enter your name, email and an issue summary of at least 10 characters."});
       if(form.honeypot)return send(200,{ok:true,message:"Thank you. Your request has been received."});
       // Counters are separate from general contact requests and AI chat usage.
-      if(!await quota("support-ticket:global:"+hour,60,3600)||
-         (ip&&!await quota("support-ticket:ip:"+ip+":"+hour,5,3600))||
-         !await quota("support-ticket:email:"+form.email+":"+day,3,86400))
-        return send(429,{error:"Too many support requests. Please try again later."});
       const turnstileSecret=Deno.env.get("CHAT_TURNSTILE_SECRET_KEY");
       if(turnstileSecret&&!await captchaOk(body.turnstileToken,turnstileSecret))
         return send(400,{error:"Please complete the spam check."});
+      if((ip&&!await quota("support-ticket:ip:"+ip+":"+hour,5,3600))||
+         !await quota("support-ticket:email:"+form.email+":"+day,3,86400)||
+         !await quota("support-ticket:global:"+hour,60,3600))
+        return send(429,{error:"Too many support requests. Please try again later."});
       const {data,error}=await admin.from("support_tickets").insert({
         sender_name:form.name,sender_email:form.email,summary:form.summary,source:"droply-chat"
       }).select("id").single();
@@ -151,8 +151,8 @@ Deno.serve(async(req:Request):Promise<Response>=>{
 
     const messages=messagesFrom(body.messages);
     if(!messages)return send(400,{error:"Invalid chat message."});
-    if(!await quota("support-chat:global:"+hour,100,3600)||
-       (ip&&!await quota("support-chat:ip:"+ip+":"+hour,20,3600)))
+    if((ip&&!await quota("support-chat:ip:"+ip+":"+hour,20,3600))||
+       !await quota("support-chat:global:"+hour,100,3600))
       return send(429,{error:"Chat is busy. Please try again later."});
     // A deterministic guide processes the latest question transiently.
     // We never forward chat text to an external language-model provider.

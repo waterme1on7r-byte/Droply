@@ -29,7 +29,10 @@ test('only authenticated socket exposes signaling, and main process fixes hello 
  socket.emit('open');assert.equal(socket.sent[0].t,'auth');
  socket.emit('message',JSON.stringify({t:'authenticated',id:f.profile.id}));assert.equal(socket.sent[1].id,f.profile.id);
  f.listeners['send-signal'](true,{t:'hello',id:'spoofed',name:'spoofed'});assert.equal(socket.sent.at(-1).id,f.profile.id);assert.equal(socket.sent.at(-1).name,f.profile.name);
+ f.listeners['send-signal'](true,{t:'watch',friends:[f.profile.id],codes:[],notify:[]});assert.equal(socket.sent.at(-1).t,'watch');
+ f.listeners['send-signal'](true,{t:'lookup',code:'DRP-1234-5678-9ABC'});assert.equal(socket.sent.at(-1).t,'lookup');
  const n=socket.sent.length;f.listeners['send-signal'](false,{t:'sig',to:'victim',data:{}});assert.equal(socket.sent.length,n);
+ socket.emit('message',JSON.stringify({t:'resolved',id:'12345678-1234-1234-1234-123456789012'}));assert.equal(f.events.at(-1).message.t,'resolved');
  socket.emit('close',4401);assert.equal(f.events.at(-1).state,'enrollment-required');f.access.stop();
 });
 

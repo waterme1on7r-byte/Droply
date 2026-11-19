@@ -6,6 +6,6 @@ The desktop main process generates a random per-device credential and encrypts i
 
 The signaling server lives in server/. PostgreSQL stores credential hashes and recovery invitations in transactions. DATABASE_URL and ADMIN_TOKEN belong only in the server host's environment. Public desktop configuration contains the signaling URL and ICE settings only.
 
-Production currently retains ALLOW_LEGACY=true for older installations. Preserve it during repository migration; changing source locations must not disconnect users. Set it to false after the intended users upgrade. Registered identities already reject legacy impersonation. Do not publish the older installers that embedded the former shared key.
+The updated server removes legacy WebSocket access. Roll out a new desktop release to existing users before deploying it: older clients do not send the authenticated friend-list protocol and will lose presence and signaling after the server update. The new server scopes presence and regular signaling to mutual friends. Do not publish older installers that embedded the former shared key.
 
-Server tests cover registration, persistence, replay, revocation, sender identity and legacy compatibility. CI additionally exercises concurrent PostgreSQL transactions. See server/README.md for deployment and recovery commands.
+Server tests cover registration, persistence, replay, revocation, sender identity, friend-scoped presence and rejection of legacy connections. CI additionally exercises concurrent PostgreSQL transactions. See server/README.md for deployment and recovery commands.

@@ -13,6 +13,7 @@ const ADMIN_UI_ORIGIN = "https://waterme1on7r-byte.github.io";
 const ADMIN_UI_URL = "https://waterme1on7r-byte.github.io/Droply/portal/contact-inbox.html";
 const TOKEN_LIFETIME_SECONDS = 45 * 60;
 const MAX_BODY_BYTES = 1024;
+const ADMIN_USERS = new Set(["anil", "cenk"]);
 
 function response(status:number, value:Record<string,unknown>, headers:Record<string,string> = {}): Response {
   return new Response(JSON.stringify(value), {status,headers:{
@@ -71,7 +72,7 @@ async function validateSession(req:Request,admin:ReturnType<typeof createClient>
     if(claims.aud!=="droply-contact-admin"||claims.iss!=="droply-contact"||
        !Number.isSafeInteger(claims.exp)||claims.exp<=now||claims.exp>now+TOKEN_LIFETIME_SECONDS||
        !Number.isSafeInteger(claims.iat)||claims.iat>now+30||
-       !["anil","cenk"].includes(claims.sub))return null;
+       !ADMIN_USERS.has(claims.sub))return null;
     const {data,error}=await admin.from("contact_admin_users")
       .select("active,session_version").eq("username",claims.sub).maybeSingle();
     if(error||!data?.active||data.session_version!==claims.ver)return null;
@@ -82,8 +83,22 @@ async function parseBody(req:Request,maxBytes=MAX_BODY_BYTES):Promise<Record<str
   const len=req.headers.get("Content-Length");
   if(len&&Number(len)>maxBytes)return null;
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get("Content-Type")||""))return null;
-  const raw=await req.text();
-  if(enc.encode(raw).byteLength>maxBytes)return null;
+  if(!req.body)return null;
+  const reader=req.body.getReader(),chunks:Uint8Array[]=[];
+  let total=0;
+  try{
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      total+=value.byteLength;
+      if(total>maxBytes){await reader.cancel();return null;}
+      chunks.push(value);
+    }
+  }finally{reader.releaseLock();}
+  const bytes=new Uint8Array(total);
+  let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  let raw:string;
+  try{raw=dec.decode(bytes);}catch{return null;}
   try {
     const value=JSON.parse(raw);
     return value && typeof value==="object"&&!Array.isArray(value)?value:null;
@@ -104,8 +119,11 @@ async function rateLimit(admin:ReturnType<typeof createClient>,secret:string,use
   }
   // Fail closed if the limiter is unavailable. Independent global cap even if
   // a client can spoof a forwarded-IP header.
-  return await take("global:"+globalWindow,100,3600) &&
-    await take("principal:"+username+":"+ip+":"+bucket,8,1800);
+  // The caller-specific gate runs first; rejected attempts must not consume
+  // the shared cap used by both administrators.
+  return await take("ip:"+ip+":"+bucket,16,1800) &&
+    await take("principal:"+username+":"+ip+":"+bucket,8,1800) &&
+    await take("global:"+globalWindow,100,3600);
 }
 function getIp(req:Request):string{
   return (
@@ -156,7 +174,7 @@ Deno.serve(async (req:Request):Promise<Response>=>{
       if(!input)return fail(400,"Invalid sign-in request.");
       const username=typeof input.username==="string"?input.username.trim().toLowerCase():"";
       const password=typeof input.password==="string"?input.password:"";
-      if(!/^[a-z]{1,24}$/.test(username)||password.length<1||password.length>128)
+      if(!/^[a-z]{1,24}$/.test(username)||!ADMIN_USERS.has(username)||password.length<1||password.length>128)
         return fail(401,"Invalid username or password.");
       if(!await rateLimit(admin,serviceKey,username,getIp(req)))
         return fail(429,"Too many sign-in attempts. Please try later.");

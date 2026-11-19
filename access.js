@@ -37,7 +37,7 @@ function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,
   current.on('message',raw=>{if(socket!==current)return;let m;try{m=JSON.parse(raw);}catch{return;}if(m.t==='access-denied'){denied=true;authenticated=false;emit('enrollment-required','This device could not connect. Please contact support if it persists.');current.close();return;}if(m.t==='authenticated'){
    if(m.id!==getProfile().id){denied=true;current.close();emit('locked','Server identity mismatch. Ask the administrator for help.');return;}
    clearTimeout(deadline);authenticated=true;attempt=0;emit('connected','Connected securely');const p=getProfile();current.send(JSON.stringify({t:'hello',id:p.id,name:p.name,av:p.avatar}));
-  }else if(authenticated&&(m.t==='peers'||m.t==='sig'))toUI('server-event',{t:'message',message:m});});
+  }else if(authenticated&&(m.t==='peers'||m.t==='sig'||m.t==='resolved'))toUI('server-event',{t:'message',message:m});});
   current.on('error',()=>{});
   current.on('close',code=>{clearTimeout(deadline);if(socket!==current)return;socket=null;authenticated=false;if(code===4401){denied=true;emit('enrollment-required','This device could not connect. Please contact support if it persists.');}if(!stopped&&!denied)schedule();});
  }
@@ -58,6 +58,8 @@ function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,
   if(!fromUI(e)||!authenticated||socket?.readyState!==1||!m||typeof m!=='object')return;
   if(m.t==='hello'){const p=getProfile();socket.send(JSON.stringify({t:'hello',id:p.id,name:p.name,av:p.avatar}));}
   else if(m.t==='sig'&&typeof m.to==='string'&&m.to.length<=64&&m.data&&typeof m.data==='object'){const encoded=JSON.stringify({t:'sig',to:m.to,data:m.data});if(Buffer.byteLength(encoded)<=1<<20&&socket.bufferedAmount<4*1024*1024)socket.send(encoded);}
+  else if(m.t==='watch'&&Array.isArray(m.friends)&&Array.isArray(m.codes)&&Array.isArray(m.notify)){const encoded=JSON.stringify(m);if(Buffer.byteLength(encoded)<=64*1024&&socket.bufferedAmount<4*1024*1024)socket.send(encoded);}
+  else if(m.t==='lookup'&&typeof m.code==='string'&&/^DRP-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/.test(m.code))socket.send(JSON.stringify(m));
  });
  app.on('before-quit',stop);return {connect,stop};
 }
