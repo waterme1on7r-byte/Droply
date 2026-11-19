@@ -75,11 +75,11 @@
       const banner = document.createElement('div');
       banner.className = 'web-note';
       banner.setAttribute('role', 'note');
-      banner.textContent = 'Browser edition · Each browser has its own device code. Keep site data intact to keep your identity. Credentials are stored in this browser, not protected by your operating system keychain. You choose where received files go.';
+      banner.textContent = 'PRIVATE TEST BUILD · Each browser has its own device code. Keep site data intact to keep your identity. Credentials are stored in this browser, not protected by your operating system keychain. You choose where received files go.';
       head.after(banner);
     }
     const label = document.querySelector('#titlebar');
-    if (label) label.firstChild.textContent = 'Droply · Web';
+    if (label) label.firstChild.textContent = 'Droply · Private test';
     const update = document.querySelector('#updateBtn');
     if (update) update.classList.add('hidden');
   });
