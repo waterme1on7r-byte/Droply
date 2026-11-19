@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-KaUbWd+V4DrnjPuO+THUOjkS3F7f4n3V/MbbjokHL9Y='; style-src 'self' 'sha256-zWJDvHQwG5eHj+oZzeE0D+VwIu2IZ/Q6ZqsDGWyayIs=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-KaUbWd+V4DrnjPuO+THUOjkS3F7f4n3V/MbbjokHL9Y='; style-src 'self' 'sha256-tyGb3VuPSVhDAG9h/h25r1M53ZL+VIrQlrQogI1a7IA=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -1230,23 +1230,27 @@
     .app-screenshot-window .app-screenshot-picture { pointer-events:none; }
     @media (prefers-reduced-motion: reduce) { .app-screenshot { transition:none; } }
 
-    /* Sunlight/sunset transition: overlay changes opacity only; never scales, blurs or transforms content. */
+    /* Gentle sunrise/sunset glow. The old high-opacity full-screen wash caused
+       a grey/white flash across screenshots and text during every theme change. */
     .theme-skywash {
       position:fixed; inset:0; z-index:9999;
       pointer-events:none; opacity:0;
-      mix-blend-mode:normal;
     }
     .theme-skywash.sunrise {
-      background:linear-gradient(180deg, rgba(45,91,173,.36) 0%, rgba(252,182,89,.28) 55%, rgba(255,236,171,.51) 100%);
-      animation:theme-dawn 1200ms ease-in-out both;
+      background:radial-gradient(ellipse 45% 52% at 78% 78%,
+        rgba(255,189,96,.22) 0%, rgba(255,224,155,.06) 52%, transparent 84%);
+      animation:theme-horizon-glow 1200ms ease-in-out both;
     }
     .theme-skywash.sunset {
-      background:linear-gradient(180deg, rgba(9,17,49,.61) 0%, rgba(88,77,143,.30) 49%, rgba(246,128,97,.23) 100%);
-      animation:theme-dusk 1200ms ease-in-out both;
+      background:radial-gradient(ellipse 45% 52% at 78% 78%,
+        rgba(100,116,203,.23) 0%, rgba(58,72,151,.06) 52%, transparent 84%);
+      animation:theme-horizon-glow 1200ms ease-in-out both;
     }
-    @keyframes theme-dawn { 0%,100%{opacity:0} 36%,58%{opacity:1} }
-    @keyframes theme-dusk { 0%,100%{opacity:0} 36%,58%{opacity:1} }
-    /* One opacity-only screenshot fade and a soft dawn/dusk wash; no page snapshot flash. */
+    @keyframes theme-horizon-glow {
+      0%,100% { opacity:0; }
+      50% { opacity:.42; }
+    }
+    /* The screenshots keep their one opacity-only crossfade, with no page snapshot. */
     @media (prefers-reduced-motion:reduce) {
       .theme-skywash, .theme-skywash.sunrise, .theme-skywash.sunset { animation:none; display:none; }
       .demo-shot-light { transition:none; }
