@@ -12,15 +12,7 @@
       height: 14px;
       z-index: 101;
       background-color: #0c1018;
-      /* Safari samples this live background while the root view snapshots
-         crossfade. Match both transitions: 850ms, ease-in-out, no delay.
-         Only animate on an actual toggle, not on first page paint. */
-    }
-
-    @media (prefers-reduced-motion: no-preference) {
-      html.theme-transitioning .ios-safari-status-tint {
-        transition: background-color 850ms ease-in-out;
-      }
+      /* No colour transition: Safari should sample the final colour immediately. */
     }
 
     html[data-theme="light"] .ios-safari-status-tint {
