@@ -15,7 +15,7 @@ html[data-theme=light] .tcard{background:rgba(255,255,255,.97)}
 html[data-theme=light] .row a{color:var(--accent)}
 html[data-theme=light] .frx{background:var(--card2);color:var(--text)}
 html[data-theme=light] .enc,html[data-theme=light] .ico{color:var(--mute)}
-html[data-theme=light] #pf .box,html[data-theme=light] #addFriend .box{background:radial-gradient(260px 160px at 50% 0%,rgba(59,130,246,.08),transparent 75%),var(--card)}
+html[data-theme=light] #pf .box,html[data-theme=light] #addFriend .box,html[data-theme=light] #friendRequests .request-box{background:radial-gradient(260px 160px at 50% 0%,rgba(59,130,246,.08),transparent 75%),var(--card)}
 html[data-theme=light] .done .st{color:var(--ok)}
 html[data-theme=light] .error .st{color:var(--err)}
 html[data-theme=light] #drop{background:linear-gradient(145deg,#fff,#f3f8ff);border-color:#8bb8f5;box-shadow:inset 0 0 0 1px rgba(57,123,232,.06),0 10px 30px rgba(51,103,177,.06)}
@@ -26,7 +26,7 @@ html[data-theme=light] .ico{color:var(--accent)}
 html[data-theme=light] h1,html[data-theme=light] .settings-head h2,html[data-theme=light] .settings-content h3,html[data-theme=light] .box h2,html[data-theme=light] .pcard b,html[data-theme=light] .peer,html[data-theme=light] .nm,html[data-theme=light] .tcard b{color:var(--accent2)}
 html[data-theme=light] .rbtn.active{background:linear-gradient(135deg,#4389f2,#2866ce);box-shadow:0 6px 18px rgba(48,106,197,.22)}
 html[data-theme=light] .tcard{background:rgba(255,255,255,.97);border-color:var(--line);box-shadow:0 14px 38px rgba(34,71,122,.16)}
-html[data-theme=light] #ask,html[data-theme=light] #pf,html[data-theme=light] #addFriend{background:rgba(28,53,88,.28)}
+html[data-theme=light] #ask,html[data-theme=light] #pf,html[data-theme=light] #addFriend,html[data-theme=light] #friendRequests{background:rgba(28,53,88,.28)}
 #settingsPane{position:fixed;inset:40px 0 0 84px;z-index:8;background:var(--canvas);display:flex;flex-direction:column;color:var(--text)}
 .settings-head{padding:24px 28px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
 .settings-head h2{font-family:var(--cond);font-size:30px;color:var(--gold)}

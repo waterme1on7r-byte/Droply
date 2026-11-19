@@ -31,6 +31,16 @@ const iconPath = () => app.isPackaged ? path.join(process.resourcesPath, iconFil
 
 let desktop, tray, quitting = false;
 let win, profile = { id: crypto.randomUUID(), name: '', avatar: '' };
+function showMainWindow() {
+  if (!win || win.isDestroyed()) return;
+  try {
+    if (win.isMinimized()) win.restore();
+    if (!win.isVisible()) win.show();
+    win.setSkipTaskbar(false);
+    if (process.platform === 'darwin') app.show();
+    win.focus(); win.webContents.focus();
+  } catch (e) { log('Could not restore main window', e); }
+}
 const pf = () => path.join(app.getPath('userData'), 'profile.json');
 // Atomic write (temp file + rename) so a crash mid-write can't corrupt the profile / lose the identity
 function saveProfile() {
@@ -262,9 +272,8 @@ function start() {
     try {
       tray = new Tray(nativeImage.createFromPath(iconPath()).resize({ width: 20, height: 20 }));
       tray.setToolTip('DROPLY');
-      const show = () => { win.show(); win.focus(); };
-      tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open DROPLY', click: show }, { label: 'Quit DROPLY', click: () => app.quit() }]));
-      tray.on('double-click', show); tray.on('click', show);
+      tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open DROPLY', click: showMainWindow }, { label: 'Quit DROPLY', click: () => app.quit() }]));
+      tray.on('double-click', showMainWindow); tray.on('click', showMainWindow);
     } catch (e) { log('tray unavailable', e); }
   }
   ensureTray();
@@ -301,7 +310,8 @@ if (gotLock) app.whenReady().then(start).catch(err => {
   try { dialog.showErrorBox('Droply could not start', String(err && err.stack || err)); } catch {}
   app.quit();
 });
-app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
+app.on('second-instance', showMainWindow);
+app.on('activate', showMainWindow);
 app.on('window-all-closed', () => app.quit());
 // Quitting mid-transfer: don't leave half-written files in Downloads
 app.on('before-quit', () => {

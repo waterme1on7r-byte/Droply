@@ -171,6 +171,15 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
 .hidden{display:none!important}
 #addFriend{background:rgba(4,8,18,.7);backdrop-filter:blur(8px);z-index:20}
 #addFriend .box{position:relative;width:min(420px,calc(100vw - 40px));max-height:calc(100vh - 72px);overflow:auto;padding:36px 28px 24px;border:1px solid var(--line);border-radius:22px;background:radial-gradient(320px 180px at 50% 0%,rgba(59,130,246,.2),transparent 75%),var(--card);box-shadow:0 24px 80px rgba(0,0,0,.5);animation:tin .2s ease}
+#friendRequests{background:rgba(4,8,18,.7);backdrop-filter:blur(8px);z-index:20}
+#friendRequests .request-box{position:relative;align-items:stretch;text-align:left;width:min(480px,calc(100vw - 40px));max-height:calc(100vh - 72px);overflow:hidden;padding:32px 24px 22px;border:1px solid var(--line);border-radius:22px;background:radial-gradient(320px 180px at 50% 0%,rgba(59,130,246,.2),transparent 75%),var(--card);box-shadow:0 24px 80px rgba(0,0,0,.5);animation:tin .2s ease}
+#friendRequests .request-head{text-align:center;padding:0 28px 4px}
+#friendRequests .request-head h2{font-size:28px}
+#friendRequests .request-head p{margin:6px 0 0}
+#friendRequestList{width:100%;min-height:42px;max-height:min(55vh,440px);overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px}
+#friendRequestList .sect{padding:10px 4px 4px;text-align:left}
+#friendRequestList .empty{padding:18px 12px}
+#friendRequestList .req{margin:0}
 #addFriend h2{font-size:28px}
 #addFriend .closeX{top:10px;right:10px}
 #addFriend .field label{display:block;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
@@ -224,6 +233,14 @@ html[data-theme=light] body.rightWindowControls #titlebar::after{right:138px}
   </div>
 </div>
 
+<div id="friendRequests" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="friendRequestsTitle">
+  <div class="box request-box">
+    <button id="friendRequestsClose" class="closeX" title="Close" aria-label="Close friend requests"></button>
+    <div class="request-head"><h2 id="friendRequestsTitle">Friend requests</h2><p>Requests you’ve received and sent.</p></div>
+    <div id="friendRequestList"></div>
+  </div>
+</div>
+
 <nav class="rail">
   <div class="rbtn active" title="Transfers"><svg width="32" height="32" viewBox="0 0 32 32"><path d="M16 6c3.7 4.9 6.4 8.1 6.4 11.5a6.4 6.4 0 0 1-12.8 0C9.6 14.1 12.3 10.9 16 6z" fill="#fff"/></svg></div>
   <div class="rsep"></div>
@@ -231,7 +248,7 @@ html[data-theme=light] body.rightWindowControls #titlebar::after{right:138px}
   <div class="rsep"></div>
   <div id="frList"></div>
   <button class="rbtn" id="addFriendBtn" title="Add friend" aria-label="Add friend" aria-haspopup="dialog"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
-  <button class="rbtn" id="peopleBtn" title="Friends"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M16 4.8a3.2 3.2 0 0 1 0 6M21 20v-1a5 5 0 0 0-3.5-4.8"/></svg><span id="count">0</span><span id="reqDot" style="display:none"></span></button>
+  <button class="rbtn" id="peopleBtn" title="Friend requests" aria-label="Friend requests" aria-haspopup="dialog" aria-controls="friendRequests"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M16 4.8a3.2 3.2 0 0 1 0 6M21 20v-1a5 5 0 0 0-3.5-4.8"/></svg><span id="count">0</span><span id="reqDot" style="display:none"></span></button>
   <button class="rbtn" id="gearBtn" title="Settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </nav>
 
@@ -247,10 +264,7 @@ html[data-theme=light] body.rightWindowControls #titlebar::after{right:138px}
       <div class="link"><div class="transferPackets" aria-hidden="true"><i class="packet out p1"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i><i class="packet out p2"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i><i class="packet out p3"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i><i class="packet in p1"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i><i class="packet in p2"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i><i class="packet in p3"><svg viewBox="0 0 16 20"><use href="#filePacketIcon"/></svg></i></div><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span></div>
       <div class="pcard" id="peerBox"><div id="peerAv" class="av">+</div><div><b id="peerName">Pick a person</b><small id="peerSub">No one online</small></div></div>
     </div>
-    <div id="picker" class="hidden">
-      <div id="reqs"></div>
-      <div id="list"></div>
-    </div>
+    <div id="picker" class="hidden"><div id="list"></div></div>
   </div>
   <div id="drop" class="off" title="Drop, click, or paste (Ctrl/⌘+V)">
     <div class="ico"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
@@ -356,7 +370,7 @@ function renderPeers() {
   });
 }
 function renderReqs() {
-  const box = $('#reqs'); box.innerHTML = '';
+  const box = $('#friendRequestList'); box.innerHTML = '';
   if (pendIn.length) box.appendChild(h('div', 'sect', 'Friend requests'));
   pendIn.forEach(r => {
     const el = h('div', 'req'), who = h('div', 'who'); who.appendChild(h('b', null, r.name)); who.append(' wants to be friends');
@@ -370,6 +384,7 @@ function renderReqs() {
     no.onclick = () => { pendOut = pendOut.filter(x => x !== o); persist(); renderReqs(); };
     el.append(who, no); box.appendChild(el);
   });
+  if (!pendIn.length && !pendOut.length) box.appendChild(h('div', 'empty', 'No pending friend requests.'));
 }
 // Left sidebar: every accepted friend, online ones first. Green dot = online, red = offline.
 function renderRail() {
@@ -409,6 +424,7 @@ function clearTransfers() {
     if (activeCard(card.state)) continue;
     card.element.remove(); transferCards.delete(id); retries.delete(id);
   }
+  $('#pair').classList.remove('flow-error'); syncTransferFlow();
   updateClearTransfers();
 }
 $('#clearTransfers').onclick = clearTransfers;
@@ -929,15 +945,33 @@ $('#pf').addEventListener('click', e => { if (e.target === $('#pf')) closeCard()
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (!$('#addFriend').classList.contains('hidden')) closeAddFriend();
+  else if (!$('#friendRequests').classList.contains('hidden')) closeFriendRequests();
   else if (!$('#pf').classList.contains('hidden')) closeCard();
   else if (!$('#setup').classList.contains('hidden') && !$('#setupX').classList.contains('hidden')) closeSetup();
   else $('#picker').classList.add('hidden');
 });
 function closeAddFriend() {
+  $('#friendRequests').classList.add('hidden');
   $('#addFriend').classList.add('hidden'); $('#addFriendBtn').focus();
 }
+function closeFriendRequests() { $('#friendRequests').classList.add('hidden'); $('#peopleBtn').focus(); }
+function openFriendRequests(e) {
+  e?.stopPropagation(); $('#picker').classList.add('hidden'); $('#addFriend').classList.add('hidden');
+  renderReqs(); $('#friendRequests').classList.remove('hidden'); $('#friendRequestsClose').focus();
+}
+$('#friendRequestsClose').innerHTML = ICON.xl;
+$('#friendRequestsClose').onclick = closeFriendRequests;
+$('#friendRequests').addEventListener('click', e => { if (e.target === $('#friendRequests')) closeFriendRequests(); });
+$('#friendRequests').addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return;
+  const buttons = [...$('#friendRequests').querySelectorAll('button:not(:disabled)')];
+  const first = buttons[0], last = buttons[buttons.length - 1];
+  if (!first || !last) { e.preventDefault(); return; }
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
 function openAddFriend() {
-  $('#picker').classList.add('hidden'); $('#addMsg').textContent = ''; $('#codeIn').value = '';
+  $('#picker').classList.add('hidden'); $('#friendRequests').classList.add('hidden'); $('#addMsg').textContent = ''; $('#codeIn').value = '';
   $('#addFriend').classList.remove('hidden'); $('#codeIn').focus();
   deviceCode(me.id).then(c => { $('#shareCode').textContent = c; });
 }
@@ -978,7 +1012,7 @@ $('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#sa
 $('#meBox').onclick = () => openSetup(true);
 $('#gearBtn').onclick = () => openSetup(true);
 const togglePicker = e => { e.stopPropagation(); $('#addMsg').textContent = ''; $('#picker').classList.toggle('hidden'); };
-$('#peerBox').onclick = togglePicker; $('#peopleBtn').onclick = togglePicker;
+$('#peerBox').onclick = togglePicker; $('#peopleBtn').onclick = openFriendRequests;
 document.addEventListener('click', e => { if (!e.composedPath().includes($('#picker'))) $('#picker').classList.add('hidden'); });
 window.addEventListener('focus', () => { if (!$('#setup').classList.contains('hidden')) $('#nameInput').focus(); });
 api.on('app-dialog', d => {

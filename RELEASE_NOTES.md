@@ -1,3 +1,10 @@
+# DROPLY 2.8.12
+
+- Restore the main window correctly from the system tray, including minimized and hidden windows.
+- Move received and sent friend requests into a dedicated themed popup opened from the Friends button; keep requests out of the person picker.
+- Reset the transfer animation to idle after clearing completed transfers.
+- Fix file sending by retaining the sender’s WebRTC data channel when a transfer starts.
+
 # DROPLY 2.8.11
 
 - Fix file sending by retaining the sender's WebRTC data channel when a transfer starts.

@@ -8,7 +8,7 @@ html.droply-android button,html.droply-android input,html.droply-android select{
 html.droply-android .rbtn:focus-visible,html.droply-android .fr:focus-visible,html.droply-android .peer:focus-visible,html.droply-android .pcard:focus-visible,html.droply-android #drop:focus-visible,html.droply-android button:focus-visible,html.droply-android input:focus-visible,html.droply-android select:focus-visible{outline:3px solid #79b7ff;outline-offset:3px}
 html.droply-android .overlay{inset:0!important;padding:max(12px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom));overflow:auto;overscroll-behavior:contain}
 html.droply-android .overlay>.box{max-height:calc(100dvh - max(24px,env(safe-area-inset-top) + env(safe-area-inset-bottom)));overflow:auto;margin:auto}
-html.droply-android #setup,html.droply-android #ask,html.droply-android #pf,html.droply-android #addFriend,html.droply-android #appDialog{z-index:60}
+html.droply-android #setup,html.droply-android #ask,html.droply-android #pf,html.droply-android #addFriend,html.droply-android #friendRequests,html.droply-android #appDialog{z-index:60}
 html.droply-android #settingsPane{inset:0;z-index:40;width:100%;max-width:100vw;overflow:hidden}
 html.droply-android .settings-layout{width:100%;min-width:0;overflow:hidden}
 html.droply-android .settings-nav{min-width:0}
@@ -65,6 +65,8 @@ html.droply-android-phone .settings-nav button{flex:none;white-space:nowrap;padd
 html.droply-android-phone .settings-content{order:1;padding:16px;min-height:0}
 html.droply-android-phone #settingsFeedback{padding:8px 16px}
 html.droply-android-phone #pf .box,html.droply-android-phone #addFriend .box,html.droply-android-phone #ask .box{width:min(100% - 24px,440px);max-height:88dvh;overflow:auto}
+html.droply-android-phone #friendRequests .request-box{width:min(100% - 24px,440px);max-height:88dvh;padding:30px 16px 18px}
+html.droply-android-phone #friendRequestList{max-height:55dvh}
 
 /* Tablet */
 html.droply-android-tablet body{display:flex}
@@ -102,6 +104,10 @@ html.droply-android-tv #drop h2{font-size:32px}
 html.droply-android-tv #drop p{font-size:20px}
 html.droply-android-tv #folderBtn{font-size:18px;padding:14px 18px}
 html.droply-android-tv #picker{width:560px;max-height:65vh}
+html.droply-android-tv #friendRequests .request-box{width:min(760px,80vw);max-height:76vh;padding:42px 36px 30px}
+html.droply-android-tv #friendRequests .request-head h2{font-size:40px}
+html.droply-android-tv #friendRequests .request-head p{font-size:21px}
+html.droply-android-tv #friendRequestList{max-height:58vh}
 html.droply-android-tv .peer{font-size:20px;padding:16px}
 html.droply-android-tv .peer .av{width:52px;height:52px}
 html.droply-android-tv .sect{font-size:15px}
