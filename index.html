@@ -647,6 +647,7 @@ async function sendFiles(files) {
 }
 async function startSender(s) {
   const pc = makePc(s), ch = pc.createDataChannel('f');
+  s.ch = ch;
   ch.binaryType = 'arraybuffer'; ch.bufferedAmountLowThreshold = 256 * 1024;
   s.timer = setTimeout(() => !s.open && fail(s, 'Could not connect', 'error', 'Connection timed out'), CONNECT_MS);
   ch.onopen = () => { s.open = true; clearTimeout(s.timer); maybeStartTransfer(s); };

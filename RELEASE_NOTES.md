@@ -1,3 +1,7 @@
+# DROPLY 2.8.11
+
+- Fix file sending by retaining the sender's WebRTC data channel when a transfer starts.
+
 # DROPLY 2.8.10
 
 - Remove the manual six-digit connection-code step. Transfers start after the receiver accepts; WebRTC still encrypts the peer-to-peer connection.
