@@ -1714,10 +1714,13 @@ html[data-theme="light"] .droply-chat-status.error {
     }
   </style>
   <!-- Droply support widget. No provider or database secret is exposed here. -->
+  <link rel="stylesheet" href="ios-safari-status-tint.css">
   <link rel="stylesheet" href="chat-widget.css">
   <script defer src="chat-widget.js"></script>
 </head>
 <body>
+  <!-- Opaque Safari tint source; sits above the navbar padding, not the controls. -->
+  <div class="ios-safari-status-tint" aria-hidden="true"></div>
   <!-- Shared vector logo, reused in the navbar, hero app mockup, download card, and footer. -->
   <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
     <defs>
