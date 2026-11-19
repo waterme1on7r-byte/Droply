@@ -1,4 +1,4 @@
-# Publish the standalone marketing website without replacing the Electron app's root index.html.
+# Publish ONLY the public marketing website. Keep the private browser preview on the authenticated server.
 name: Deploy Droply website
 
 on:
@@ -7,11 +7,6 @@ on:
       - main
     paths:
       - 'docs/**'
-      - 'web/**'
-      - 'index.html'
-      - 'settings.js'
-      - 'settings.css'
-      - 'config.js'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -34,10 +29,6 @@ jobs:
     steps:
       - name: Check out site
         uses: actions/checkout@v4
-      - name: Build the browser app
-        run: |
-          node web/build.mjs
-          node --test web/test/*.test.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
