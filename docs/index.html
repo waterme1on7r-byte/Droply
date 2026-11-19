@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-JI6uLG/I/k21Esqg297I59orrKbMP+WVAbzLA52rbv8='; style-src 'self' 'sha256-k8/ns1SXAi8m+HqV2rvt33FGjrk+W+e8NlJjiQ3/7GQ=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-KaUbWd+V4DrnjPuO+THUOjkS3F7f4n3V/MbbjokHL9Y='; style-src 'self' 'sha256-zWJDvHQwG5eHj+oZzeE0D+VwIu2IZ/Q6ZqsDGWyayIs=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -1252,8 +1252,6 @@
       .demo-shot-light { transition:none; }
     }
 
-    /* Arrive at the top download buttons instead of a restored mid-page scroll position. */
-    .hero-actions { scroll-margin-top:90px; }
   </style>
   <!-- Droply support widget. No provider or database secret is exposed here. -->
   <link rel="stylesheet" href="chat-widget.css">
@@ -1542,21 +1540,10 @@
       const toast = document.getElementById('toast');
       let toastTimer;
 
-      // Do not restore a prior deep scroll position when opening or refreshing the site.
-      // Keep intentional anchor links working normally.
+      // Open at the natural top of the page, without automatic CTA scrolling.
+      // Manual restoration prevents reloading into a previously scrolled position.
+      // Explicit anchor navigation remains available when visitors click links.
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-      let initialDownloadPositioned = false;
-      function landAtHeroDownloads() {
-        if (initialDownloadPositioned || location.hash) return;
-        initialDownloadPositioned = true;
-        const cta = document.querySelector('.hero-actions');
-        if (!cta) return;
-        const rect = cta.getBoundingClientRect();
-        const target = window.scrollY + rect.top - Math.max(90, (window.innerHeight - rect.height) / 2);
-        window.scrollTo({ top:Math.max(0, target), behavior:'instant' });
-      }
-      window.addEventListener('load', () => requestAnimationFrame(landAtHeroDownloads), {once:true});
-      window.addEventListener('pageshow', () => requestAnimationFrame(landAtHeroDownloads), {once:true});
 
       // Explicit website theme switch: respects a saved user choice, not only OS settings.
       const themeToggle = document.getElementById('theme-toggle');
