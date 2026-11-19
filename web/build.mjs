@@ -1,0 +1,50 @@
+import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { runInNewContext } from 'node:vm';
+import { dirname, resolve, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const output = join(root, 'docs', 'app');
+const source = await readFile(join(root, 'index.html'), 'utf8');
+const config = await readFile(join(root, 'config.js'), 'utf8');
+const context = { window: {} };
+runInNewContext(config, context, { timeout: 1000 });
+const url = new URL(context.window.CONFIG?.SERVER_URL || '');
+if (!['wss:', 'ws:'].includes(url.protocol) || url.username || url.password || url.search || url.hash
+  || (url.protocol === 'ws:' && !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))
+  throw Error('config.js must contain a valid secure public signaling URL');
+const httpUrl = new URL(url.origin);
+httpUrl.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
+let html = source;
+function replaceOnce(from, to) {
+  if (!html.includes(from)) throw Error('Desktop renderer changed: missing ' + from.slice(0, 80));
+  html = html.replace(from, to);
+}
+replaceOnce('<meta charset="UTF-8">', '<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<meta name="description" content="Droply Web — private peer-to-peer file transfers in your browser">');
+replaceOnce('<title>Droply</title>', '<title>Droply Web · File transfers</title>');
+replaceOnce('media="print" onload="this.media=\'all\'"', 'media="all"');
+replaceOnce('<link rel="stylesheet" href="settings.css">', '<link rel="stylesheet" href="settings.css">\n<link rel="stylesheet" href="web.css">');
+replaceOnce('<script src="config.js"></script>', [
+  '<script src="config.js"></script>',
+  '<script src="storage.js"></script>',
+  '<script src="network.js"></script>',
+  '<script src="receive.js"></script>',
+  '<script src="bridge.js"></script>'
+].join('\n'));
+// Preserve the desktop UI and transfer protocol, but remove its broad browser
+// script permission. Hash the unchanged inline app script after all substitutions.
+const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+if (inline.length !== 1) throw Error('Expected exactly one renderer inline script');
+const hash = createHash('sha256').update(inline[0][1]).digest('base64');
+replaceOnce("script-src 'self' 'unsafe-inline'", "script-src 'self' 'sha256-" + hash + "'");
+replaceOnce("connect-src 'self' ws: wss:", "connect-src 'self' " + url.origin + ' ' + httpUrl.origin);
+replaceOnce("a.textContent = 'Show in folder';", "a.textContent = window.DroplyWeb ? 'Download file' : 'Show in folder';");
+await mkdir(output, { recursive: true });
+await writeFile(join(output, 'index.html'), html);
+await writeFile(join(output, 'config.js'), config);
+for (const name of ['settings.js', 'settings.css'])
+  await copyFile(join(root, name), join(output, name));
+for (const name of ['storage.js', 'network.js', 'receive.js', 'bridge.js', 'web.css'])
+  await copyFile(join(root, 'web', name), join(output, name));
+console.log('Built the browser app at docs/app/index.html');
