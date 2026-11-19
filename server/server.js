@@ -5,6 +5,9 @@ const {createStore,codeFor}=require('./auth-store');
 function createServer(options={}){
  const env=options.env||process.env;
  const store=env.DATABASE_URL?require('./postgres-store').createPostgresStore(env.DATABASE_URL):env.AUTH_STORE_FILE?createStore(env.AUTH_STORE_FILE):null,admin=env.ADMIN_TOKEN||'';
+ const origins=(env.WEB_ALLOWED_ORIGINS||'').split(',').map(s=>s.trim()).filter(Boolean);
+ for(const origin of origins){const u=new URL(origin);if(u.origin!==origin||(u.protocol!=='https:'&&!(u.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(u.hostname))))throw Error('Invalid WEB_ALLOWED_ORIGINS');}
+ const allowedOrigins=new Set(origins);
  const sessions=new Map(),users=new Map(),buckets=new Map(),ipConnections=new Map();
  const limit=(key,max,ms)=>{const time=Date.now();let b=buckets.get(key);if(!b||b.until<time){if(buckets.size>=10000)return false;b={count:0,until:time+ms};buckets.set(key,b);}return ++b.count<=max;};
  const equal=(a,b)=>{const aa=Buffer.from(a),bb=Buffer.from(b);return aa.length===bb.length&&crypto.timingSafeEqual(aa,bb);};
@@ -17,6 +20,14 @@ function createServer(options={}){
  const srv=http.createServer(async(req,res)=>{
   const route=req.url.split('?')[0],ip=req.socket.remoteAddress;
   try{
+   // Browser API requests are allowed only from explicitly configured site origins.
+   // Native clients do not send an Origin header and retain existing behavior.
+   if(['/auth/status','/auth/register','/auth/enroll'].includes(route)){
+    const origin=req.headers.origin;
+    if(origin&&!allowedOrigins.has(origin))return json(res,403,{error:'Browser origin not allowed'});
+    if(origin){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');}
+    if(req.method==='OPTIONS'){res.writeHead(204,{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Cache-Control':'no-store'});return res.end();}
+   }
    if(req.method==='GET'&&route==='/')return json(res,200,{service:'DROPLY signaling',protocol:2});
    if(store?.ready)await store.ready;
    if(req.method==='GET'&&route==='/auth/status')return json(res,200,{protocol:2,enrollment:!!store&&admin.length>=32,automaticRegistration:!!store});
@@ -49,6 +60,7 @@ function createServer(options={}){
  srv.requestTimeout=15000;srv.headersTimeout=10000;
  const wss=new WebSocketServer({noServer:true,maxPayload:1<<20,perMessageDeflate:false});
  srv.on('upgrade',(req,socket,head)=>{
+  if(req.headers.origin&&!allowedOrigins.has(req.headers.origin)){socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');return;}
   const ip=req.socket.remoteAddress;
   if(!limit('upgrade:'+ip,60,60000)||(ipConnections.get(ip)||0)>=20||wss.clients.size>=1000){socket.end('HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\n\r\n');return;}
   let url;try{url=new URL(req.url,'http://localhost');}catch{return socket.destroy();}
