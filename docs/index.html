@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-JXITz5/+3JTns9tJtofj9sqbIyFo8dM3Vu2cuxyWGzQ='; style-src 'self' 'sha256-t41tJ/Ja75ogxxYKjxBuV0CZnBkKKsTr1omkKFG6wh8=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-JI6uLG/I/k21Esqg297I59orrKbMP+WVAbzLA52rbv8='; style-src 'self' 'sha256-k8/ns1SXAi8m+HqV2rvt33FGjrk+W+e8NlJjiQ3/7GQ=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -612,10 +612,10 @@
       transform:none; /* User screenshots remain unwarped. */
     }
     .app-screenshot-picture { position: relative; display:block; width:100%; height:100%; }
-    .app-screenshot { display:block; position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; user-select:none; transition:opacity 1150ms ease-in-out; will-change:opacity; }
+    .app-screenshot { display:block; position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; user-select:none; }
+    /* Dark image is always opaque underneath: no semi-transparent gap or flash. */
     .demo-shot-dark { opacity:1; }
-    .demo-shot-light { opacity:0; }
-    html[data-theme="light"] .demo-shot-dark { opacity:0; }
+    .demo-shot-light { opacity:0; transition:opacity 1050ms ease-in-out; will-change:opacity; }
     html[data-theme="light"] .demo-shot-light { opacity:1; }
     .app-screenshot-window::after { box-shadow: inset 0 0 0 1px #91c6ff24; }
     .demo-peer-ready {
@@ -1022,15 +1022,17 @@
     /* App demo footer matching both supplied desktop screenshots.
        The live demo image stays untouched; footer credit is rendered above it. */
     .demo-footer-brand {
-      position:absolute; z-index:5; left:50%; bottom:1.9%;
-      transform:translateX(-50%); padding:3px 15px;
-      background:#10192b; color:#7483a1;
+      position:absolute; z-index:5; left:50%; bottom:0;
+      transform:translateX(-50%);
+      display:flex; justify-content:center; align-items:center;
+      width:35%; height:8%; padding:0;
+      background:#13162a; color:#7483a1;
       font:700 clamp(8px,1.45cqw,11px)/1.2 'IBM Plex Mono',monospace;
       letter-spacing:.16em; text-transform:lowercase;
       white-space:nowrap; pointer-events:none;
     }
     html[data-theme="light"] .demo-footer-brand {
-      background:#eef3fb; color:#8499ba;
+      background:#edf2fd; color:#8499ba;
     }
 
     /* The bright palette follows the supplied desktop app: cobalt blue type,
@@ -1244,13 +1246,10 @@
     }
     @keyframes theme-dawn { 0%,100%{opacity:0} 36%,58%{opacity:1} }
     @keyframes theme-dusk { 0%,100%{opacity:0} 36%,58%{opacity:1} }
-    ::view-transition-old(root) { animation:theme-fade-old 1100ms ease-in-out both; }
-    ::view-transition-new(root) { animation:theme-fade-new 1100ms ease-in-out both; }
-    @keyframes theme-fade-old { from{opacity:1} to{opacity:0} }
-    @keyframes theme-fade-new { from{opacity:0} to{opacity:1} }
+    /* One opacity-only screenshot fade and a soft dawn/dusk wash; no page snapshot flash. */
     @media (prefers-reduced-motion:reduce) {
       .theme-skywash, .theme-skywash.sunrise, .theme-skywash.sunset { animation:none; display:none; }
-      ::view-transition-old(root), ::view-transition-new(root) { animation:none; }
+      .demo-shot-light { transition:none; }
     }
 
     /* Arrive at the top download buttons instead of a restored mid-page scroll position. */
@@ -1598,20 +1597,11 @@
         wash.className = 'theme-skywash ' + (nextTheme === 'light' ? 'sunrise' : 'sunset');
         wash.setAttribute('aria-hidden', 'true');
         document.body.appendChild(wash);
+        // Apply the new palette once. The incoming image fades over a fully
+        // opaque dark screenshot, preventing the page snapshot's double flash.
+        applyAndStore();
         try {
-          if (typeof document.startViewTransition === 'function') {
-            const transition = document.startViewTransition(applyAndStore);
-            await Promise.race([
-              transition.finished,
-              new Promise(resolve => setTimeout(resolve, 1800))
-            ]);
-          } else {
-            await new Promise(resolve => setTimeout(resolve, 460));
-            applyAndStore();
-            await new Promise(resolve => setTimeout(resolve, 650));
-          }
-        } catch (_) {
-          if (selectedTheme !== nextTheme) applyAndStore();
+          await new Promise(resolve => setTimeout(resolve, 1200));
         } finally {
           wash.remove();
           changingTheme = false;
