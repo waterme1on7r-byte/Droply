@@ -15,15 +15,32 @@ To build the deployable static files without running the local server:
     npm run web:build
     npm run web:test
 
-The output is docs/app/ (ignored in git). GitHub Actions builds that folder before publishing docs/ to GitHub Pages. The normal marketing website remains at /; the web app is at /app/.
+The output is docs/app/ (ignored in git). It is **not deployed to public GitHub Pages**. The normal marketing site remains at /, unchanged. The production signaling server builds this output on startup only when its private preview has been explicitly enabled.
+
+## Private hosted testing
+
+The web app is **private by default**: there is no public Pages route. The existing signaling server offers a separate password-protected route, `/internal/preview/`, but returns 404 until both variables below are set in its **server-side secrets** on Render (never commit them):
+
+    WEB_PREVIEW_ORIGIN=https://droply-server-91kh.onrender.com
+    WEB_PREVIEW_PASSWORD=<random-secret-of-at-least-24-characters>
+
+Use a random, unique secret generated in a secure password manager or using `openssl rand -base64 36`. Give it only to invited testers, using a secure channel; the browser login name is `droply`. The server applies HTTP Basic authentication over HTTPS to the HTML and **every JavaScript/CSS asset**. The secret is never included in generated client files. No public GitHub Pages copy is created.
+
+Once the feature PR has been merged, configure these values in the **existing** Render service and redeploy it, retaining its current `DATABASE_URL`, `ADMIN_TOKEN` and database. Then visit:
+
+    https://droply-server-91kh.onrender.com/internal/preview/
+
+If the Render service uses a different hostname, use its real HTTPS origin. With no preview secret, the route is not exposed. With only one value set or a weak password, the server fails startup rather than serving an insecure preview.
+
+**Important:** Testing on the production signaling service may register new browser identities, use its rate limits and affect presence. Test with separate device profiles; this is not an isolated staging database. The preview URL's browser identity belongs to the server's origin and will **not** automatically migrate when a public app is launched later.
+
+The public site and eventual public browser rollout should be handled in a separate release. Do not publish `docs/app/` or add `/app/` to GitHub Pages while the preview is private.
 
 ## Signaling server configuration
 
-Add your *actual* website origin to WEB_ALLOWED_ORIGINS on the existing Droply server, then redeploy without resetting the database. For example:
+The private preview origin is permitted automatically for browser registration and WebSocket signaling **only while the private preview is enabled**. Local development from `http://localhost:4173` needs to be explicitly listed in `WEB_ALLOWED_ORIGINS` on the signaling server. Public sites will need their exact HTTPS origins allowlisted at launch.
 
-    WEB_ALLOWED_ORIGINS=https://waterme1on7r-byte.github.io,http://localhost:4173
-
-For a custom domain, replace or add that exact HTTPS origin. Do not include a path such as /Droply/app, a trailing slash, a wildcard, or untrusted origins.
+Do not include paths, trailing slashes, wildcards or untrusted origins.
 
 Only the browser auth endpoints (/auth/status, /auth/register and /auth/enroll) receive CORS headers. Browser WebSocket upgrades are also restricted by Origin. Desktop and Android connections continue to work without an Origin header. The server still stores credential hashes; file data remains device-to-device over WebRTC.
 
@@ -43,7 +60,7 @@ Each browser profile is a *new device identity*, not a synchronized copy of a de
 
 Clearing site data or using private browsing can lose access to the browser identity. If the identity is registered but the key is unavailable, Droply preserves the profile and requires administrator-issued recovery; it must not silently recreate that identity. Profiles, friend lists, and history are local to this browser and are not synced to other devices.
 
-Because the signaling service is a separate origin from GitHub Pages, browser registration cannot succeed until WEB_ALLOWED_ORIGINS is configured. The browser client does not request or store an administrator token.
+For private hosted testing the browser shares the signaling server's HTTPS origin; local or future separate hosts need their origins allowlisted. The browser client never requests or stores an administrator token.
 
 ## Validation
 
