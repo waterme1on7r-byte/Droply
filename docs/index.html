@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-KaUbWd+V4DrnjPuO+THUOjkS3F7f4n3V/MbbjokHL9Y='; style-src 'self' 'sha256-tyGb3VuPSVhDAG9h/h25r1M53ZL+VIrQlrQogI1a7IA=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-YyQ86PrmFnsb9UWkmQJ7QhnJCo0Futj56na532yXcW8='; style-src 'self' 'sha256-dAl/9CJNvyujYqW5QldA8/F8g4iohDBr/Ba+C/REGl4=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -603,21 +603,26 @@
       position: relative;
       display: block;
       aspect-ratio: 762 / 721;
-      background: #111f37;
+      background: transparent;
       container-type: inline-size;
       overflow: hidden;
-      border: 1px solid rgba(93,158,255,.72);
-      border-radius: 17px;
-      box-shadow: 0 37px 85px #0009, 0 0 100px #137aff44, 0 0 0 1px #81bbff12;
-      transform:none; /* User screenshots remain unwarped. */
+      /* The supplied PNG already contains its window frame.
+         Do not draw a second border/shadow along its left edge. */
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      transform: none;
     }
     .app-screenshot-picture { position: relative; display:block; width:100%; height:100%; }
     .app-screenshot { display:block; position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; user-select:none; }
-    /* Dark image is always opaque underneath: no semi-transparent gap or flash. */
-    .demo-shot-dark { opacity:1; }
-    .demo-shot-light { opacity:0; transition:opacity 1050ms ease-in-out; will-change:opacity; }
-    html[data-theme="light"] .demo-shot-light { opacity:1; }
-    .app-screenshot-window::after { box-shadow: inset 0 0 0 1px #91c6ff24; }
+    /* One screenshot is present in each page state. The browser crossfades
+       both entire page states together, so images never trail the website,
+       and the opposite screenshot cannot show at the edges. */
+    .demo-shot-dark { display:block; }
+    .demo-shot-light { display:none; }
+    html[data-theme="light"] .demo-shot-dark { display:none; }
+    html[data-theme="light"] .demo-shot-light { display:block; }
+    .app-screenshot-window::after { content:none !important; box-shadow:none !important; }
     .demo-peer-ready {
       position: absolute; z-index: 2; left: 62.55%; top: 16.9%; width: 35.0%; height: 11.05%;
       display: flex; align-items: center; gap: 1.7cqw; padding: 1.55cqw; border-radius: 2.5cqw;
@@ -890,11 +895,11 @@
     html[data-theme="light"] .connection-bubble { color: #45617F; }
     html[data-theme="light"] .app-screenshot-window {
         aspect-ratio: 762 / 721;
-        background: #EEF2F7;
-        border-color: rgba(190, 199, 213, .98);
-        box-shadow: 0 30px 65px rgba(136, 149, 170, .20), 0 0 0 1px rgba(255,255,255,.7);
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
       }
-    html[data-theme="light"] .app-screenshot-window::after { box-shadow: inset 0 0 0 1px rgba(255,255,255,.68); }
     html[data-theme="light"] .demo-peer-ready {
         background: #F7F7F8;
         border-color: rgba(201, 206, 214, .92);
@@ -1230,30 +1235,35 @@
     .app-screenshot-window .app-screenshot-picture { pointer-events:none; }
     @media (prefers-reduced-motion: reduce) { .app-screenshot { transition:none; } }
 
-    /* Gentle sunrise/sunset glow. The old high-opacity full-screen wash caused
-       a grey/white flash across screenshots and text during every theme change. */
-    .theme-skywash {
-      position:fixed; inset:0; z-index:9999;
-      pointer-events:none; opacity:0;
+    /* The old root snapshot and new root snapshot fade as ONE synchronized
+       transition, including both screenshots and floating feature cards.
+       No extra image animation or translucent full-screen overlay. */
+    ::view-transition-old(root) {
+      animation: 850ms ease-in-out both droply-theme-out;
     }
-    .theme-skywash.sunrise {
-      background:radial-gradient(ellipse 45% 52% at 78% 78%,
-        rgba(255,189,96,.22) 0%, rgba(255,224,155,.06) 52%, transparent 84%);
-      animation:theme-horizon-glow 1200ms ease-in-out both;
+    ::view-transition-new(root) {
+      animation: 850ms ease-in-out both droply-theme-in;
     }
-    .theme-skywash.sunset {
-      background:radial-gradient(ellipse 45% 52% at 78% 78%,
-        rgba(100,116,203,.23) 0%, rgba(58,72,151,.06) 52%, transparent 84%);
-      animation:theme-horizon-glow 1200ms ease-in-out both;
+    @keyframes droply-theme-out { from { opacity:1; } to { opacity:0; } }
+    @keyframes droply-theme-in { from { opacity:0; } to { opacity:1; } }
+    html.theme-transitioning .mini-float,
+    html.theme-transitioning .orbit-dot {
+      animation-play-state: paused;
     }
-    @keyframes theme-horizon-glow {
-      0%,100% { opacity:0; }
-      50% { opacity:.42; }
+    /* Fix cards that became white-on-white in the light screenshot mode. */
+    html[data-theme="light"] .mini-float {
+      color:#255eac;
+      background:rgba(250,252,255,.98);
+      border-color:#c5d8f3;
+      box-shadow:0 13px 35px rgba(55,92,143,.16);
     }
-    /* The screenshots keep their one opacity-only crossfade, with no page snapshot. */
+    html[data-theme="light"] .mini-float strong { color:#2b578a; }
+    html[data-theme="light"] .mini-float span { color:#7186a3; }
+    html[data-theme="light"] .mini-float svg { color:#3f8fdf; }
+    html[data-theme="light"] .mini-float.connected svg { color:#34b98d; }
     @media (prefers-reduced-motion:reduce) {
-      .theme-skywash, .theme-skywash.sunrise, .theme-skywash.sunset { animation:none; display:none; }
-      .demo-shot-light { transition:none; }
+      ::view-transition-old(root),
+      ::view-transition-new(root) { animation-duration:.01ms !important; }
     }
 
   </style>
@@ -1568,33 +1578,38 @@
       }
       applyWebsiteTheme(selectedTheme);
       const themeMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      // Decode both original PNGs before the first switch. The browser can then
+      // capture fully painted light and dark page snapshots, not blank images.
+      const themeImagesReady = Promise.allSettled(
+        Array.from(document.querySelectorAll('.app-screenshot')).map(image =>
+          typeof image.decode === 'function' ? image.decode() : Promise.resolve()
+        )
+      );
       let changingTheme = false;
       themeToggle.addEventListener('click', async () => {
         if (changingTheme) return;
         changingTheme = true;
         const nextTheme = selectedTheme === 'dark' ? 'light' : 'dark';
-        const reduceMotion = themeMotion.matches;
         const applyAndStore = () => {
           selectedTheme = nextTheme;
-          applyWebsiteTheme(selectedTheme);
-          try { window.localStorage.setItem(themeKey, selectedTheme); } catch (_) { /* Storage optional. */ }
+          applyWebsiteTheme(nextTheme);
+          try { window.localStorage.setItem(themeKey, nextTheme); } catch (_) { /* Optional storage. */ }
         };
-        if (reduceMotion) {
-          applyAndStore();
-          changingTheme = false;
-          return;
-        }
-        const wash = document.createElement('div');
-        wash.className = 'theme-skywash ' + (nextTheme === 'light' ? 'sunrise' : 'sunset');
-        wash.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(wash);
-        // Apply the new palette once. The incoming image fades over a fully
-        // opaque dark screenshot, preventing the page snapshot's double flash.
-        applyAndStore();
         try {
-          await new Promise(resolve => setTimeout(resolve, 1200));
+          await themeImagesReady;
+          if (themeMotion.matches || typeof document.startViewTransition !== 'function') {
+            applyAndStore(); // Older browsers and reduced-motion: no delayed image.
+            return;
+          }
+          // Safari 18+ supports a whole-page snapshot crossfade. One animation
+          // keeps the background, screenshots, floating cards and text in sync.
+          document.documentElement.classList.add('theme-transitioning');
+          const transition = document.startViewTransition(applyAndStore);
+          await transition.finished;
+        } catch (_) {
+          if (selectedTheme !== nextTheme) applyAndStore();
         } finally {
-          wash.remove();
+          document.documentElement.classList.remove('theme-transitioning');
           changingTheme = false;
         }
       });
