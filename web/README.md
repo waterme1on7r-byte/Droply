@@ -15,36 +15,42 @@ To build the deployable static files without running the local server:
     npm run web:build
     npm run web:test
 
-The output is docs/app/ (ignored in git). It is **not deployed to public GitHub Pages**. The normal marketing site remains at /, unchanged. The production signaling server builds this output on startup only when its private preview has been explicitly enabled.
+The output is docs/app/ (ignored in git). It is **not deployed to public GitHub Pages**. The normal marketing site remains at /, unchanged. An independent Render web service builds and serves this output with access control.
 
-## Private hosted testing
+## Private hosted testing on Render
 
-The web app is **private by default**: there is no public Pages route. The existing signaling server offers a separate password-protected route, `/internal/preview/`, but returns 404 until both variables below are set in its **server-side secrets** on Render (never commit them):
+Deploy the feature branch as a **separate Render web service**. Do not modify or replace the existing signaling service, its database, admin credentials or runtime configuration. The test service proxies only authenticated browser registration and WebSocket-signaling traffic to the existing server; file bytes remain peer-to-peer over WebRTC.
 
-    WEB_PREVIEW_ORIGIN=https://droply-server-91kh.onrender.com
-    WEB_PREVIEW_PASSWORD=<random-secret-of-at-least-24-characters>
+Use the following settings for the new Render service:
 
-Use a random, unique secret generated in a secure password manager or using `openssl rand -base64 36`. Give it only to invited testers, using a secure channel; the browser login name is `droply`. The server applies HTTP Basic authentication over HTTPS to the HTML and **every JavaScript/CSS asset**. The secret is never included in generated client files. No public GitHub Pages copy is created.
+    Repository: https://github.com/waterme1on7r-byte/Droply
+    Branch: feature/droply-web-app
+    Runtime: Node
+    Build: npm --prefix server ci && DROPLY_PRIVATE_PREVIEW=1 node web/build.mjs
+    Start: node web/preview-server.cjs
+    Root directory: repository root (.)
+    Auto-deploy: off (recommended for stable manual testing)
 
-Once the feature PR has been merged, configure these values in the **existing** Render service and redeploy it, retaining its current `DATABASE_URL`, `ADMIN_TOKEN` and database. Then visit:
+Set these variables **on the new preview service only**:
 
-    https://droply-server-91kh.onrender.com/internal/preview/
+    WEB_PREVIEW_PASSWORD=<unique-random-secret-at-least-24-characters>
+    SIGNALING_UPSTREAM_URL=wss://droply-server-91kh.onrender.com
 
-If the Render service uses a different hostname, use its real HTTPS origin. With no preview secret, the route is not exposed. With only one value set or a weak password, the server fails startup rather than serving an insecure preview.
+The password is server-side only, never committed or placed in client assets. The standalone test gateway exposes a private login page at:
 
-**Important:** Testing on the production signaling service may register new browser identities, use its rate limits and affect presence. Test with separate device profiles; this is not an isolated staging database. The preview URL's browser identity belongs to the server's origin and will **not** automatically migrate when a public app is launched later.
+    https://<your-preview-host>.onrender.com/internal/preview/
 
-The public site and eventual public browser rollout should be handled in a separate release. Do not publish `docs/app/` or add `/app/` to GitHub Pages while the preview is private.
+All HTML, CSS, JS, registration API routes, and WebSocket upgrades require an authenticated, time-limited, HttpOnly SameSite=Strict session cookie. The password is entered into a server-side login form over HTTPS; failed logins are rate limited. The service adds no public `/app/` route, disables indexing and caching and does not publish browser files on GitHub Pages. The WebSocket gateway bridges signaling JSON frames to the existing server and does not carry file data.
+
+**Important:** The preview uses the production signaling server's existing device records. New browser profiles will register against its database and may appear in friends' presence lists, even though the preview hosting and password are separate. Avoid test spam and do not reset the production database. Device identities created on this preview origin will not automatically migrate to any future public domain.
 
 ## Signaling server configuration
 
-The private preview origin is permitted automatically for browser registration and WebSocket signaling **only while the private preview is enabled**. Local development from `http://localhost:4173` needs to be explicitly listed in `WEB_ALLOWED_ORIGINS` on the signaling server. Public sites will need their exact HTTPS origins allowlisted at launch.
+The standalone private preview uses its own HTTPS origin for the browser and proxies authenticated requests to the existing signaling server, so **no origin or environment changes are necessary on the live signaling service**. The gateway never stores a signaling admin token or database credentials.
 
-Do not include paths, trailing slashes, wildcards or untrusted origins.
+If you instead run the local unproxied development server at `http://localhost:4173/app/`, the existing signaling server must explicitly allow that local origin using `WEB_ALLOWED_ORIGINS` (available in the feature branch, not required for private hosted testing). Never allow arbitrary origins.
 
-Only the browser auth endpoints (/auth/status, /auth/register and /auth/enroll) receive CORS headers. Browser WebSocket upgrades are also restricted by Origin. Desktop and Android connections continue to work without an Origin header. The server still stores credential hashes; file data remains device-to-device over WebRTC.
-
-config.js must contain only the public SERVER_URL and ICE settings. TURN credentials should be short-lived or provisioned securely; never put administrator tokens, private database URLs, or static secrets in client assets.
+TURN credentials should be short-lived or provisioned securely; never put administrator tokens or private database URLs in client assets.
 
 ## How browser downloads work
 
