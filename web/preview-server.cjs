@@ -108,12 +108,25 @@ function createPreviewServer(options = {}) {
   }
   const validOrigin = req => {
     const origin = req.headers.origin;
-    if (!origin || typeof origin !== 'string') return false;
+    if (typeof origin !== 'string') return false;
     // The session cookie is host-only. No other browser origin is accepted.
     const hostname = req.headers.host;
     if (!hostname || /[\s/\\@]/.test(hostname)) return false;
     return origin === 'https://' + hostname ||
       (env.PREVIEW_LOCAL_HTTP === '1' && origin === 'http://' + hostname);
+  };
+  // Safari can omit Origin on a same-origin HTML form submission. For the
+  // password form only, a matching Referer with same-origin Fetch metadata is
+  // a safe fallback. API mutations and WebSocket upgrades still require Origin.
+  const validLoginOrigin = req => {
+    if (req.headers.origin !== undefined) return validOrigin(req);
+    const host = req.headers.host;
+    if (!host || /[\s/\\@]/.test(host)) return false;
+    const expected = (env.PREVIEW_LOCAL_HTTP === '1' ? 'http://' : 'https://') + host;
+    const ref = req.headers.referer;
+    if (typeof ref !== 'string' || (req.headers['sec-fetch-site'] &&
+      !['same-origin', 'none'].includes(req.headers['sec-fetch-site']))) return false;
+    try { return new URL(ref).origin === expected; } catch { return false; }
   };
   async function readBody(req, limit = MAX_BODY) {
     const chunks = [];
@@ -167,7 +180,7 @@ function createPreviewServer(options = {}) {
     if (!pathname.startsWith(PREFIX)) return reply(res, 404, 'Not found');
     const asset = pathname.slice(PREFIX.length);
     if (asset === 'login' && req.method === 'POST') {
-      if (!validOrigin(req)) return reply(res, 403, 'Invalid origin');
+      if (!validLoginOrigin(req)) return reply(res, 403, 'Invalid origin');
       if (!attemptAllowed(req)) return reply(res, 429, loginPage('error'),
         { 'Content-Type': 'text/html; charset=utf-8' });
       let supplied;
@@ -178,15 +191,36 @@ function createPreviewServer(options = {}) {
       } catch { return reply(res, 400, 'Bad input'); }
       if (!matchesPassword(supplied)) return reply(res, 401, loginPage('error'),
         { 'Content-Type': 'text/html; charset=utf-8' });
-      return reply(res, 303, '', { Location: PREFIX, 'Set-Cookie': COOKIE + '=' +
-        signedCookie() + '; HttpOnly; SameSite=Strict; Path=/; Max-Age=' + MAX_AGE +
-        (secureCookies ? '; Secure' : '') });
+      // A first-party Lax cookie survives Safari's top-level form navigation.
+      // State-changing operations remain protected by a strict Origin check.
+      const cookie = COOKIE + '=' + signedCookie() +
+        '; HttpOnly; SameSite=Lax; Path=/; Max-Age=' + MAX_AGE +
+        (secureCookies ? '; Secure' : '');
+      // An intermediate success document gives Safari a full navigation to
+      // store the cookie before loading the app and a manual Continue fallback.
+      return reply(res, 200,
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
+        '<meta http-equiv="refresh" content="1;url=' + PREFIX + '">' +
+        '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+        '<title>Droply · Access granted</title>' +
+        '<style>:root{color-scheme:dark}body{background:#0e1523;color:#f1f5fb;font:16px system-ui,sans-serif;min-height:90vh;display:grid;place-items:center;text-align:center}a{color:#f5d97e}</style>' +
+        '</head><body><main><h1>Access granted</h1><p>Opening Droply Web…</p>' +
+        '<p><a href="' + PREFIX + '">Continue to Droply</a></p></main></body></html>',
+        { 'Set-Cookie': cookie, 'Content-Type': 'text/html; charset=utf-8',
+          'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'" });
     }
     if (!['GET', 'HEAD'].includes(req.method)) return reply(res, 405, 'Method not allowed');
-    if (!authorized(req)) return reply(res, 200, loginPage(), {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
-    });
+    if (!authorized(req)) {
+      // Never serve HTML as JavaScript/CSS: browsers may try to download
+      // a misleading "file" instead of displaying the login page.
+      if (asset && asset !== 'index.html')
+        return reply(res, 401, 'Sign in at /internal/preview/ first.',
+          { 'Content-Type': 'text/plain; charset=utf-8', 'WWW-Authenticate': 'Session realm="Droply preview"' });
+      return reply(res, 200, loginPage(), {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+      });
+    }
     if (asset === 'config.js') {
       // Both fetch() and WebSocket use this same protected preview origin.
       const configuration = 'window.CONFIG={SERVER_URL:location.origin.replace(/^http/,"ws"),ICE:' +
