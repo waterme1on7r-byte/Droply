@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-CxZSYgzasqMpULpMwex+RKUBD5sAf459bFzdq40kY0Q='; style-src 'self' 'sha256-hg1MwOyfssq8uo713Dhau5w4KoSTcsMD6uQ1LvptQqw=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-CxZSYgzasqMpULpMwex+RKUBD5sAf459bFzdq40kY0Q='; style-src 'self' 'sha256-Frz04YIMu2ihpfUwqIzHNId2JcSNUvKj5BTnW2LVnLI=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -87,8 +87,6 @@
 
     .hero-grid { display: grid; grid-template-columns: .94fr 1.06fr; align-items: center; gap: 44px; }
     .hero-copy { position: relative; z-index: 2; }
-    .hero-pill { display: inline-flex; align-items: center; border: 1px solid #90c6ff45; border-radius: 40px; background: #79baff11; padding: 8px 13px; color: #c9e3ff; font-weight: 650; font-size: .77rem; margin-bottom: 28px; box-shadow: inset 0 1px 0 #ffffff08; }
-
     h1 { margin: 0; font-size: clamp(3.3rem, 5.7vw, 5.65rem); font-weight: 790; letter-spacing: -.079em; line-height: 1.075; max-width: 620px; }
     h1 .line { display: block; }
     .hero-lead { font-size: clamp(1.035rem, 1.55vw, 1.16rem); color: var(--muted); line-height: 1.87; max-width: 490px; margin: 26px 0 30px; }
@@ -343,8 +341,6 @@
     .hero { background: radial-gradient(ellipse 62% 73% at 90% 46%, #1266e64f 0%, #0c3f9950 34%, transparent 75%), radial-gradient(ellipse 50% 58% at 8% 0%, #0b49b638, transparent 78%); }
     .hero::before { background-image: linear-gradient(#6d9bff09 1px,transparent 1px),linear-gradient(90deg,#6d9bff09 1px,transparent 1px); }
 
-    .hero-pill { background: #0c2c55af; border-color: #4d9bff65; color: #c7e3ff; }
-
     .hero-lead { line-height: 1.75; }
     .hero-trust { color: #b6c8e0; }
     .trust-mark { background: #1e6bc92b; border-color: #478dff55; color: #93c3ff; }
@@ -410,7 +406,6 @@
     /* Crisp cobalt details, not a blanket violet overlay. */
     .site-header { border-bottom-color: #367fe654; }
     .nav-links a.active { border-bottom: 1px solid #62abff; padding-bottom: 5px; }
-    .hero-pill { border-color: #3c9dff9c; background: #095eb15c; }
     .app-window::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 0 0 1px #6cbbff1f; }
     .section-heading-center .eyebrow { color: #8dc6ff; }
     .step-card { border-color: #528be749; }
@@ -466,7 +461,6 @@
       .nav-links a { padding: 12px 14px; font-size: .95rem; border-radius: 9px; }
       .nav-links a:hover,.nav-links a.active { background: #79baff20; border-bottom: 0; padding-bottom: 12px; }
       .hero { padding-top: 67px; padding-bottom: 66px; }
-      .hero-pill { margin-bottom: 23px; }
       h1 { font-size: clamp(3.05rem,10.3vw,4.6rem); }
       .hero-lead { margin-top: 22px; }
       .hero-trust { margin-top: 30px; }
@@ -581,7 +575,6 @@
     .toast { color: #FFE36E; }
     .security-list b,
     .drop-zone strong { color: #FFE995; }
-    .hero-pill { color: #FFEAA1; }
     .window-title,
     .hero-trust,
     .footer-tagline,
@@ -780,7 +773,7 @@
       
       <div class="container hero-grid">
         <div class="hero-copy">
-          <div class="hero-pill">A better way to share</div>
+          
           <h1 id="hero-title"><span class="line">Send files</span><span class="line gradient-text">directly.</span><span class="line">No cloud.</span><span class="line gradient-text">No limits.</span></h1>
           <p class="hero-lead">Send anything straight from your device to someone else's. No cloud detours, no distance worries—just two people, online and ready to share.</p>
           <div class="hero-actions" aria-label="Download options">
