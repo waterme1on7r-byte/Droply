@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121214">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-ask49H27STRRN3Qb9608Ht7GWwkes3lG8vTyvfKWDZU='; style-src 'self' 'sha256-RTIh4d3kRjheOaxmrHbrSWLFNfinDKnqGzfLGfmpXaU=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-ask49H27STRRN3Qb9608Ht7GWwkes3lG8vTyvfKWDZU='; style-src 'self' 'sha256-9ycRDy0LXHYuFM8I/8dHtEjkuuNxeaaDZdtRZZE2gHw=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -1002,7 +1002,12 @@
       .theme-toggle { order:4; margin-left:0; }
     }
     @media(max-width:500px) {
-      .nav-wrap { gap:10px; }
+      .nav-wrap { gap:9px; }
+      .nav-cta { display:inline-flex; padding:8px 10px; font-size:.75rem; }
+      .nav-cta svg { display:none; }
+      .brand { gap:8px; }
+    }
+    @media(max-width:350px) {
       .nav-cta { display:none; }
     }
     @media(prefers-reduced-motion:reduce) {
