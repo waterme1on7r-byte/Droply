@@ -59,7 +59,7 @@
         state('connecting', 'Registering this browser…');
         try {
           const response = await fetch(endpoint(base, '/auth/register'), {
-            method: 'POST', mode: 'cors', credentials: 'omit', redirect: 'error',
+            method: 'POST', mode: 'cors', credentials: 'same-origin', redirect: 'error',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: user.id, token: credential.token }),
             signal: AbortSignal.timeout(30000)
@@ -164,7 +164,7 @@
     if (!/^[A-Za-z0-9_-]{43}$/.test(String(invitation || '').trim())) throw Error('Enter a valid recovery invitation');
     const base = address(), user = await store.profile();
     const response = await fetch(endpoint(base, '/auth/enroll'), {
-      method: 'POST', mode: 'cors', credentials: 'omit', redirect: 'error',
+      method: 'POST', mode: 'cors', credentials: 'same-origin', redirect: 'error',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ invitation: invitation.trim(), id: user.id }),
       signal: AbortSignal.timeout(15000)
