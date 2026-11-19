@@ -34,11 +34,13 @@ function createPreviewServer(options = {}) {
     || password.trim() !== password || /[\r\n]/.test(password))
     throw Error('WEB_PREVIEW_PASSWORD must be a strong 24–256 character secret.');
   const backend = new URL(env.SIGNALING_UPSTREAM_URL || '');
-  if (backend.protocol !== 'wss:' || backend.username || backend.password || backend.search
-    || backend.hash || backend.pathname !== '/')
+  const localUpstream = options.allowLocalUpstream === true &&
+    backend.protocol === 'ws:' && ['localhost', '127.0.0.1', '[::1]'].includes(backend.hostname);
+  if ((!localUpstream && backend.protocol !== 'wss:') || backend.username || backend.password ||
+    backend.search || backend.hash || backend.pathname !== '/')
     throw Error('SIGNALING_UPSTREAM_URL must be a WSS origin without credentials or paths.');
   const upstreamHttps = new URL(backend.origin);
-  upstreamHttps.protocol = 'https:';
+  upstreamHttps.protocol = backend.protocol === 'wss:' ? 'https:' : 'http:';
   const root = options.root || path.join(__dirname, '..', 'docs', 'app');
   const sessionKey = crypto.createHash('sha256').update('droply-preview-session-v1:' + password).digest();
   const attempts = new Map();
