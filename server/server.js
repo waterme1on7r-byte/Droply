@@ -2,17 +2,12 @@
 const http=require('node:http'),crypto=require('node:crypto');
 const {WebSocketServer}=require('ws');
 const {createStore,codeFor}=require('./auth-store');
-const {validatePreview,servePreview}=require('./preview');
-const path=require('node:path');
 function createServer(options={}){
  const env=options.env||process.env;
  const store=env.DATABASE_URL?require('./postgres-store').createPostgresStore(env.DATABASE_URL):env.AUTH_STORE_FILE?createStore(env.AUTH_STORE_FILE):null,admin=env.ADMIN_TOKEN||'';
  const origins=(env.WEB_ALLOWED_ORIGINS||'').split(',').map(s=>s.trim()).filter(Boolean);
  for(const origin of origins){const u=new URL(origin);if(u.origin!==origin||(u.protocol!=='https:'&&!(u.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(u.hostname))))throw Error('Invalid WEB_ALLOWED_ORIGINS');}
  const allowedOrigins=new Set(origins);
- const preview=validatePreview(env);
- if(preview)allowedOrigins.add(preview.origin);
- const previewRoot=options.previewRoot||path.join(__dirname,'..','docs','app');
  const sessions=new Map(),users=new Map(),buckets=new Map(),ipConnections=new Map();
  const limit=(key,max,ms)=>{const time=Date.now();let b=buckets.get(key);if(!b||b.until<time){if(buckets.size>=10000)return false;b={count:0,until:time+ms};buckets.set(key,b);}return ++b.count<=max;};
  const equal=(a,b)=>{const aa=Buffer.from(a),bb=Buffer.from(b);return aa.length===bb.length&&crypto.timingSafeEqual(aa,bb);};
@@ -25,7 +20,6 @@ function createServer(options={}){
  const srv=http.createServer(async(req,res)=>{
   const route=req.url.split('?')[0],ip=req.socket.remoteAddress;
   try{
-   if(await servePreview(req,res,preview,previewRoot))return;
    // Browser API requests are allowed only from explicitly configured site origins.
    // Native clients do not send an Origin header and retain existing behavior.
    if(['/auth/status','/auth/register','/auth/enroll'].includes(route)){
@@ -113,10 +107,4 @@ function createServer(options={}){
  return {server:srv,store,users,close:async()=>{clearInterval(heartbeat);for(const ws of wss.clients)ws.terminate();await new Promise(resolve=>wss.close(resolve));if(srv.listening)await new Promise(resolve=>srv.close(resolve));await store?.close?.();}};
 }
 module.exports={createServer};
-if(require.main===module){(async()=>{try{const instance=createServer();if(instance.store?.ready)await instance.store.ready;
- if(process.env.WEB_PREVIEW_PASSWORD){
-  // Build the isolated private bundle on server startup. It is NOT published
-  // in GitHub Pages, and the preview secret never enters client assets.
-  require('node:child_process').execFileSync(process.execPath,[path.join(__dirname,'..','web','build.mjs')],{stdio:'inherit',timeout:30000});
- }
- instance.server.listen(process.env.PORT||8080,()=>console.log('DROPLY signaling ready; enrollment storage: '+!!instance.store+'; authenticated devices only'));const stop=()=>instance.close().then(()=>process.exit(0));process.on('SIGTERM',stop);process.on('SIGINT',stop);}catch{console.error('Cannot open authentication storage. Restore storage or correct configuration; identities were not reset.');process.exit(1);}})();}
+if(require.main===module){(async()=>{try{const instance=createServer();if(instance.store?.ready)await instance.store.ready;instance.server.listen(process.env.PORT||8080,()=>console.log('DROPLY signaling ready; enrollment storage: '+!!instance.store+'; authenticated devices only'));const stop=()=>instance.close().then(()=>process.exit(0));process.on('SIGTERM',stop);process.on('SIGINT',stop);}catch{console.error('Cannot open authentication storage. Restore storage or correct configuration; identities were not reset.');process.exit(1);}})();}
