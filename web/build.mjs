@@ -16,7 +16,9 @@ if (!['wss:', 'ws:'].includes(url.protocol) || url.username || url.password || u
   throw Error('config.js must contain a valid secure public signaling URL');
 const httpUrl = new URL(url.origin);
 httpUrl.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
-let html = source;
+// HTML parsers normalize CRLF/CR to LF before CSP hashes are checked.
+// The desktop renderer uses CRLF; hash and serve the same normalized text.
+let html = source.replace(/\r\n?/g, '\n');
 function replaceOnce(from, to) {
   if (!html.includes(from)) throw Error('Desktop renderer changed: missing ' + from.slice(0, 80));
   html = html.replace(from, to);
