@@ -14,7 +14,10 @@
     "dist": "electron-builder --publish never",
     "server:start": "npm --prefix server start",
     "server:test": "npm --prefix server test",
-    "recovery-tool": "node scripts/recovery-tool.cjs"
+    "recovery-tool": "node scripts/recovery-tool.cjs",
+    "web:build": "node web/build.mjs",
+    "web:test": "node web/build.mjs && node --test web/test/*.test.mjs",
+    "web:dev": "node web/dev.mjs"
   },
   "devDependencies": {
     "electron": "43.8.10",
