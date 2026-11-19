@@ -42,7 +42,7 @@ function renderSettings(section) {
   const intro = text => body.append(h('p', 'intro', text));
   const actions = () => { const node = h('div', 'settings-actions'); body.append(node); return node; };
   if (section === 'Profile') {
-    intro('Your name and photo are visible to your friends. Your code belongs to this device.');
+    intro(window.DroplyWeb ? 'Your name and photo are visible to friends. Your code belongs to this browser profile and depends on this browser’s site data.' : 'Your name and photo are visible to your friends. Your code belongs to this device.');
     const av = avatar(me.avatar, me.name, true, true); av.onclick = () => openSetup(true);
     if (window.DroplyAndroid) {
       const hero = h('div', 'profile-hero'); av.classList.add('profile-hero-avatar');
@@ -53,39 +53,54 @@ function renderSettings(section) {
     field.append(h('small', '', 'Your device code')); copy.innerHTML = ICON.copy; copy.setAttribute('aria-label', 'Copy device code');
     deviceCode(me.id).then(c => { code.textContent = c; copy.onclick = () => copyCode(copy, c); }); box.append(code, copy); field.append(box); body.append(field);
   } else if (section === 'Downloads') {
-    intro('Choose where received files are saved. Incoming transfers always require your approval.');
-    const code = h('code', '', settingsState.downloadDir); code.id = 'downloadPath'; body.append(code);
-    const row = actions(); settingAction(row, 'Change folder', async () => { settingsState.downloadDir = await api.chooseDownloads(); code.textContent = settingsState.downloadDir; settingsFeedback('Download folder saved'); });
-    settingAction(row, 'Open folder', async () => { const error = await api.openDownloads(); if (error) throw Error(error); });
-    settingToggle(body, 'askSave', 'Ask where to save', 'Choose a destination for each accepted transfer.');
-    intro('Folders keep their structure inside a new DROPLY transfer directory. Empty folders are not included.');
+    if (window.DroplyWeb) {
+      intro('Incoming transfers always require your approval. In Chrome or Edge, choose a folder when you accept a transfer. Files are written into a unique Droply received folder.');
+      intro('Other browsers can receive up to 64 MB per transfer. Choose Download file on the completed transfer to save it through your browser. Empty folders are not included.');
+    } else {
+      intro('Choose where received files are saved. Incoming transfers always require your approval.');
+      const code = h('code', '', settingsState.downloadDir); code.id = 'downloadPath'; body.append(code);
+      const row = actions(); settingAction(row, 'Change folder', async () => { settingsState.downloadDir = await api.chooseDownloads(); code.textContent = settingsState.downloadDir; settingsFeedback('Download folder saved'); });
+      settingAction(row, 'Open folder', async () => { const error = await api.openDownloads(); if (error) throw Error(error); });
+      settingToggle(body, 'askSave', 'Ask where to save', 'Choose a destination for each accepted transfer.');
+      intro('Folders keep their structure inside a new DROPLY transfer directory. Empty folders are not included.');
+    }
   } else if (section === 'Notifications') {
-    intro('Choose which desktop notifications you receive. System notification permissions still apply.');
+    intro(window.DroplyWeb ? 'Browser notifications require permission and may not work in every browser or when the tab is closed.' : 'Choose which desktop notifications you receive. System notification permissions still apply.');
+    if (window.DroplyWeb && 'Notification' in window && Notification.permission === 'default') settingAction(actions(), 'Enable browser notifications', () => Notification.requestPermission());
     settingToggle(body, 'friendNotifications', 'Friend requests', 'Notify when someone asks to add you.');
     settingToggle(body, 'incomingNotifications', 'Incoming transfers', 'Notify when a friend offers files.');
     settingToggle(body, 'completedNotifications', 'Completed transfers', 'Notify when files finish sending or saving.');
-    settingToggle(body, 'sounds', 'Notification sounds', 'Use the system notification sound when available.');
+    if (!window.DroplyWeb) settingToggle(body, 'sounds', 'Notification sounds', 'Use the system notification sound when available.');
   } else if (section === 'App behavior') {
-    intro('Keep DROPLY available when you need it.');
-    settingToggle(body, 'launchAtStartup', 'Launch at startup', settingsState.startupSupported ? 'Open DROPLY when you sign in.' : 'Available in installed Windows and macOS builds.', !settingsState.startupSupported);
-    settingToggle(body, 'tray', 'Keep running when closed', 'Closing the window hides it in the system tray. Use Quit DROPLY in the tray menu to exit.');
+    if (window.DroplyWeb) {
+      intro('This browser edition works while its tab is open. Browser startup and system tray features are available only in the desktop app.');
+    } else {
+      intro('Keep DROPLY available when you need it.');
+      settingToggle(body, 'launchAtStartup', 'Launch at startup', settingsState.startupSupported ? 'Open DROPLY when you sign in.' : 'Available in installed Windows and macOS builds.', !settingsState.startupSupported);
+      settingToggle(body, 'tray', 'Keep running when closed', 'Closing the window hides it in the system tray. Use Quit DROPLY in the tray menu to exit.');
+    }
   } else if (section === 'Appearance') {
     intro('The same DROPLY layout, in your preferred palette.');
     const row = h('label', 'setting-row', 'Theme'), select = document.createElement('select'); select.setAttribute('aria-label', 'Theme');
     for (const value of ['dark', 'light']) { const option = h('option', '', value === 'dark' ? 'Dark' : 'Light'); option.value = value; select.append(option); } select.value = settingsState.theme; select.onchange = () => updatePreference('theme', select.value); row.append(select); body.append(row);
   } else if (section === 'Updates & About') {
     intro(`DROPLY ${settingsState.version || ''} · Share files with your friends.`);
-    const status = h('p', '', updateState.text); status.id = 'updateDetail'; body.append(status);
-    const progress = document.createElement('progress'); progress.id = 'updateProgress'; progress.max = 100; progress.value = updateState.percent || 0; progress.classList.toggle('hidden', updateState.percent == null); body.append(progress);
-    const row = actions(); settingAction(row, 'Check for updates', () => api.checkUpdates(), true); settingAction(row, 'View GitHub', () => api.openGithub());
-    intro('DROPLY checks for stable releases at startup and every four hours. You choose when to download and restart.');
+    if (window.DroplyWeb) {
+      intro('The browser edition updates when you reload this page. Installed desktop updates are managed separately.');
+      settingAction(actions(), 'View GitHub', () => api.openGithub());
+    } else {
+      const status = h('p', '', updateState.text); status.id = 'updateDetail'; body.append(status);
+      const progress = document.createElement('progress'); progress.id = 'updateProgress'; progress.max = 100; progress.value = updateState.percent || 0; progress.classList.toggle('hidden', updateState.percent == null); body.append(progress);
+      const row = actions(); settingAction(row, 'Check for updates', () => api.checkUpdates(), true); settingAction(row, 'View GitHub', () => api.openGithub());
+      intro('DROPLY checks for stable releases at startup and every four hours. You choose when to download and restart.');
+    }
   } else if (section === 'Transfer history') {
     intro('The latest 300 events are saved on this device. Retry failed sends from their transfer card while DROPLY remains open.');
     const row = actions(); settingAction(row, 'Clear history', async () => { await api.clearHistory(); historyItems = []; renderSettings(section); }); renderHistory(body);
   } else if (section === 'Troubleshooting') {
     intro('Connection information and tools to help investigate a problem.');
     const detail = h('p', '', connectionText); detail.id = 'connectionDetail'; body.append(detail);
-    const row = actions(); settingAction(row, 'Open diagnostic log', () => api.openLog()); settingAction(row, 'Copy diagnostics', async () => { await api.copyDiagnostics(); settingsFeedback('Basic diagnostics copied. Device codes and credentials are excluded.'); });
+    const row = actions(); if (!window.DroplyWeb) settingAction(row, 'Open diagnostic log', () => api.openLog()); settingAction(row, 'Copy diagnostics', async () => { await api.copyDiagnostics(); settingsFeedback('Basic diagnostics copied. Device codes and credentials are excluded.'); });
   } else if (section === 'Device access') {
     intro('DROPLY normally connects this device automatically. Use recovery only if this device’s saved connection key is missing or no longer accepted.');
     const detail = h('p', '', accessState.text || 'Checking device connection…'); detail.id = 'accessDetail'; body.append(detail);
