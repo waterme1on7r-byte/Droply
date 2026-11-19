@@ -55,6 +55,13 @@ test('online profiles and signaling are scoped to mutual friends; code lookup re
  b.socket.send(JSON.stringify({t:'watch',friends:[a.id],codes:[],notify:[]}));
  assert.equal((await next(a.socket,m=>m.t==='peers')).peers[0].name,'Bob');assert.equal((await bFriend).peers[0].name,'Alice');
  const delivered=next(b.socket,m=>m.t==='sig'&&m.from===a.id);a.socket.send(JSON.stringify({t:'sig',to:b.id,data:{t:'req',tid:'friend-only'}}));assert.equal((await delivered).data.t,'req');
+ // Editing a profile must not clear the server's mutual-friend subscriptions.
+ const refreshedA=next(a.socket,m=>m.t==='peers'),refreshedB=next(b.socket,m=>m.t==='peers');
+ a.socket.send(JSON.stringify({t:'hello',name:'Alice updated',av:''}));
+ assert.equal((await refreshedA).peers[0]?.id,b.id);
+ assert.equal((await refreshedB).peers[0]?.name,'Alice updated');
+ const afterEdit=next(b.socket,m=>m.t==='sig'&&m.from===a.id);
+ a.socket.send(JSON.stringify({t:'sig',to:b.id,data:{t:'req',tid:'after-profile-edit'}}));assert.equal((await afterEdit).data.tid,'after-profile-edit');
  for(const c of [a.socket,b.socket])c.terminate();
 });
 

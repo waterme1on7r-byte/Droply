@@ -134,7 +134,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
             .put("sounds", saved.optBoolean("sounds", false))
             .put("launchAtStartup", false).put("tray", false).put("startupSupported", false)
             .put("downloadDir", if (tree == null) "Downloads/Droply" else "Selected folder")
-            .put("version", "Android 0.1.0")
+            .put("version", "Android 0.1.3")
     }
 
     fun saveSettings(raw: String): JSONObject {
@@ -392,7 +392,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
     fun checkUpdates() = openExternal("https://github.com/waterme1on7r-byte/Droply/releases")
 
     fun copyDiagnostics() {
-        val details = "DROPLY Android 0.1.0\nOS: Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\nDevice mode: $deviceMode\nTheme: ${settings().optString("theme")}\nConnection: $accessState"
+        val details = "DROPLY Android 0.1.3\nOS: Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\nDevice mode: $deviceMode\nTheme: ${settings().optString("theme")}\nConnection: $accessState"
         copy(details)
     }
 

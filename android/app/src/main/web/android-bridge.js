@@ -79,7 +79,66 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const mode = String(native.deviceMode());
-    document.documentElement.classList.add('droply-android', `droply-android-${mode}`);
+    const root = document.documentElement;
+    root.classList.add('droply-android');
+    const applyLayoutMode = () => {
+      const portrait = window.matchMedia('(orientation: portrait)').matches;
+      const compact = mode !== 'tv' && (portrait || root.clientWidth < 900);
+      root.classList.toggle('droply-android-phone', compact);
+      root.classList.toggle('droply-android-tablet', mode !== 'tv' && !compact);
+      root.classList.toggle('droply-android-tv', mode === 'tv');
+    };
+    applyLayoutMode();
+    window.addEventListener('resize', applyLayoutMode, { passive: true });
+    const friendStrip = document.createElement('section');
+    friendStrip.id = 'androidFriendsStrip'; friendStrip.setAttribute('aria-label', 'Friends');
+    friendStrip.innerHTML = '<div class="strip-heading"><b>Friends</b><small></small></div><div class="strip-friends"></div>';
+    document.querySelector('.pairwrap').before(friendStrip);
+    window.renderAndroidFriends = (friends, peers, selected) => {
+      const online = new Set(peers.map(peer => peer.id));
+      const list = friendStrip.querySelector('.strip-friends'); list.replaceChildren();
+      friendStrip.querySelector('.strip-heading small').textContent = `${friends.filter(f => online.has(f.id)).length} online · ${friends.filter(f => !online.has(f.id)).length} offline`;
+      if (!friends.length) {
+        const empty = document.createElement('button'); empty.type = 'button'; empty.className = 'strip-empty ghost'; empty.textContent = 'Add your first friend';
+        empty.onclick = () => document.querySelector('#addFriendBtn').click(); list.append(empty);
+      }
+      [...friends].sort((a,b) => Number(online.has(b.id)) - Number(online.has(a.id)) || a.name.localeCompare(b.name)).forEach(friend => {
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'strip-friend' + (online.has(friend.id) ? ' online' : '') + (friend.id === selected ? ' selected' : '');
+        button.setAttribute('aria-pressed', String(friend.id === selected));
+        button.setAttribute('aria-label', `${friend.name}, ${online.has(friend.id) ? 'online' : 'offline'}`);
+        const image = avatar(friend.av, friend.name), dot = document.createElement('i'); dot.className = 'strip-dot'; image.append(dot);
+        const name = document.createElement('span'); name.textContent = friend.name;
+        const state = document.createElement('small'); state.textContent = online.has(friend.id) ? 'Online' : 'Offline';
+        button.append(image, name, state); button.onclick = () => selectFriend(friend.id); list.append(button);
+      });
+    };
+    renderRail();
+    // The Android add-friend form is anchored to its own navigation button.
+    const addPopup = document.querySelector('#addFriend'), addButton = document.querySelector('#addFriendBtn');
+    const addPanel = addPopup.querySelector('.box');
+    addPopup.classList.remove('overlay');
+    addPopup.setAttribute('aria-modal', 'false');
+    const positionAddPopup = () => {
+      if (addPopup.classList.contains('hidden')) return;
+      const anchor = addButton.getBoundingClientRect(), panel = addPanel.getBoundingClientRect();
+      const horizontal = getComputedStyle(document.querySelector('.rail')).flexDirection === 'row';
+      let left = horizontal ? anchor.right - panel.width : anchor.right + 12;
+      let top = horizontal ? anchor.top - panel.height - 10 : anchor.bottom - panel.height;
+      left = Math.max(12, Math.min(left, innerWidth - panel.width - 12));
+      top = Math.max(12, Math.min(top, innerHeight - panel.height - 12));
+      addPanel.style.left = `${left}px`; addPanel.style.top = `${top}px`;
+    };
+    const openAdd = addButton.onclick;
+    addButton.onclick = event => {
+      if (!addPopup.classList.contains('hidden')) { addPopup.classList.add('hidden'); return; }
+      openAdd.call(addButton, event);
+      requestAnimationFrame(positionAddPopup);
+    };
+    window.addEventListener('resize', positionAddPopup);
+    window.visualViewport?.addEventListener('resize', positionAddPopup);
+    document.addEventListener('pointerdown', event => {
+      if (!addPopup.classList.contains('hidden') && !addPanel.contains(event.target) && !addButton.contains(event.target)) addPopup.classList.add('hidden');
+    }, true);
     const folderButton = document.querySelector('#folderBtn');
     if (folderButton) folderButton.onclick = event => { event.stopPropagation(); native.pickFolder(); };
     if (mode === 'tv') {

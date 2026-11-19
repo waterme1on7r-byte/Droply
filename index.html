@@ -30,6 +30,10 @@ input{user-select:text}
 #frList::-webkit-scrollbar{width:0}
 .fr{position:relative;width:50px;height:50px;flex:none;cursor:pointer;border-radius:14px;transition:.15s}
 .fr:hover{transform:scale(1.05)}
+html:not(.droply-android) .rail>.rbtn.active{transition:transform .15s,filter .15s}
+html:not(.droply-android) .rail>.rbtn.active:hover{transform:scale(1.05);filter:brightness(1.08)}
+html:not(.droply-android) #railAv{transition:transform .15s}
+html:not(.droply-android) #railAv:hover{transform:scale(1.05)}
 .fr.sel{box-shadow:0 0 0 2.5px var(--accent)}
 .rail .fav{width:50px;height:50px;border-radius:14px;font-size:20px}
 .fr .dot{position:absolute;left:-1px;bottom:-1px;width:15px;height:15px;border-radius:50%;background:#ef4444;border:3px solid #0d1524}
@@ -171,15 +175,29 @@ input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,1
 .hidden{display:none!important}
 #addFriend{background:rgba(4,8,18,.7);backdrop-filter:blur(8px);z-index:20}
 #addFriend .box{position:relative;width:min(420px,calc(100vw - 40px));max-height:calc(100vh - 72px);overflow:auto;padding:36px 28px 24px;border:1px solid var(--line);border-radius:22px;background:radial-gradient(320px 180px at 50% 0%,rgba(59,130,246,.2),transparent 75%),var(--card);box-shadow:0 24px 80px rgba(0,0,0,.5);animation:tin .2s ease}
-#friendRequests{background:rgba(4,8,18,.7);backdrop-filter:blur(8px);z-index:20}
-#friendRequests .request-box{position:relative;align-items:stretch;text-align:left;width:min(480px,calc(100vw - 40px));max-height:calc(100vh - 72px);overflow:hidden;padding:32px 24px 22px;border:1px solid var(--line);border-radius:22px;background:radial-gradient(320px 180px at 50% 0%,rgba(59,130,246,.2),transparent 75%),var(--card);box-shadow:0 24px 80px rgba(0,0,0,.5);animation:tin .2s ease}
-#friendRequests .request-head{text-align:center;padding:0 28px 4px}
-#friendRequests .request-head h2{font-size:28px}
-#friendRequests .request-head p{margin:6px 0 0}
-#friendRequestList{width:100%;min-height:42px;max-height:min(55vh,440px);overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px}
-#friendRequestList .sect{padding:10px 4px 4px;text-align:left}
-#friendRequestList .empty{padding:18px 12px}
-#friendRequestList .req{margin:0}
+html:not(.droply-android) #addFriend{inset:auto;width:0;height:0;display:block;overflow:visible;background:transparent;backdrop-filter:none;pointer-events:none}
+html:not(.droply-android) #addFriend .box{position:fixed;left:12px;top:12px;width:min(370px,calc(100vw - 24px));max-height:calc(100vh - 64px);padding:36px 18px 18px;gap:12px;border-radius:16px;background:var(--card);box-shadow:0 16px 48px rgba(0,0,0,.42);pointer-events:auto;animation:tin .16s ease}
+#friendRequests{position:fixed;inset:auto;width:0;height:0;display:block;overflow:visible;padding:0;background:transparent;backdrop-filter:none;z-index:80;pointer-events:none}
+#friendRequests .request-box{position:fixed;left:12px;top:12px;display:flex;align-items:stretch;text-align:left;gap:10px;width:min(350px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:hidden;padding:14px 12px 12px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 16px 48px rgba(0,0,0,.42);pointer-events:auto;animation:tin .16s ease}
+#friendRequests .request-head{display:flex;align-items:center;justify-content:space-between;min-height:24px;padding:0 38px 0 2px;text-align:left}
+#friendRequests .request-head h2{font-size:15px;line-height:1.2}
+#friendRequests .request-head p{display:none}
+#friendRequests .closeX{top:8px;right:8px;width:28px;height:28px}
+#friendRequests .request-tabs{display:flex;gap:4px;padding:3px;border:1px solid var(--line);border-radius:11px;background:var(--card2)}
+#friendRequests .request-tab{flex:1;min-width:0;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:var(--mute);font-size:11px;line-height:1.2;white-space:nowrap}
+#friendRequests .request-tab[aria-selected="true"]{background:var(--win);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+#friendRequests .request-tab:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+#friendRequestList{width:100%;min-height:42px;max-height:min(48vh,330px);overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px}
+#friendRequestList .sect{padding:4px;text-align:left}
+#friendRequestList .empty{padding:16px 10px}
+#friendRequestList .req{margin:0;flex-wrap:wrap;background:rgba(255,255,255,.035);border-color:var(--line)}
+#friendRequestList .req .av{width:34px;height:34px;border-radius:10px;font-size:13px}
+#friendRequestList .req .who{font-size:11px;white-space:normal;line-height:1.35}
+#friendRequestList .req .who b{display:block;margin-bottom:3px}
+#friendRequestList .req button{padding:7px 10px;font-size:11px}
+#friendRequestList .req .who+.req-actions{margin-left:auto}
+#friendRequestList .req-actions{display:flex;gap:6px;margin-left:auto}
+#friendRequestList .req.out .who{flex:1;overflow-wrap:anywhere}
 #addFriend h2{font-size:28px}
 #addFriend .closeX{top:10px;right:10px}
 #addFriend .field label{display:block;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
@@ -233,10 +251,14 @@ html[data-theme=light] body.rightWindowControls #titlebar::after{right:138px}
   </div>
 </div>
 
-<div id="friendRequests" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="friendRequestsTitle">
+<div id="friendRequests" class="hidden" role="dialog" aria-modal="false" aria-labelledby="friendRequestsTitle">
   <div class="box request-box">
     <button id="friendRequestsClose" class="closeX" title="Close" aria-label="Close friend requests"></button>
-    <div class="request-head"><h2 id="friendRequestsTitle">Friend requests</h2><p>Requests you’ve received and sent.</p></div>
+    <div class="request-head"><h2 id="friendRequestsTitle">Friend requests</h2></div>
+    <div class="request-tabs" role="tablist" aria-label="Friend request type">
+      <button id="receivedReqTab" class="request-tab" type="button" role="tab" aria-controls="friendRequestList" aria-selected="true">Received <span id="receivedReqCount">0</span></button>
+      <button id="sentReqTab" class="request-tab" type="button" role="tab" aria-controls="friendRequestList" aria-selected="false">Sent <span id="sentReqCount">0</span></button>
+    </div>
     <div id="friendRequestList"></div>
   </div>
 </div>
@@ -353,6 +375,7 @@ const ICON = {
 };
 const isFriend = id => friends.some(f => f.id === id);
 const byName = (a, b) => a.name.localeCompare(b.name);
+let activeReqTab = 'received';
 function renderPeers() {
   const on = new Set(peers.map(p => p.id));
   $('#count').textContent = peers.length; $('#count').style.display = peers.length ? '' : 'none';
@@ -371,23 +394,33 @@ function renderPeers() {
 }
 function renderReqs() {
   const box = $('#friendRequestList'); box.innerHTML = '';
-  if (pendIn.length) box.appendChild(h('div', 'sect', 'Friend requests'));
-  pendIn.forEach(r => {
-    const el = h('div', 'req'), who = h('div', 'who'); who.appendChild(h('b', null, r.name)); who.append(' wants to be friends');
-    const ok = h('button', null, 'Accept'), no = h('button', 'ghost', 'Decline');
-    ok.onclick = () => acceptReq(r.id); no.onclick = () => declineReq(r.id);
-    el.append(avatar(r.av, r.name), who, ok, no); box.appendChild(el);
-  });
-  if (pendOut.length) box.appendChild(h('div', 'sect', 'Waiting for a reply'));
-  pendOut.forEach(o => {
-    const el = h('div', 'req out'), who = h('div', 'who', o.code), no = h('button', 'ghost', 'Cancel');
-    no.onclick = () => { pendOut = pendOut.filter(x => x !== o); persist(); renderReqs(); };
-    el.append(who, no); box.appendChild(el);
-  });
-  if (!pendIn.length && !pendOut.length) box.appendChild(h('div', 'empty', 'No pending friend requests.'));
+  $('#receivedReqCount').textContent = pendIn.length;
+  $('#sentReqCount').textContent = pendOut.length;
+  $('#receivedReqTab').setAttribute('aria-selected', String(activeReqTab === 'received'));
+  $('#sentReqTab').setAttribute('aria-selected', String(activeReqTab === 'sent'));
+  if (activeReqTab === 'received') {
+    if (!pendIn.length) box.appendChild(h('div', 'empty', 'No received friend requests.'));
+    pendIn.forEach(r => {
+      const el = h('div', 'req'), who = h('div', 'who'); who.appendChild(h('b', null, r.name)); who.append('Wants to connect');
+      const actions = h('div', 'req-actions'), ok = h('button', null, 'Accept'), no = h('button', 'ghost', 'Decline');
+      ok.onclick = () => acceptReq(r.id); no.onclick = () => declineReq(r.id);
+      actions.append(no, ok); el.append(avatar(r.av, r.name), who, actions); box.appendChild(el);
+    });
+  } else {
+    if (!pendOut.length) box.appendChild(h('div', 'empty', 'No sent friend requests.'));
+    pendOut.forEach(o => {
+      const el = h('div', 'req out'), who = h('div', 'who'), label = h('b', null, o.name || o.code), detail = h('span', null, 'Waiting for a reply');
+      who.append(label, detail);
+      const no = h('button', 'ghost', 'Cancel');
+      no.onclick = () => { pendOut = pendOut.filter(x => x !== o); persist(); renderReqs(); };
+      el.append(who, no); box.appendChild(el);
+    });
+  }
+  if (!$('#friendRequests').classList.contains('hidden')) requestAnimationFrame(positionFriendRequests);
 }
 // Left sidebar: every accepted friend, online ones first. Green dot = online, red = offline.
 function renderRail() {
+  window.renderAndroidFriends?.(friends, peers, sel);
   const l = $('#frList'); l.innerHTML = '';
   const on = new Set(peers.map(p => p.id));
   [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
@@ -476,7 +509,7 @@ function notifyNew() {
 
 /* ---------- Server connection ---------- */
 const send = o => ws && ws.readyState === 1 && ws.send(JSON.stringify(o));
-const hello = () => me.name && send({ t: 'hello', id: me.id, name: me.name, av: me.avatar });
+const hello = () => { if (me.name) { send({ t: 'hello', id: me.id, name: me.name, av: me.avatar }); syncFriendState(); } };
 const sig = (to, data) => send({ t: 'sig', to, data });
 function connect() {
   ws = { readyState: 0, send: encoded => api.sendSignal(JSON.parse(encoded)) };
@@ -951,28 +984,73 @@ document.addEventListener('keydown', e => {
   else $('#picker').classList.add('hidden');
 });
 function closeAddFriend() {
-  $('#friendRequests').classList.add('hidden');
+  document.removeEventListener('pointerdown', outsideAddFriend, true);
+  window.removeEventListener('resize', positionAddFriend);
   $('#addFriend').classList.add('hidden'); $('#addFriendBtn').focus();
 }
-function closeFriendRequests() { $('#friendRequests').classList.add('hidden'); $('#peopleBtn').focus(); }
+function positionAddFriend() { positionAnchoredPopup($('#addFriend'), $('#addFriendBtn')); }
+function outsideAddFriend(e) {
+  if (!$('#addFriend .box').contains(e.target) && !$('#addFriendBtn').contains(e.target)) closeAddFriend();
+}
+function positionFriendRequests() {
+  positionAnchoredPopup($('#friendRequests'), $('#peopleBtn'));
+}
+function positionAnchoredPopup(popup, button) {
+  const panel = popup.querySelector('.box');
+  if (popup.classList.contains('hidden')) return;
+  const anchor = button.getBoundingClientRect(), box = panel.getBoundingClientRect();
+  const railIsHorizontal = getComputedStyle($('.rail')).flexDirection === 'row';
+  const pad = 12;
+  let left, top;
+  if (railIsHorizontal) {
+    left = anchor.right - box.width;
+    top = anchor.top - box.height - 10;
+  } else {
+    left = anchor.right + 12;
+    if (left + box.width > innerWidth - pad) left = anchor.left - box.width - 12;
+    top = anchor.bottom - box.height;
+  }
+  left = Math.max(pad, Math.min(left, innerWidth - box.width - pad));
+  const topLimit = window.DroplyAndroid ? pad : 52;
+  top = Math.max(topLimit, Math.min(top, innerHeight - box.height - pad));
+  panel.style.left = `${left}px`; panel.style.top = `${top}px`;
+}
+function outsideFriendRequests(e) {
+  const panel = $('#friendRequests .request-box');
+  if (!panel.contains(e.target) && !$('#peopleBtn').contains(e.target)) closeFriendRequests(false);
+}
+function closeFriendRequests(restoreFocus = true) {
+  const popup = $('#friendRequests');
+  if (popup.classList.contains('hidden')) return;
+  popup.classList.add('hidden');
+  document.removeEventListener('pointerdown', outsideFriendRequests, true);
+  window.removeEventListener('resize', positionFriendRequests);
+  if (restoreFocus) $('#peopleBtn').focus();
+}
 function openFriendRequests(e) {
-  e?.stopPropagation(); $('#picker').classList.add('hidden'); $('#addFriend').classList.add('hidden');
-  renderReqs(); $('#friendRequests').classList.remove('hidden'); $('#friendRequestsClose').focus();
+  e?.stopPropagation(); $('#picker').classList.add('hidden');
+  if (!$('#addFriend').classList.contains('hidden')) closeAddFriend();
+  if (!$('#friendRequests').classList.contains('hidden')) { closeFriendRequests(); return; }
+  activeReqTab = 'received'; renderReqs(); $('#friendRequests').classList.remove('hidden');
+  requestAnimationFrame(() => { positionFriendRequests(); $('#friendRequestsClose').focus(); });
+  document.addEventListener('pointerdown', outsideFriendRequests, true);
+  window.addEventListener('resize', positionFriendRequests);
 }
 $('#friendRequestsClose').innerHTML = ICON.xl;
 $('#friendRequestsClose').onclick = closeFriendRequests;
-$('#friendRequests').addEventListener('click', e => { if (e.target === $('#friendRequests')) closeFriendRequests(); });
-$('#friendRequests').addEventListener('keydown', e => {
-  if (e.key !== 'Tab') return;
-  const buttons = [...$('#friendRequests').querySelectorAll('button:not(:disabled)')];
-  const first = buttons[0], last = buttons[buttons.length - 1];
-  if (!first || !last) { e.preventDefault(); return; }
-  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-});
+$('#receivedReqTab').onclick = () => { activeReqTab = 'received'; renderReqs(); };
+$('#sentReqTab').onclick = () => { activeReqTab = 'sent'; renderReqs(); };
 function openAddFriend() {
-  $('#picker').classList.add('hidden'); $('#friendRequests').classList.add('hidden'); $('#addMsg').textContent = ''; $('#codeIn').value = '';
+  if (!window.DroplyAndroid && !$('#addFriend').classList.contains('hidden')) { closeAddFriend(); return; }
+  $('#picker').classList.add('hidden'); closeFriendRequests(false); $('#addMsg').textContent = ''; $('#codeIn').value = '';
   $('#addFriend').classList.remove('hidden'); $('#codeIn').focus();
+  if (!window.DroplyAndroid) {
+    $('#addFriend').setAttribute('aria-modal', 'false');
+    positionAddFriend();
+    requestAnimationFrame(positionAddFriend);
+    document.addEventListener('pointerdown', outsideAddFriend, true);
+    window.addEventListener('resize', positionAddFriend);
+  }
   deviceCode(me.id).then(c => { $('#shareCode').textContent = c; });
 }
 $('#addFriendBtn').onclick = openAddFriend;

@@ -72,7 +72,7 @@ function createServer(options={}){
     if(me&&me.id!==id)return ws.close(4400,'Identity cannot change');
     clearTimeout(timeout);const av=typeof m.av==='string'&&m.av.length<60000&&/^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(m.av)?m.av:'';
     if(ws.readyState!==1)return;
-    const old=users.get(id);me={id,name:Array.from(m.name.trim()).slice(0,24).join(''),av,ws,friends:new Set(),watchCodes:new Set(),notifyIds:new Set()};users.set(id,me);if(old&&old.ws!==ws)old.ws.close(4000,'Connected on another session');broadcast();
+    const old=users.get(id),sameSession=old?.ws===ws;me={id,name:Array.from(m.name.trim()).slice(0,24).join(''),av,ws,friends:sameSession?old.friends:new Set(),watchCodes:sameSession?old.watchCodes:new Set(),notifyIds:sameSession?old.notifyIds:new Set()};users.set(id,me);if(old&&old.ws!==ws)old.ws.close(4000,'Connected on another session');broadcast();
    }else if(m.t==='watch'&&me&&Array.isArray(m.friends)&&Array.isArray(m.codes)&&Array.isArray(m.notify)){
     if(m.friends.length>200||m.codes.length>200||m.notify.length>200)return ws.close(4400,'Invalid friend list');
     me.friends=new Set(m.friends.filter(id=>typeof id==='string'&&/^[A-Za-z0-9-]{16,64}$/.test(id)&&id!==me.id));
@@ -91,7 +91,7 @@ function createServer(options={}){
   }).catch(()=>ws.close(1011,'Authentication service unavailable')); });
   ws.on('close',()=>{clearTimeout(timeout);if(identity){sessions.get(identity)?.delete(ws);if(sessions.get(identity)?.size===0)sessions.delete(identity);}ipConnections.set(ip,Math.max(0,(ipConnections.get(ip)||1)-1));if(ipConnections.get(ip)===0)ipConnections.delete(ip);if(me&&users.get(me.id)?.ws===ws){users.delete(me.id);broadcast();}});
  });
- const heartbeat=setInterval(()=>{for(const ws of wss.clients){if(!ws.alive){ws.terminate();continue;}ws.alive=false;ws.ping();}for(const[k,b]of buckets)if(b.until<Date.now())buckets.delete(k);},25000);heartbeat.unref();
+ const heartbeat=setInterval(()=>{for(const ws of wss.clients){if(!ws.alive){ws.terminate();continue;}ws.alive=false;ws.ping();}for(const[k,b]of buckets)if(b.until<Date.now())buckets.delete(k);},10000);heartbeat.unref();
  return {server:srv,store,users,close:async()=>{clearInterval(heartbeat);for(const ws of wss.clients)ws.terminate();await new Promise(resolve=>wss.close(resolve));if(srv.listening)await new Promise(resolve=>srv.close(resolve));await store?.close?.();}};
 }
 module.exports={createServer};

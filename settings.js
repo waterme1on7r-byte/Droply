@@ -36,14 +36,18 @@ function renderHistory(parent) {
   }
 }
 function renderSettings(section) {
-  activeSettingsSection = section; const nav = $('#settingsNav'), body = $('#settingsContent'); nav.innerHTML = ''; body.innerHTML = '';
+  activeSettingsSection = section; const nav = $('#settingsNav'), body = $('#settingsContent'); nav.innerHTML = ''; body.innerHTML = ''; body.dataset.section = section;
   for (const label of settingsSections) { const b = h('button', '', label); b.setAttribute('aria-selected', String(label === section)); b.onclick = () => renderSettings(label); nav.append(b); }
   body.append(h('h3', '', section));
   const intro = text => body.append(h('p', 'intro', text));
   const actions = () => { const node = h('div', 'settings-actions'); body.append(node); return node; };
   if (section === 'Profile') {
     intro('Your name and photo are visible to your friends. Your code belongs to this device.');
-    const av = avatar(me.avatar, me.name, true, true); av.onclick = () => openSetup(true); body.append(av, h('p', 'intro', me.name));
+    const av = avatar(me.avatar, me.name, true, true); av.onclick = () => openSetup(true);
+    if (window.DroplyAndroid) {
+      const hero = h('div', 'profile-hero'); av.classList.add('profile-hero-avatar');
+      hero.append(av, h('strong', 'profile-hero-name', me.name)); body.append(hero);
+    } else body.append(av, h('p', 'intro', me.name));
     settingAction(actions(), 'Edit name & photo', () => openSetup(true));
     const field = h('div', 'field settings-code'), box = h('div', 'codebox'), code = h('code'), copy = h('button', 'cp ghost');
     field.append(h('small', '', 'Your device code')); copy.innerHTML = ICON.copy; copy.setAttribute('aria-label', 'Copy device code');
