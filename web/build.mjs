@@ -34,14 +34,16 @@ replaceOnce('<script src="config.js"></script>', [
   '<script src="receive.js"></script>',
   '<script src="bridge.js"></script>'
 ].join('\n'));
-// Preserve the desktop UI and transfer protocol, but remove its broad browser
-// script permission. Hash the unchanged inline app script after all substitutions.
+// Apply every browser-specific renderer edit BEFORE hashing. A later edit
+// would invalidate CSP and silently block all UI event handlers.
+replaceOnce("a.textContent = 'Show in folder';", "a.textContent = window.DroplyWeb ? 'Download file' : 'Show in folder';");
+// Preserve the desktop UI and transfer protocol, but remove broad browser
+// script permission. Hash the FINAL normalized inline app script.
 const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 if (inline.length !== 1) throw Error('Expected exactly one renderer inline script');
 const hash = createHash('sha256').update(inline[0][1]).digest('base64');
 replaceOnce("script-src 'self' 'unsafe-inline'", "script-src 'self' 'sha256-" + hash + "'");
 replaceOnce("connect-src 'self' ws: wss:", "connect-src 'self' " + url.origin + ' ' + httpUrl.origin + (process.env.DROPLY_PRIVATE_PREVIEW === '1' ? ' wss:' : ''));
-replaceOnce("a.textContent = 'Show in folder';", "a.textContent = window.DroplyWeb ? 'Download file' : 'Show in folder';");
 await mkdir(output, { recursive: true });
 await writeFile(join(output, 'index.html'), html);
 await writeFile(join(output, 'config.js'), config);
