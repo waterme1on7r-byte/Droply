@@ -92,16 +92,3 @@ Normal Supabase hosting limits still apply.
 
 The code and database checks passed, but a full live test of the published website's forms, chatbot, and admin login is still outstanding.
 
-## What's next?
-
-My suggested priorities are to test a real support ticket from the website through to the admin panel, add email notifications for new contact messages and support tickets, strengthen administrator authentication with MFA, and finish the newsletter's unsubscribe process.
-
-**Your Droply project**
-
-- [GitHub repository](https://github.com/waterme1on7r-byte/Droply)
-- [Droply website](https://waterme1on7r-byte.github.io/Droply/)
-- [Admin panel](https://waterme1on7r-byte.github.io/Droply/portal/contact-inbox.html)
-
-**Overall:** Today we built the core infrastructure for Droply to distribute its desktop app, collect newsletter subscribers, receive customer messages, guide users through common problems, and manage support tickets through a private admin dashboard.
-
-And importantly, **we did all this without modifying Droply's desktop application's core functionality.**
