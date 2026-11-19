@@ -2,6 +2,8 @@
   'use strict';
   const transfers = new Map(), downloads = new Map();
   const MAX_BUFFERED = 64 * 1024 * 1024;
+  const MAX_READY_DOWNLOADS = 128 * 1024 * 1024;
+  let readyDownloadBytes = 0;
   const validTid = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value);
   const safeName = name => {
     if (typeof name !== 'string' || !name || name.length > 1024 || name.startsWith('/')
@@ -107,11 +109,14 @@
       } else {
         const blob = new Blob(current.parts, { type: 'application/octet-stream' });
         path = 'web-download-' + crypto.randomUUID();
-        downloads.set(path, { url: URL.createObjectURL(blob), name: current.name.split('/').at(-1) });
+        downloads.set(path, { url: URL.createObjectURL(blob), name: current.name.split('/').at(-1), size: blob.size });
+        readyDownloadBytes += blob.size;
         current.parts = [];
-        while (downloads.size > 100) {
+        while (downloads.size > 100 || readyDownloadBytes > MAX_READY_DOWNLOADS) {
           const oldest = downloads.keys().next().value;
-          URL.revokeObjectURL(downloads.get(oldest).url);
+          const entry = downloads.get(oldest);
+          readyDownloadBytes -= entry.size;
+          URL.revokeObjectURL(entry.url);
           downloads.delete(oldest);
         }
       }
@@ -139,7 +144,10 @@
   function finishReceive(tid) { transfers.delete(tid); }
   function showFile(path) {
     const entry = downloads.get(path);
-    if (!entry) return;
+    if (!entry) {
+      window.alert('This download is no longer available in this tab. Ask your friend to resend the file.');
+      return;
+    }
     const a = document.createElement('a');
     a.href = entry.url;
     a.download = entry.name;
