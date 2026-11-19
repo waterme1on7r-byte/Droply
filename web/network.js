@@ -173,7 +173,7 @@
     const result = await response.json();
     if (result.id !== user.id || !/^[A-Za-z0-9_-]{43}$/.test(result.token)) throw Error('Invalid enrollment response');
     // Preserve the same profile, friends and device code. Replace only the credential.
-    await store.writeCredential(result.token, base.origin, user.id, true);
+    await store.writeCredential(result.token, base.origin, user.id, true, true);
     close();
     active = true;
     connect();
