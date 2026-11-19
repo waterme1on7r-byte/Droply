@@ -110,7 +110,12 @@
           authenticated = true;
           attempt = 0;
           clearTimeout(deadline);
-          ws.send(JSON.stringify({ t: 'hello', id: user.id, name: user.name, av: user.avatar }));
+          // Read the latest profile: the user may have chosen a name while
+          // initial registration or the WebSocket handshake was in progress.
+          store.profile().then(latest => {
+            if (socket === ws && ws.readyState === WebSocket.OPEN)
+              ws.send(JSON.stringify({ t: 'hello', id: latest.id, name: latest.name, av: latest.avatar }));
+          }).catch(() => {});
           state('connected', 'Connected securely');
         } else if (authenticated && ['peers', 'sig', 'resolved'].includes(message.t))
           emit('server-event', { t: 'message', message });
