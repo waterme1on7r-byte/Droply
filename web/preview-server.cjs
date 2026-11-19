@@ -78,6 +78,28 @@ function createPreviewServer(options = {}) {
         Date.now() - value.iat < MAX_AGE * 1000;
     } catch { return false; }
   }
+  // Safari may omit both Origin and Referer (the page uses no-referrer).
+  // Use an expiring, HMAC-signed hidden form token instead.
+  const LOGIN_TOKEN_AGE = 15 * 60 * 1000;
+  function signedLoginToken() {
+    const value = Date.now().toString(36) + '.' + crypto.randomBytes(16).toString('base64url');
+    const signature = crypto.createHmac('sha256', sessionKey)
+      .update('droply-private-login:' + value).digest('base64url');
+    return value + '.' + signature;
+  }
+  function validLoginToken(token) {
+    if (typeof token !== 'string' || token.length > 128) return false;
+    const parts = token.split('.');
+    if (parts.length !== 3 || !/^[a-z0-9]+$/.test(parts[0]) ||
+      !/^[A-Za-z0-9_-]{22}$/.test(parts[1]) ||
+      !/^[A-Za-z0-9_-]{43}$/.test(parts[2])) return false;
+    const when = Number.parseInt(parts[0], 36), elapsed = Date.now() - when;
+    if (!Number.isSafeInteger(when) || elapsed < 0 || elapsed > LOGIN_TOKEN_AGE) return false;
+    const value = parts[0] + '.' + parts[1];
+    const signature = crypto.createHmac('sha256', sessionKey)
+      .update('droply-private-login:' + value).digest('base64url');
+    return compare(signature, parts[2]);
+  }
   const matchesPassword = supplied => {
     const digest = value => crypto.createHash('sha256').update(value).digest();
     return crypto.timingSafeEqual(digest(String(supplied || '')), digest(password));
@@ -93,7 +115,8 @@ function createPreviewServer(options = {}) {
     return ++state.count <= 12;
   }
   function loginPage(error = '') {
-    const notice = error ? '<p class="error" role="alert">Incorrect password or too many attempts.</p>' : '';
+    const notice = error ? '<p class="error" role="alert">Incorrect password or expired sign-in page. Reload and try again.</p>' : '';
+    const formToken = signedLoginToken();
     return '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
       '<meta name="viewport" content="width=device-width,initial-scale=1">' +
       '<title>Droply · Private test access</title><meta name="robots" content="noindex,nofollow">' +
@@ -102,6 +125,7 @@ function createPreviewServer(options = {}) {
       'label{display:block;margin-top:22px;font-size:13px;font-weight:600}input{display:block;width:100%;margin-top:8px;padding:13px;border:1px solid #4b5a72;border-radius:9px;background:#101827;color:white;font:inherit}' +
       'button{width:100%;margin-top:22px;padding:13px;background:#3b82f6;border:0;border-radius:9px;color:white;font:inherit;font-weight:600;cursor:pointer}.error{color:#f87171}small{color:#9aa7bd}</style></head>' +
       '<body><form method="post" action="' + PREFIX + 'login"><h1>Droply</h1>' +
+      '<input type="hidden" name="csrf" value="' + formToken + '">' +
       '<p>Private browser testing. Only invited testers can enter this preview.</p>' +
       notice + '<label for="password">Test access password</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus>' +
       '<button type="submit">Enter Droply</button><p><small>Testing uses the existing Droply signaling service. Your browser gets its own device identity.</small></p></form></body></html>';
@@ -115,18 +139,13 @@ function createPreviewServer(options = {}) {
     return origin === 'https://' + hostname ||
       (env.PREVIEW_LOCAL_HTTP === '1' && origin === 'http://' + hostname);
   };
-  // Safari can omit Origin on a same-origin HTML form submission. For the
-  // password form only, a matching Referer with same-origin Fetch metadata is
-  // a safe fallback. API mutations and WebSocket upgrades still require Origin.
+  // The form token proves this page was fetched; reject explicitly foreign
+  // origins and cross-site fetches, without relying on missing Safari headers.
   const validLoginOrigin = req => {
-    if (req.headers.origin !== undefined) return validOrigin(req);
-    const host = req.headers.host;
-    if (!host || /[\s/\\@]/.test(host)) return false;
-    const expected = (env.PREVIEW_LOCAL_HTTP === '1' ? 'http://' : 'https://') + host;
-    const ref = req.headers.referer;
-    if (typeof ref !== 'string' || (req.headers['sec-fetch-site'] &&
-      !['same-origin', 'none'].includes(req.headers['sec-fetch-site']))) return false;
-    try { return new URL(ref).origin === expected; } catch { return false; }
+    const origin = req.headers.origin;
+    if (origin && origin !== 'null' && !validOrigin(req)) return false;
+    const site = req.headers['sec-fetch-site'];
+    return !site || site === 'same-origin' || site === 'none';
   };
   async function readBody(req, limit = MAX_BODY) {
     const chunks = [];
@@ -183,12 +202,15 @@ function createPreviewServer(options = {}) {
       if (!validLoginOrigin(req)) return reply(res, 403, 'Invalid origin');
       if (!attemptAllowed(req)) return reply(res, 429, loginPage('error'),
         { 'Content-Type': 'text/html; charset=utf-8' });
-      let supplied;
+      let supplied, csrf;
       try {
         if (!/^application\/x-www-form-urlencoded(?:;|$)/i.test(req.headers['content-type'] || ''))
           throw Error('Invalid input');
-        supplied = new URLSearchParams(await readBody(req, 1024)).get('password');
+        const data = new URLSearchParams(await readBody(req, 1024));
+        supplied = data.get('password');
+        csrf = data.get('csrf');
       } catch { return reply(res, 400, 'Bad input'); }
+      if (!validLoginToken(csrf)) return reply(res, 403, 'Invalid or expired sign-in form. Reload the test page.');
       if (!matchesPassword(supplied)) return reply(res, 401, loginPage('error'),
         { 'Content-Type': 'text/html; charset=utf-8' });
       // A first-party Lax cookie survives Safari's top-level form navigation.
