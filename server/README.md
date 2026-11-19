@@ -11,6 +11,7 @@ Environment variables:
 - DATABASE_URL: the Neon PostgreSQL connection string, stored only in Render's secret environment. TLS certificates are verified outside localhost.
 - ADMIN_TOKEN: a random server-only administrator token of at least 32 characters, used for recovery and revocation. Never package it with the desktop app or put it in Git.
 - PORT: supplied by Render.
+- WEB_ALLOWED_ORIGINS: comma-separated exact HTTPS origins that may use browser auth and browser WebSockets, e.g. `https://waterme1on7r-byte.github.io`. Include your custom website origin if applicable. For local testing, you can also add `http://localhost:4173`. Do not add paths or trailing slashes. Browser clients are rejected when this setting is absent. This does not affect Electron or Android clients without an Origin header.
 - Legacy WebSocket access is removed. Every connection must authenticate with a registered device credential. Older app versions that use legacy signaling must be updated before deploying this server version.
 
 Coordinate the server rollout with an app update so users can install the new client first. The production server must use the existing Neon database and device records; do not reset them during deployment.
@@ -41,3 +42,9 @@ For a browser-based local tool, run `Start-Droply-Recovery.cmd` on Windows or `n
 Signaling fixes the sender identity from the authenticated connection and limits rates, payloads, output buffering and authentication time. PostgreSQL transactions and a row lock protect shared authentication state. The client requires the receiver to approve each transfer; WebRTC encrypts the peer-to-peer connection automatically, without a manual fingerprint-code comparison. Bearer credentials can still be stolen by malware running as the same OS user.
 
 Run npm test from this directory. GitHub Actions additionally starts PostgreSQL to verify atomic concurrent enrollment across store instances. Local integration checks have exercised two native Electron devices, real WebRTC transfers, restart persistence and revocation. A deployed migration must also verify /auth/status and device connectivity before deleting the old server repository.
+
+## Browser client
+
+The web app is built from the existing renderer using `node web/build.mjs` and deployed by GitHub Pages under `/app/`. It reuses the same WebRTC and friend-signaling protocol, but browser storage is **not** the operating-system-protected Electron safeStorage. Device credentials are encrypted with a non-extractable browser Web Crypto key stored in IndexedDB. Scripts running on the same origin may still access that key, so avoid untrusted browser extensions and never clear site data without understanding identity recovery.
+
+Browser HTTP registration requires CORS. Set `WEB_ALLOWED_ORIGINS` on the existing signaling service to the exact GitHub Pages origin (or the custom domain that serves the app) before using the browser build; redeploy the existing service without replacing its PostgreSQL database or secrets. Browser WebSocket handshakes are restricted to this allowlist too. Never expose `ADMIN_TOKEN` in client assets.
