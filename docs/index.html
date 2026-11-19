@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0c1018">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-XInSV9diZRmQ1v8fddxcHeG3TfOCQxaGbKDBX17HSTs='; style-src 'self' 'sha256-ecVqxx2VNg8tUdAQ5oxLws6w8PWK48UqbFGKpml5uE4=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-GwAuYODQiofMc2pEwN++j7zAHd1cn/PIHuU/JnG+luM='; style-src 'self' 'sha256-ecVqxx2VNg8tUdAQ5oxLws6w8PWK48UqbFGKpml5uE4=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -2049,12 +2049,11 @@ html[data-theme="light"] .droply-chat-status.error {
           try { window.localStorage.setItem(themeKey, nextTheme); } catch (_) { /* Optional storage. */ }
         };
         try {
-          // Let iOS sample the live header immediately instead of a page snapshot.
-          if (isIOSWebKit) {
-            applyAndStore();
-            return;
-          }
-          await themeImagesReady;
+          // On iOS, crossfade the same root snapshot as desktop. The fixed
+          // Safari tint sample animates its live background in parallel for
+          // the status bar; never swap the whole page instantly on iPhone.
+          // Do not delay a mobile tap on offscreen screenshot decoding.
+          if (!isIOSWebKit) await themeImagesReady;
           if (themeMotion.matches || typeof document.startViewTransition !== 'function') {
             applyAndStore(); // Older browsers and reduced-motion: no delayed image.
             return;
