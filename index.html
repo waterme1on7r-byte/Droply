@@ -963,7 +963,7 @@ function openSetup(edit) {
   $('#setup').classList.remove('hidden'); $('#nameInput').value = edit ? me.name : ''; pendAv = null; setupAv(me.avatar);
   $('#codeRow').classList.toggle('hidden', !edit); $('#setupX').classList.toggle('hidden', !edit); $('#saveBtn').textContent = edit ? 'Save' : 'Get started';
   if (edit) deviceCode(me.id).then(c => { $('#myCode').textContent = c; });
-  $('#updateBtn').classList.toggle('hidden', !edit);
+  $('#updateBtn').classList.toggle('hidden', !edit || !!window.DroplyWeb);
   $('#nameInput').focus();
 }
 const closeSetup = () => $('#setup').classList.add('hidden');
