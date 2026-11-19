@@ -12,12 +12,12 @@
 
 ## Browser edition (preview)
 
-The web app reuses Droply's desktop interface, friend requests, and peer-to-peer WebRTC transfers. It is built separately from the marketing website. **Browser access requires the signaling server to allow the website origin** and is not enabled just by publishing static files.
+The web app reuses Droply's desktop interface, friend requests, and peer-to-peer WebRTC transfers. **For now, it is available only through a separate, password-protected server preview**, not through the public marketing website.
 
-- Build it: `npm run web:build` (outputs `docs/app/`).
-- Preview it: `npm run web:dev`, then open `http://localhost:4173/app/`.
-- Test it: `npm run web:test`.
-- GitHub Pages publishes the app under `/app/` and keeps the marketing website at `/`.
+- Private test path: `/internal/preview/` on the existing signaling server (enabled only after setting private server environment variables).
+- Local preview: `npm run web:dev`, then open `http://localhost:4173/app/`.
+- Build and test: `npm run web:build` and `npm run web:test`.
+- GitHub Pages publishes the marketing website only. The browser app is **not publicly deployed** during private testing.
 
 Browser identities use IndexedDB/Web Crypto rather than Electron's OS-protected credential storage. Chrome/Edge can stream incoming files into a folder explicitly selected on acceptance; other browsers use a 64 MiB per-transfer download fallback. See [the web app guide](web/README.md) for setup, security differences, browser compatibility, and required end-to-end testing.
 
