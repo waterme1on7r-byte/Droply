@@ -521,7 +521,7 @@ function connect() {
     if (event.t === 'state') {
       const connected = event.state === 'connected'; ws.readyState = connected ? 1 : 3;
       setStatus(connected, event.text); known = null; if (connected) syncFriendState();
-      if (!connected) { sentFr.clear(); webPeerIds.clear(); webAnnouncedTo.clear(); setOnline([]); }
+      if (!connected) { resetFriendRetries(); webPeerIds.clear(); webAnnouncedTo.clear(); setOnline([]); }
       if (typeof accessState !== 'undefined') { accessState = event; if (typeof renderSettings === 'function' && activeSettingsSection === 'Device access' && !$('#settingsPane').classList.contains('hidden')) renderSettings('Device access'); }
     } else if (event.t === 'message') {
       const m = event.message;
@@ -536,8 +536,61 @@ function connect() {
 /* ---------- Friends ---------- */
 // Device code: derived from this installation's random id (created on first launch, saved with the app data,
 // so it belongs to the device and never changes when the profile is edited). Only a hash is shared, never the id.
-const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ', codes = new Map(), FSIG = new Set(['fr', 'fa', 'fd', 'fx']), sentFr = new Set();
+const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ', codes = new Map(), FSIG = new Set(['fr', 'fa', 'fd', 'fx']);
+const sentFr = new Map(); // peer ID -> last send time and bounded retry state
 const webPeerIds = new Set(), webAnnouncedTo = new Set();
+function resetFriendRetries() {
+  for (const pending of sentFr.values()) clearTimeout(pending.timer);
+  sentFr.clear();
+}
+function dropFinishedFriendRetries() {
+  const codes = new Set(pendOut.map(p => p.code));
+  for (const [id, pending] of sentFr) {
+    if (codes.has(pending.code)) continue;
+    clearTimeout(pending.timer);
+    sentFr.delete(id);
+  }
+}
+// A friend request is a transient WebSocket signal, not a durable server job.
+// Repeat a bounded number of times, so a reconnecting recipient does not miss
+// the original frame. Recipients already de-duplicate requests by sender ID.
+function sendPendingFriendRequest(id, code) {
+  if (!me?.name || !pendOut.some(p => p.code === code) || ws?.readyState !== 1) return;
+  let pending = sentFr.get(id);
+  if (!pending || pending.code !== code) {
+    if (pending) clearTimeout(pending.timer);
+    pending = { code, last: 0, attempts: 0, timer: null };
+    sentFr.set(id, pending);
+  }
+  if (Date.now() - pending.last < 2000) return;
+  pending.last = Date.now();
+  sig(id, { t: 'fr', name: me.name, av: me.avatar });
+  if (pending.timer || pending.attempts >= 2) return;
+  const delay = pending.attempts++ === 0 ? 3500 : 8000;
+  pending.timer = setTimeout(() => {
+    pending.timer = null;
+    if (sentFr.get(id) !== pending) return;
+    if (!pendOut.some(p => p.code === code) || ws?.readyState !== 1) {
+      clearTimeout(pending.timer); sentFr.delete(id); return;
+    }
+    // A resolution signal may have retried recently. Avoid duplicate bursts.
+    if (Date.now() - pending.last >= 2000) {
+      pending.last = Date.now();
+      sig(id, { t: 'fr', name: me.name, av: me.avatar });
+    }
+    if (pending.attempts < 2) {
+      pending.timer = setTimeout(() => {
+        pending.timer = null;
+        if (sentFr.get(id) !== pending || !pendOut.some(p => p.code === code) || ws?.readyState !== 1) return;
+        if (Date.now() - pending.last >= 2000) {
+          pending.last = Date.now();
+          sig(id, { t: 'fr', name: me.name, av: me.avatar });
+        }
+      }, 8000);
+      pending.attempts++;
+    }
+  }, delay);
+}
 async function deviceCode(id) {
   if (codes.has(id)) return codes.get(id);
   const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('droply-device:' + id)));
@@ -579,7 +632,7 @@ function formatFriendCodeInput(input) {
 const cleanName = n => Array.from(String(n || '').trim()).slice(0, 40).join('') || 'Friend';
 const cleanAv = a => typeof a === 'string' && a.length < 60000 && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(a) ? a : '';
 let saveT = 0;
-const persist = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { api.saveFriends({ friends, out: pendOut, inc: pendIn, gone }); } catch {} syncFriendState(); }, 150); };
+const persist = () => { dropFinishedFriendRetries(); clearTimeout(saveT); saveT = setTimeout(() => { try { api.saveFriends({ friends, out: pendOut, inc: pendIn, gone }); } catch {} syncFriendState(); }, 150); };
 function syncFriendState() { send({ t: 'watch', friends: friends.map(f => f.id), codes: pendOut.map(o => o.code), notify: gone }); }
 function addFriend(rec) {
   friends = friends.filter(f => f.id !== rec.id); friends.push(rec); friends.sort(byName);
@@ -616,7 +669,7 @@ async function handleResolved(m) {
   const code = await deviceCode(m.id);
   if (m.code && m.code !== code) return;
   if (gone.includes(m.id)) { sig(m.id, { t: 'fx' }); gone = gone.filter(id => id !== m.id); persist(); return; }
-  if (pendOut.some(o => o.code === code) && !sentFr.has(m.id)) { sentFr.add(m.id); sig(m.id, { t: 'fr', name: me.name, av: me.avatar }); }
+  if (pendOut.some(o => o.code === code)) sendPendingFriendRequest(m.id, code);
 }
 async function friendSig(from, d) {
   if (typeof from !== 'string' || !me || from === me.id) return;
