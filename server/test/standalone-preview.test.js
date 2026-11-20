@@ -28,7 +28,11 @@ test('private preview protects assets and proxies authenticated API and WebSocke
     } else { res.writeHead(404); res.end(); }
   });
   const upstreamWs = new WebSocketServer({ server: upstreamHttp, path: '/device' });
-  upstreamWs.on('connection', socket => socket.on('message', data => socket.send(data.toString())));
+  let upstreamAppHeartbeats = 0;
+  upstreamWs.on('connection', socket => socket.on('message', data => {
+    if (data.toString() === '{"t":"heartbeat"}') { upstreamAppHeartbeats++; return; }
+    socket.send(data.toString());
+  }));
   await listen(upstreamHttp);
   t.after(async () => { await new Promise(resolve => upstreamWs.close(resolve)); await stop(upstreamHttp); });
   const proxy = createPreviewServer({
@@ -133,6 +137,8 @@ test('private preview protects assets and proxies authenticated API and WebSocke
   });
   assert.equal(pong.t, 'gateway-pong');
   assert.equal(pong.id, 42);
+  assert.equal(upstreamAppHeartbeats, 1,
+    'The gateway must send a lightweight application data frame to the upstream service');
 
   // Safari may send neither Origin nor Referer, especially when the page
   // explicitly sets Referrer-Policy: no-referrer.
