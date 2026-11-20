@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Notification, shell, session, dialog, clipboard, Tray, Menu, nativeImage, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, shell, session, dialog, clipboard, Tray, Menu, nativeImage, safeStorage, powerMonitor } = require('electron');
 const path = require('path'), fs = require('fs'), crypto = require('crypto');
 
 // Second instance: quit right away and don't run any of the setup below
@@ -113,6 +113,15 @@ function safeName(name) {
   if (n.length > 200) { const ext = path.extname(n).slice(0, 20); n = n.slice(0, 200 - ext.length) + ext; }
   return n;
 }
+// Show actionable Windows save failures without exposing private paths to peers.
+function describeSaveError(error) {
+  const code = error?.code;
+  if (code === 'ENOENT' || code === 'ENOTDIR') return 'Download folder not found. Choose a valid folder in Settings.';
+  if (code === 'EACCES' || code === 'EPERM') return 'Cannot write to the download folder. Check folder permissions or choose another folder in Settings.';
+  if (code === 'ENAMETOOLONG' || code === 'EINVAL') return 'Windows rejected the filename or destination path. Try a shorter download folder path.';
+  if (code === 'ENOSPC') return 'Disk is full';
+  return "Couldn't save the incoming file. Check the download folder and available space.";
+}
 // Create the file exclusively ('wx') so two transfers can never grab the same name (no check-then-write race)
 function createUnique(dir, name) {
   const ext = path.extname(name), base = path.basename(name, ext);
@@ -156,7 +165,10 @@ ipcMain.on('save-open', (e, tid, name, size) => {
   if (open.size >= MAX_OPEN) return toUI('save-error', { tid, message: 'Too many files open at once' });
   let made;
   try { const target = desktop.target(tid, name, size); made = createUnique(target.dir, target.name); }
-  catch (err) { console.error(err); return toUI('save-error', { tid, message: "Couldn't create the file in Downloads" }); }
+  catch (err) {
+    log('Incoming transfer destination rejected', err.code || 'unknown');
+    return toUI('save-error', { tid, message: describeSaveError(err) });
+  }
   const ws = fs.createWriteStream(made.p, { fd: made.fd });
   const o = { ws, dest: made.p, fd: made.fd, size, received: 0 };
   // Without this handler a disk-full / permission error would crash the whole app
@@ -164,7 +176,7 @@ ipcMain.on('save-open', (e, tid, name, size) => {
     console.error('Write failed:', err);
     if (open.get(tid) === o) open.delete(tid);
     removeFile(o);
-    toUI('save-error', { tid, message: err.code === 'ENOSPC' ? 'Disk is full' : "Couldn't write the file" });
+    toUI('save-error', { tid, message: describeSaveError(err) });
   });
   open.set(tid, o);
 });
@@ -251,7 +263,9 @@ function start() {
     width: 780, height: 740, minWidth: 640, minHeight: 560, backgroundColor: '#0f1b2e', show: false, titleBarStyle: 'hidden',
     ...(process.platform === 'darwin' ? { trafficLightPosition: { x: 16, y: 13 } } : process.platform === 'win32' ? { frame: false, thickFrame: true } : { titleBarOverlay: { color: '#0e1523', symbolColor: '#9aa7bd', height: 40 } }),
     autoHideMenuBar: true, title: 'Droply', icon: iconPath(),
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true }
+    // Friend invitations must be processed even if Droply is hidden in the tray.
+    // Electron otherwise throttles background renderer execution.
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false }
   });
   ipcMain.handle('get-window-chrome', e => fromUI(e) ? { custom: process.platform === 'win32', rightControls: process.platform !== 'darwin', maximized: win.isMaximized() } : null);
   ipcMain.handle('window-control', (e, action) => {
@@ -265,7 +279,10 @@ function start() {
   win.on('unmaximize', () => toUI('window-state', { maximized: false }));
   const accessConfig = { window: {} };
   require('vm').runInNewContext(fs.readFileSync(path.join(__dirname, 'config.js'), 'utf8'), accessConfig, { timeout: 1000 });
-  require('./access').createAccess({ app, ipcMain, safeStorage, fromUI, toUI, getProfile: () => profile, serverURL: accessConfig.window.CONFIG.SERVER_URL });
+  const nativeAccess = require('./access').createAccess({ app, ipcMain, safeStorage, fromUI, toUI, getProfile: () => profile, serverURL: accessConfig.window.CONFIG.SERVER_URL });
+  // An OS sleep or network change may leave a WebSocket appearing connected.
+  // Refresh signaling immediately on wake, and test it when the window returns.
+  powerMonitor.on('resume', () => nativeAccess.resume());
   desktop.appearance();
   function ensureTray() {
     if (tray || !desktop.settings.tray) return;
@@ -303,7 +320,7 @@ function start() {
   win.webContents.once('did-finish-load', () => updates.start());
   win.loadFile(path.join(__dirname, 'index.html')).catch(err => { log('loadFile failed', err); show(); });
   // Windows'ta klavye odağı pencereye geçmeyebiliyor (özellikle installer'dan otomatik açılınca)
-  win.on('focus', () => win.webContents.focus());
+  win.on('focus', () => { win.webContents.focus(); nativeAccess.checkConnection(); });
 }
 if (gotLock) app.whenReady().then(start).catch(err => {
   log('startup failed', err);

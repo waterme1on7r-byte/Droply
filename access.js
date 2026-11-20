@@ -5,11 +5,55 @@ function validateServer(value){const u=new URL(value);if(u.username||u.password|
 function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,fetcher=fetch,Socket=WebSocket}){
  const base=validateServer(serverURL),origin=base.origin,file=path.join(app.getPath('userData'),'device-access.json');
  let needsRegistration=false,registering=false,socket=null,retryTimer=null,stopped=false,attempt=0,authenticated=false,last={state:'idle',text:'Connecting...'},busy=false;
+ let pingTimer=null,pongDeadline=null,waitingForPong=false;
+ function clearHeartbeat(){
+  clearInterval(pingTimer);clearTimeout(pongDeadline);
+  pingTimer=null;pongDeadline=null;waitingForPong=false;
+ }
+ function probeSocket(){
+  const current=socket;
+  if(stopped||!authenticated||!current||current.readyState!==1||waitingForPong)return;
+  waitingForPong=true;
+  pongDeadline=setTimeout(()=>{
+   if(socket===current&&waitingForPong){
+    // Old WebSocket connections can look open after sleep or a network change.
+    // Reconnect so the server will replay pending friend-code resolutions.
+    current.terminate();
+   }
+  },5000);
+  pongDeadline.unref?.();
+  try{current.ping();}catch{
+   clearTimeout(pongDeadline);pongDeadline=null;waitingForPong=false;
+   current.terminate();
+  }
+ }
+ function startHeartbeat(current){
+  clearHeartbeat();
+  current.on('pong',()=>{if(socket===current){waitingForPong=false;clearTimeout(pongDeadline);pongDeadline=null;}});
+  pingTimer=setInterval(()=>{if(socket===current)probeSocket();},8000);
+  pingTimer.unref?.();
+ }
+ function checkConnection(){
+  if(stopped)return;
+  if(socket&&authenticated)probeSocket();
+  else if(!socket&&!registering){
+   clearTimeout(retryTimer);retryTimer=null;void connect();
+  }
+ }
+ function resume(){
+  if(stopped)return;
+  // Always refresh after OS sleep: an apparently open socket may be half-dead.
+  const old=socket;
+  if(old){socket=null;authenticated=false;clearHeartbeat();old.terminate();}
+  clearTimeout(retryTimer);retryTimer=null;attempt=0;
+  emit('connecting','Reconnecting after wake…');
+  void connect();
+ }
  const usable=()=>!!safeStorage?.isEncryptionAvailable()&&!(process.platform==='linux'&&safeStorage.getSelectedStorageBackend?.()==='basic_text');
  function emit(state,text){last={state,text};toUI('server-event',{t:'state',...last});}
  function read(){if(!fs.existsSync(file))return null;if(!usable())throw Error('Operating-system credential encryption is unavailable.');const data=JSON.parse(fs.readFileSync(file,'utf8'));if(data.version!==1||data.origin!==origin||data.id!==getProfile().id)throw Error('Saved credential belongs to a different server or device.');needsRegistration=data.registered===false;const token=safeStorage.decryptString(Buffer.from(data.encrypted,'base64'));if(!/^[A-Za-z0-9_-]{43}$/.test(token))throw Error('Saved device credential is invalid.');return token;}
  function write(token,registered=true){if(!usable())throw Error('Operating-system credential encryption is unavailable.');const temp=file+'.tmp';fs.writeFileSync(temp,JSON.stringify({version:1,origin,registered,id:getProfile().id,encrypted:safeStorage.encryptString(token).toString('base64')}),{mode:0o600});fs.renameSync(temp,file);}
- function stop(){stopped=true;clearTimeout(retryTimer);retryTimer=null;const old=socket;socket=null;authenticated=false;old?.terminate();}
+ function stop(){stopped=true;clearTimeout(retryTimer);retryTimer=null;clearHeartbeat();const old=socket;socket=null;authenticated=false;old?.terminate();}
  async function connect(){
   if(socket||retryTimer||registering)return;stopped=false;let token;
   try{token=read();}catch(e){emit('locked',e.message+' Your profile and friends have been preserved.');return;}
@@ -36,12 +80,12 @@ function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,
   const deadline=setTimeout(()=>{if(socket===current&&!authenticated)current.terminate();},15000);deadline.unref();
   current.on('message',raw=>{if(socket!==current)return;let m;try{m=JSON.parse(raw);}catch{return;}if(m.t==='access-denied'){denied=true;authenticated=false;emit('enrollment-required','This device could not connect. Please contact support if it persists.');current.close();return;}if(m.t==='authenticated'){
    if(m.id!==getProfile().id){denied=true;current.close();emit('locked','Server identity mismatch. Ask the administrator for help.');return;}
-   clearTimeout(deadline);authenticated=true;attempt=0;const p=getProfile();current.send(JSON.stringify({t:'hello',id:p.id,name:p.name,av:p.avatar}));emit('connected','Connected securely');
+   clearTimeout(deadline);authenticated=true;attempt=0;const p=getProfile();current.send(JSON.stringify({t:'hello',id:p.id,name:p.name,av:p.avatar}));startHeartbeat(current);emit('connected','Connected securely');
   }else if(authenticated&&(m.t==='peers'||m.t==='sig'||m.t==='resolved'))toUI('server-event',{t:'message',message:m});});
   current.on('error',()=>{});
-  current.on('close',code=>{clearTimeout(deadline);if(socket!==current)return;socket=null;authenticated=false;if(code===4401){denied=true;emit('enrollment-required','This device could not connect. Please contact support if it persists.');}if(!stopped&&!denied)schedule();});
+  current.on('close',code=>{clearTimeout(deadline);if(socket!==current)return;clearHeartbeat();socket=null;authenticated=false;if(code===4401){denied=true;emit('enrollment-required','This device could not connect. Please contact support if it persists.');}if(!stopped&&!denied)schedule();});
  }
- function schedule(){if(stopped||retryTimer)return;emit('offline','Offline - reconnecting securely...');retryTimer=setTimeout(()=>{retryTimer=null;connect();},Math.min(30000,1000*2**Math.min(attempt++,5))+Math.random()*500);retryTimer.unref();}
+ function schedule(){if(stopped||retryTimer)return;emit('offline','Offline - reconnecting securely...');retryTimer=setTimeout(()=>{retryTimer=null;connect();},Math.min(8000,1000*2**Math.min(attempt++,3))+Math.random()*500);retryTimer.unref();}
  const handle=(ch,fn)=>ipcMain.handle(ch,async(e,...args)=>fromUI(e)?fn(...args):null);
  handle('get-access',()=>({configured:fs.existsSync(file),encryptionAvailable:usable(),...last}));
  handle('connect-server',()=>{connect();return last;});
@@ -61,6 +105,6 @@ function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,
   else if(m.t==='watch'&&Array.isArray(m.friends)&&Array.isArray(m.codes)&&Array.isArray(m.notify)){const encoded=JSON.stringify(m);if(Buffer.byteLength(encoded)<=64*1024&&socket.bufferedAmount<4*1024*1024)socket.send(encoded);}
   else if(m.t==='lookup'&&typeof m.code==='string'&&/^DRP-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/.test(m.code))socket.send(JSON.stringify(m));
  });
- app.on('before-quit',stop);return {connect,stop};
+ app.on('before-quit',stop);return {connect,stop,checkConnection,resume};
 }
 module.exports={createAccess,validateServer};

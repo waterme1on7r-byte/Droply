@@ -26,6 +26,8 @@ class MainActivity : Activity() {
     private val pickerQueue = ArrayDeque<PickerJob>()
     private var activePicker: PickerJob? = null
     private var notificationPermissionRequested = false
+    @Volatile var droplyForeground: Boolean = false
+        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -154,6 +156,22 @@ class MainActivity : Activity() {
             return true
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        droplyForeground = true
+        if (::backend.isInitialized) {
+            backend.onAppResumed()
+            // Needed for native friend alerts when the WebView is suspended.
+            ensureNotificationPermission()
+        }
+    }
+
+    override fun onPause() {
+        droplyForeground = false
+        if (::backend.isInitialized) backend.onAppPaused()
+        super.onPause()
     }
 
     override fun onDestroy() {

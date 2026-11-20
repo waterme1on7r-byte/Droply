@@ -35,7 +35,7 @@ test('full handshake: request, accept, both sides become friends and can transfe
   const codeB = await B.t.deviceCode('bob');
   A.t.setRaw([{ id: 'bob', name: 'Bob' }]);
   const res = await A.t.addByCode(codeB);
-  assert.match(res.msg, /Saved/); await A.t.handleResolved({ id: 'bob', code: codeB });
+  assert.match(res.msg, /Request sent|Saved/); await A.t.handleResolved({ id: 'bob', code: codeB });
   const msgs = relay(A, 'alice', B); assert(msgs.some(m => m.t === 'fr' && m.name === 'Alice'));
   await tick(20);
   assert.strictEqual(B.t.pendIn.length, 1); assert.strictEqual(B.t.friends.length, 0, 'not friends before accepting');
@@ -52,7 +52,7 @@ test('full handshake: request, accept, both sides become friends and can transfe
   });
 test('a request to someone offline is kept and delivered when they show up', async () => {
   const A = withId(user('alice', 'Alice'), 'alice'), code = await A.t.deviceCode('carol');
-  A.t.setRaw([]); assert.match((await A.t.addByCode(code)).msg, /delivered when that person is online/);
+  A.t.setRaw([]); assert.match((await A.t.addByCode(code)).msg, /Waiting for the other device to be online|delivered when that person is online/);
   assert(!A.sig.some(m => m.t === 'sig' && m.data.t === 'fr'));
   await A.t.handleResolved({ id: 'carol', code });
   assert.strictEqual(A.sig.filter(m => m.t === 'sig' && m.to === 'carol' && m.data.t === 'fr').length, 1);
