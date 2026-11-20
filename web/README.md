@@ -15,7 +15,17 @@ To build the deployable static files without running the local server:
     npm run web:build
     npm run web:test
 
-The output is docs/app/ (ignored in git). It is **not deployed to public GitHub Pages**. The normal marketing site remains at /, unchanged. An independent Render web service builds and serves this output with access control.
+The output is docs/app/ (ignored in git). The GitHub Pages workflow now builds it at `https://waterme1on7r-byte.github.io/Droply/app/`, alongside the marketing website at `/Droply/`. For the public build, GitHub Actions sets `DROPLY_PUBLIC_GATEWAY_URL=wss://droply-internal-preview.onrender.com`, allowing browser device registration and signaling through the separately hosted gateway.
+
+## Public GitHub Pages edition
+
+The public website's **Use Droply Web** button opens `https://waterme1on7r-byte.github.io/Droply/app/`. GitHub Pages serves static app files quickly, while a separate gateway handles WebSocket signaling and browser device registration. `web/build.mjs` only appends a public WSS gateway URL, not credentials, to the built app configuration.
+
+Configure the existing gateway service with `WEB_PUBLIC_ALLOWED_ORIGINS=https://waterme1on7r-byte.github.io` (the **origin** without `/Droply` or a trailing slash). The gateway permits only public `POST /auth/register`, `POST /auth/enroll` and `/device` WebSocket signaling with that origin. Private preview files at `/internal/preview/` **remain password protected**. The production signaling server still requires no origin or database changes.
+
+The public release uses a **new browser identity** under the GitHub Pages origin. Identities and friend lists saved while using the private Render preview **do not migrate automatically**, because browser IndexedDB is scoped to its origin. Users should exchange the new public device code with friends.
+
+**Performance caveat:** GitHub Pages removes the preview website's static cold-start, but the public app still connects via a free Render gateway and then to the existing signaling server. If either service sleeps, live friend requests may still be delayed. The current signaling backend also limits the number of sessions per upstream IP, so this arrangement is appropriate for an early public beta, not a high-scale launch. For reliable fast friend requests, host the gateway/signaling server always-on and add durable server-side request delivery later.
 
 ## Private hosted testing on Render
 
@@ -40,7 +50,7 @@ The password is server-side only, never committed or placed in client assets. Th
 
     https://<your-preview-host>.onrender.com/internal/preview/
 
-All HTML, CSS, JS, registration API routes, and WebSocket upgrades require an authenticated, time-limited, HttpOnly SameSite=Lax session cookie. The password is entered into a server-side login form over HTTPS; failed logins are rate limited. The service adds no public `/app/` route, disables indexing and caching and does not publish browser files on GitHub Pages. The WebSocket gateway bridges signaling JSON frames to the existing server and does not carry file data.
+The **private preview HTML/JS/CSS** and its same-origin API and WebSocket connections require a time-limited HttpOnly SameSite=Lax session cookie. The password is entered into a server-side login form over HTTPS; failed logins are rate limited. The separate **public GitHub Pages client** uses CORS and WebSocket connections only from an explicitly configured `WEB_PUBLIC_ALLOWED_ORIGINS=https://waterme1on7r-byte.github.io` and authenticates to the upstream signaling server with its own device token. The preview password is not embedded in the public app; the gateway never relays file bytes.
 
 **Important:** The preview uses the production signaling server's existing device records. New browser profiles will register against its database and may appear in friends' presence lists, even though the preview hosting and password are separate. Avoid test spam and do not reset the production database. Device identities created on this preview origin will not automatically migrate to any future public domain.
 
