@@ -32,14 +32,14 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
   assert.match(css, /@media\s*\(max-width:\s*500px\)/);
   assert.match(css, /@media\s*\(max-width:\s*360px\)/);
   assert.doesNotMatch(css, /\.hero-actions\s*\{[^}]*flex-direction:\s*column/);
-  assert.match(css, /min-height: 54px/);
-  assert.doesNotMatch(css, /translateX\(-8px\)/);
-
-  assert.match(css, /max-width: 515px/);
-  assert.match(css, /min-height: 54px/);
-  assert.match(css, /min-height: 55px/);
-  assert.doesNotMatch(css, /min-height: (?:65|67|68)px/);
   assert.match(css, /min-height: 58px/);
+  assert.doesNotMatch(css, /translateX\(-8px\)/);
+  assert.match(css, /max-width: 560px/);
+  assert.match(css, /min-height: 65px/);
+  assert.match(css, /min-height: 68px/);
+  assert.match(css, /min-height: 67px/);
+  assert.match(css, /padding: 9px 8px/);
+  assert.match(css, /font-size: \.83rem/);
   assert.doesNotMatch(html, /class="btn btn-primary nav-cta"/);
   assert.match(html, /<a href="#download">Download<\/a>/);
   // The published native downloads are still the exact same releases.
