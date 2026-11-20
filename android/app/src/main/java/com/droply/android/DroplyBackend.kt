@@ -46,7 +46,10 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
     private val network: ScheduledExecutorService = Executors.newScheduledThreadPool(2)
     private val io = Executors.newSingleThreadExecutor()
     private val http = OkHttpClient.Builder().connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS).writeTimeout(30, TimeUnit.SECONDS).build()
+        .readTimeout(30, TimeUnit.SECONDS).writeTimeout(30, TimeUnit.SECONDS)
+        // OkHttp sends ping frames and disconnects unresponsive sockets itself.
+        // Without this, Android can retain a half-open connection after doze.
+        .pingInterval(8, TimeUnit.SECONDS).build()
     private val server = "wss://droply-server-91kh.onrender.com"
     private val origin = "https://droply-server-91kh.onrender.com"
     private val maxTransferBytes = 1L shl 40
@@ -65,6 +68,8 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
     private var retryCount = 0
     private var reconnectTask: java.util.concurrent.ScheduledFuture<*>? = null
     private var authTask: java.util.concurrent.ScheduledFuture<*>? = null
+    @Volatile private var pausedAt = 0L
+    private val pausedFriendRequests = linkedMapOf<String, String>()
     private var transferActive = false
     private var prepareCount = 0
     private val prepared = mutableMapOf<String, PreparedReceive>()
@@ -175,6 +180,50 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
         return JSONObject().put("state", accessState).put("text", accessText)
     }
 
+    fun onAppPaused() { pausedAt = android.os.SystemClock.elapsedRealtime() }
+
+    fun onAppResumed() {
+        if (stopped) return
+        val elapsed = if (pausedAt > 0L) android.os.SystemClock.elapsedRealtime() - pausedAt else 0L
+        pausedAt = 0L
+        // The WebView might have deferred JavaScript while the app was asleep.
+        // Replay friend requests to the now-visible UI. Duplicate requests are
+        // already de-duplicated by the shared renderer using the sender ID.
+        activity.runOnUiThread {
+            webView.postDelayed({
+                val queued = synchronized(lock) { pausedFriendRequests.toMap() }
+                for ((from, raw) in queued) {
+                    val envelope = JSONObject().put("t", "server-event").put("data",
+                        JSONObject().put("t", "message").put("message", parseObject(raw)))
+                    val expr = "(function(){if(typeof window.__droplyAndroidEvent!=='function')return false;" +
+                        "window.__droplyAndroidEvent(${JSONObject.quote(envelope.toString())});return true;})()"
+                    webView.evaluateJavascript(expr) { value ->
+                        if (value == "true") synchronized(lock) {
+                            // Only discard the exact event we replayed.
+                            if (pausedFriendRequests[from] == raw) pausedFriendRequests.remove(from)
+                        }
+                    }
+                }
+            }, 250L)
+        }
+        if (elapsed > 10000L) {
+            // Proactively re-announce this device after Android doze. The
+            // signaling server immediately replays watched friend codes.
+            val previous = synchronized(lock) {
+                reconnectTask?.cancel(false); reconnectTask = null
+                val ws = socket; socket = null; authenticated = false; connecting = false
+                retryCount = 0
+                ws
+            }
+            previous?.cancel()
+            setAccess("connecting", "Reconnecting after background…")
+            ensureConnected()
+        } else if (!authenticated) {
+            synchronized(lock) { reconnectTask?.cancel(false); reconnectTask = null }
+            ensureConnected()
+        }
+    }
+
     fun sendSignal(raw: String) {
         if (!authenticated) return
         val message = parseObject(raw) ?: return
@@ -234,13 +283,17 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
             private var thisSocket: WebSocket? = null
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 thisSocket = webSocket
-                synchronized(lock) { socket = webSocket; connecting = false }
+                synchronized(lock) {
+                    if (stopped || socket !== webSocket) { webSocket.cancel(); return }
+                    connecting = false
+                }
                 webSocket.send(JSONObject().put("t", "auth").put("token", token).toString())
                 authTask?.cancel(false)
                 authTask = network.schedule({ if (!authenticated) webSocket.close(4401, "Authentication timeout") }, 15, TimeUnit.SECONDS)
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
+                if (socket !== webSocket) return
                 val msg = parseObject(text) ?: return
                 when (msg.optString("t")) {
                     "authenticated" -> {
@@ -254,7 +307,29 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
                         setAccess("connected", "Connected securely")
                     }
                     "access-denied" -> { authenticated = false; setAccess("enrollment-required", "This device could not connect. Open Settings → Device access to recover it."); webSocket.close(4401, "Access denied") }
-                    "peers", "sig", "resolved" -> emit("server-event", JSONObject().put("t", "message").put("message", msg))
+                    "peers", "sig", "resolved" -> {
+                        if (msg.optString("t") == "sig" && msg.optJSONObject("data")?.optString("t") == "fr" &&
+                            !activity.droplyForeground) {
+                            val sender = msg.optString("from")
+                            if (idPattern.matches(sender)) {
+                                val first = synchronized(lock) {
+                                    val isNew = !pausedFriendRequests.containsKey(sender)
+                                    pausedFriendRequests[sender] = text
+                                    if (pausedFriendRequests.size > 50)
+                                        pausedFriendRequests.remove(pausedFriendRequests.keys.first())
+                                    isNew
+                                }
+                                // Native system notification is independent of WebView's
+                                // suspended JavaScript event loop.
+                                if (first) {
+                                    val name = msg.optJSONObject("data")?.optString("name")?.trim()
+                                        ?.take(40)?.ifEmpty { "Someone" } ?: "Someone"
+                                    notify("friend", "$name wants to add you")
+                                }
+                            }
+                        }
+                        emit("server-event", JSONObject().put("t", "message").put("message", msg))
+                    }
                 }
             }
 
@@ -262,8 +337,13 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) = disconnected(webSocket, response?.code ?: 0)
             private fun disconnected(webSocket: WebSocket, code: Int) {
                 authTask?.cancel(false)
-                synchronized(lock) { if (socket === webSocket) socket = null; connecting = false; authenticated = false }
-                if (!stopped && accessState != "enrollment-required" && code != 4401) scheduleReconnect()
+                val wasCurrent = synchronized(lock) {
+                    if (socket !== webSocket) false
+                    else { socket = null; connecting = false; authenticated = false; true }
+                }
+                // A cancelled stale socket must not disrupt a newer connection.
+                if (wasCurrent && !stopped && accessState != "enrollment-required" && code != 4401)
+                    scheduleReconnect()
             }
         }
         synchronized(lock) { if (stopped) { connecting = false; return }; socket = http.newWebSocket(request, listener) }
@@ -273,7 +353,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
         synchronized(lock) {
             if (stopped || reconnectTask != null || accessState == "enrollment-required") return
             setAccess("offline", "Offline - reconnecting securely...")
-            val delay = minOf(30L, 1L shl minOf(retryCount++, 5))
+            val delay = minOf(8L, 1L shl minOf(retryCount++, 3))
             reconnectTask = network.schedule({ synchronized(lock) { reconnectTask = null }; ensureConnected() }, delay, TimeUnit.SECONDS)
         }
     }
