@@ -46,3 +46,15 @@ test('iPhone landscape dialogs scroll within the space above the bottom bar', as
   assert.match(css, /html\.droply-web\.droply-iphone #addFriend \.box/);
   assert.doesNotMatch(css, /html\.droply-web\.droply-ipad/);
 });
+
+test('iPhone landscape uses the visible Safari viewport with a compact two-column setup', async () => {
+  const css = await readFile(webCss, 'utf8');
+  assert.match(css, /html\.droply-web\.droply-iphone body \{[^}]*height: 100dvh/);
+  assert.match(css, /html\.droply-web\.droply-iphone #titlebar \{ display: none; \}/);
+  assert.match(css, /html\.droply-web\.droply-iphone #setup \.box \{[^}]*display: grid/);
+  assert.match(css, /grid-template-columns: minmax\(64px, 90px\) minmax\(0, 1fr\)/);
+  assert.match(css, /html\.droply-web\.droply-iphone #setup #codeRow \{/);
+  assert.match(css, /html\.droply-web\.droply-iphone #setup #saveBtn \{/);
+  assert.match(css, /html\.droply-web\.droply-iphone #settingsPane \{[^}]*var\(--iphone-landscape-nav\)/);
+  assert.match(css, /max-height: calc\(100dvh - var\(--iphone-landscape-nav\) - 12px\)/);
+});
