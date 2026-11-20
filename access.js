@@ -13,8 +13,8 @@ function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,
  function probeSocket(){
   const current=socket;
   if(stopped||!authenticated||!current||current.readyState!==1||waitingForPong)return;
-  try{current.ping();}catch{current.terminate();return;}
   waitingForPong=true;
+  try{current.ping();}catch{waitingForPong=false;current.terminate();return;}
   pongDeadline=setTimeout(()=>{
    if(socket===current&&waitingForPong){
     // Old WebSocket connections can look open after sleep or a network change.
