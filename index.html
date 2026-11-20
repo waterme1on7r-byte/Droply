@@ -539,12 +539,35 @@ function connect() {
 const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ', codes = new Map(), FSIG = new Set(['fr', 'fa', 'fd', 'fx']);
 const sentFr = new Map(); // peer ID -> last send time and bounded retry state
 const webPeerIds = new Set(), webAnnouncedTo = new Set();
+const lookupTimers = new Map();
+function clearLookupRetries(code) {
+  const timers = lookupTimers.get(code);
+  if (!timers) return;
+  for (const timer of timers) clearTimeout(timer);
+  lookupTimers.delete(code);
+}
+function lookupFriendQuickly(code) {
+  send({ t: 'lookup', code });
+  syncFriendState();
+  if (!window.DroplyWeb || lookupTimers.has(code)) return;
+  // A small, bounded second chance handles missed presence/lookup frames.
+  // No continuous polling: the existing watch subscription handles later joins.
+  const timers = [1100, 3600].map(ms => setTimeout(() => {
+    if (pendOut.some(o => o.code === code) && ws?.readyState === 1) {
+      send({ t: 'lookup', code });
+      syncFriendState();
+    }
+    if (ms === 3600) lookupTimers.delete(code);
+  }, ms));
+  lookupTimers.set(code, timers);
+}
 function resetFriendRetries() {
   for (const pending of sentFr.values()) clearTimeout(pending.timer);
   sentFr.clear();
 }
 function dropFinishedFriendRetries() {
   const codes = new Set(pendOut.map(p => p.code));
+  for (const code of lookupTimers.keys()) if (!codes.has(code)) clearLookupRetries(code);
   for (const [id, pending] of sentFr) {
     if (codes.has(pending.code)) continue;
     clearTimeout(pending.timer);
@@ -682,7 +705,9 @@ async function friendSig(from, d) {
     const i = pendIn.findIndex(r => r.id === from);
     if (i >= 0) { pendIn[i] = rec; persist(); return renderPeers(); }
     if (pendIn.length >= MAX_REQ || friends.length >= MAX_FRIENDS) return;
-    pendIn.push(rec); persist(); renderPeers(); notify('Friend request', rec.name + ' wants to add you');
+    pendIn.push(rec); persist(); renderPeers();
+    notify('Friend request', rec.name + ' wants to add you');
+    showIncomingFriendRequest();
   } else if (d.t === 'fa') {                                       // they accepted our request
     const mine = pendOut.find(o => o.code === code); if (!mine || friends.length >= MAX_FRIENDS) return;
     pendOut = pendOut.filter(o => o !== mine);
@@ -707,8 +732,10 @@ async function addByCode(input) {
   if (pendOut.some(o => o.code === code)) return { ok: false, msg: 'Request already sent. Waiting for a reply.' };
   if (friends.length + pendOut.length >= MAX_FRIENDS) return { ok: false, msg: 'Friend list is full.' };
   pendOut.push({ code }); persist(); renderPeers();
-  send({ t: 'lookup', code }); syncFriendState();
-  return { ok: true, msg: 'Saved. The request will be delivered when that person is online.' };
+  lookupFriendQuickly(code);
+  return { ok: true, msg: ws?.readyState === 1
+    ? 'Request sent to Droply. Waiting for the other device to be online.'
+    : 'Request saved. Connecting to Droply before delivery.' };
 }
 function acceptReq(id) {
   const r = pendIn.find(x => x.id === id); if (!r || friends.length >= MAX_FRIENDS) return;
@@ -1101,6 +1128,29 @@ function closeFriendRequests(restoreFocus = true) {
   document.removeEventListener('pointerdown', outsideFriendRequests, true);
   window.removeEventListener('resize', positionFriendRequests);
   if (restoreFocus) $('#peopleBtn').focus();
+}
+let incomingRequestNeedsAttention = false;
+function showIncomingFriendRequest() {
+  // Only the browser auto-expands incoming requests. The existing desktop UI
+  // continues using its own notifications and system behavior.
+  if (!window.DroplyWeb || !pendIn.length) return;
+  if (document.visibilityState === 'hidden' ||
+      !$('#setup').classList.contains('hidden') ||
+      !$('#settingsPane').classList.contains('hidden')) {
+    incomingRequestNeedsAttention = true;
+    return;
+  }
+  incomingRequestNeedsAttention = false;
+  if ($('#friendRequests').classList.contains('hidden')) openFriendRequests();
+  else { activeReqTab = 'received'; renderReqs(); }
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && incomingRequestNeedsAttention) showIncomingFriendRequest();
+  });
+  window.addEventListener('focus', () => {
+    if (incomingRequestNeedsAttention) showIncomingFriendRequest();
+  });
 }
 function openFriendRequests(e) {
   e?.stopPropagation(); $('#picker').classList.add('hidden');
