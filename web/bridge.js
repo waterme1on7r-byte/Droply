@@ -127,7 +127,7 @@
     const main = document.querySelector('main');
     // iOS Web only: use the approved two-button mobile transfer panel.
     // Reuse existing friend and file inputs instead of altering the renderer.
-    if (iosDevice) {
+    if (document.documentElement.classList.contains('droply-iphone')) {
       const drop = document.querySelector('#drop');
       if (drop) {
         const actions = document.createElement('div');
