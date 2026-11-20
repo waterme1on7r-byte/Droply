@@ -161,7 +161,11 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         droplyForeground = true
-        if (::backend.isInitialized) backend.onAppResumed()
+        if (::backend.isInitialized) {
+            backend.onAppResumed()
+            // Needed for native friend alerts when the WebView is suspended.
+            ensureNotificationPermission()
+        }
     }
 
     override fun onPause() {
