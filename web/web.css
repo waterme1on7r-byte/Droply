@@ -551,3 +551,129 @@ html.droply-web .web-note p { margin-top: 7px; }
     overflow-y: auto; -webkit-overflow-scrolling: touch;
   }
 }
+
+/* iPhone Safari landscape: fit the *visible page below Safari's address bar*.
+   100dvh tracks expanding/collapsing browser chrome. Avoid allocating another
+   internal 34px title bar; use a compact horizontal setup panel when possible.
+   iPadOS and Android never receive droply-iphone, so remain unchanged. */
+@media (orientation: landscape) and (max-width: 1100px) and (max-height: 600px) {
+  html.droply-web.droply-iphone {
+    --iphone-landscape-nav: calc(52px + env(safe-area-inset-bottom, 0px));
+    --landscape-title: 0px;
+    --ios-landscape-nav: var(--iphone-landscape-nav);
+  }
+  html.droply-web.droply-iphone body {
+    width: 100%; height: 100dvh; min-height: 0;
+    flex-direction: column; padding: 0 0 var(--iphone-landscape-nav);
+    overflow: hidden;
+  }
+  html.droply-web.droply-iphone #titlebar { display: none; }
+  html.droply-web.droply-iphone main {
+    order: 1; flex: 1 1 auto; min-height: 0; width: 100%;
+    padding: 8px max(12px, env(safe-area-inset-right, 0px))
+      10px max(12px, env(safe-area-inset-left, 0px));
+    gap: 8px; overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  html.droply-web.droply-iphone .head p { display: none; }
+  html.droply-web.droply-iphone h1 { font-size: 26px; line-height: 1.15; }
+  html.droply-web.droply-iphone #status {
+    max-width: 48%; font-size: 10px; padding: 5px 9px;
+  }
+  html.droply-web.droply-iphone .web-note {
+    margin: 0; padding: 5px 9px;
+  }
+  html.droply-web.droply-iphone .pcard { padding: 7px 9px; }
+  html.droply-web.droply-iphone #drop {
+    flex: 1 0 100px; min-height: 100px; padding: 12px 10px;
+  }
+  html.droply-web.droply-iphone .rail {
+    height: var(--iphone-landscape-nav);
+    min-height: var(--iphone-landscape-nav);
+    max-height: var(--iphone-landscape-nav);
+    padding: 4px max(12px, env(safe-area-inset-right, 0px))
+      calc(4px + env(safe-area-inset-bottom, 0px))
+      max(12px, env(safe-area-inset-left, 0px));
+    align-items: center;
+  }
+  html.droply-web.droply-iphone .rail #railAv,
+  html.droply-web.droply-iphone .rail #peopleBtn,
+  html.droply-web.droply-iphone .rail #gearBtn,
+  html.droply-web.droply-iphone .rail #addFriendBtn {
+    width: 40px; height: 40px; min-width: 40px;
+  }
+  html.droply-web.droply-iphone #settingsPane {
+    inset: 0 0 var(--iphone-landscape-nav);
+  }
+  html.droply-web.droply-iphone #setup,
+  html.droply-web.droply-iphone #ask,
+  html.droply-web.droply-iphone #pf,
+  html.droply-web.droply-iphone #appDialog {
+    inset: 0 0 var(--iphone-landscape-nav);
+    padding: 7px max(12px, env(safe-area-inset-right, 0px))
+      8px max(12px, env(safe-area-inset-left, 0px));
+    justify-content: flex-start; align-items: center;
+    overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  html.droply-web.droply-iphone #setup .box {
+    flex: none; display: grid;
+    grid-template-columns: minmax(64px, 90px) minmax(0, 1fr);
+    align-content: start; align-items: center;
+    gap: 5px 12px; width: min(620px, 100%);
+    max-width: 100%; max-height: none; overflow: visible;
+    margin: 0 auto; padding: 0;
+  }
+  html.droply-web.droply-iphone #setup .box h2 {
+    grid-column: 1 / -1; font-size: 20px !important;
+    line-height: 1.15; margin: 0;
+  }
+  html.droply-web.droply-iphone #setup .box > p {
+    grid-column: 1 / -1; margin: 0;
+    font-size: 11px; line-height: 1.2;
+  }
+  html.droply-web.droply-iphone #setup #setupAvatarWrap {
+    grid-column: 1; grid-row: 3 / span 2;
+    justify-self: center; align-self: start;
+  }
+  html.droply-web.droply-iphone #setup #setupAvatarWrap .av.big {
+    width: 56px; height: 56px; font-size: 24px; border-radius: 14px;
+  }
+  html.droply-web.droply-iphone #setup #nameInput {
+    grid-column: 2; grid-row: 3;
+    width: 100%; min-width: 0; height: 38px;
+    padding: 7px 10px; font-size: 16px;
+  }
+  html.droply-web.droply-iphone #setup #codeRow {
+    grid-column: 2; grid-row: 4; min-width: 0;
+  }
+  html.droply-web.droply-iphone #setup #codeRow .hint {
+    font-size: 10px; line-height: 1.2;
+  }
+  html.droply-web.droply-iphone #setup #saveBtn {
+    grid-column: 2; grid-row: 5; justify-self: stretch;
+    min-height: 38px; padding: 8px 12px;
+  }
+  html.droply-web.droply-iphone #setup #updateBtn {
+    grid-column: 2; grid-row: 6; justify-self: stretch;
+    padding: 7px 12px;
+  }
+  html.droply-web.droply-iphone #setupX {
+    top: 6px; right: max(8px, env(safe-area-inset-right, 0px));
+  }
+  html.droply-web.droply-iphone #ask .box,
+  html.droply-web.droply-iphone #pf .box,
+  html.droply-web.droply-iphone #appDialog .box {
+    width: min(430px, 100%); max-width: 100%;
+    max-height: none; overflow: visible;
+    margin: 0 auto; padding: 10px 14px; gap: 8px;
+  }
+  html.droply-web.droply-iphone #addFriend .box {
+    top: 6px;
+    max-height: calc(100dvh - var(--iphone-landscape-nav) - 12px);
+  }
+  html.droply-web.droply-iphone #friendRequests .request-box {
+    bottom: calc(var(--iphone-landscape-nav) + 6px);
+    max-height: calc(100dvh - var(--iphone-landscape-nav) - 12px);
+  }
+}
