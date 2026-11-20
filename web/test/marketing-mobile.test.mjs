@@ -14,28 +14,45 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
   }
   assert.match(html, /id="hero-web"[^>]*href="\.\/app\/"/);
   assert.match(html, /id="hero-web"[^>]*aria-label="Use Droply Web"/);
-  const actions = html.match(/<div class="hero-actions"[^>]*>([\s\S]*?)<\/div>/);
-  assert.ok(actions, 'Expected four choices in one button group');
+  const actionStart = html.indexOf('<div class="hero-actions"');
+  assert.ok(actionStart >= 0, 'Expected four choices in one button group');
+  const actionEnd = html.indexOf('</section>', actionStart);
+  const actions = html.slice(actionStart, actionEnd);
   const heroStart = html.indexOf('<div class="hero-copy">');
   const heroArt = html.indexOf('<div class="hero-art"', heroStart);
   const heroActions = html.indexOf('<div class="hero-actions"', heroStart);
   const heroEnd = html.indexOf('</section>', heroStart);
   assert.ok(heroStart >= 0 && heroArt > heroStart && heroActions > heroArt && heroActions < heroEnd,
     'All four buttons must be a separate centered row below the hero illustration');
-  assert.ok(html.indexOf('class="hero-meta"', heroStart) < html.indexOf('class="hero-trust"', heroStart),
-    'Version details precede the trust line');
+  assert.doesNotMatch(html, /class="hero-meta"/, 'Global requirements line should be replaced by platform-specific details');
+  for (const [id, os] of [
+    ['hero-mac', 'macOS 12+'],
+    ['hero-win', 'Windows 10+'],
+    ['hero-android', 'Android 10+'],
+    ['hero-web', 'No installation']
+  ]) {
+    const item = actions.match(new RegExp('<a id="' + id + '"[^\\n]*<\\/a>\\s*<p class="hero-requirements">([^<]*<span>[^<]*<\\/span>){2}<\\/p>'));
+    assert.ok(item, 'Requirements must appear directly below ' + id);
+    assert.ok(item[0].includes(os), 'Expected the correct requirement below ' + id);
+  }
   assert.match(css, /grid-column: 1 \/ -1/);
   assert.match(css, /justify-self: center/);
   assert.match(css, /margin-top: 8px/);
-  assert.equal((actions[1].match(/class="btn btn-lg/g) || []).length, 4);
+  assert.equal((actions.match(/class="btn btn-lg/g) || []).length, 4);
+  assert.equal((actions.match(/class="hero-choice"/g) || []).length, 4);
+  assert.equal((actions.match(/class="hero-requirements"/g) || []).length, 4);
   assert.match(css, /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(css, /@media\s*\(max-width:\s*500px\)/);
   assert.match(css, /@media\s*\(max-width:\s*360px\)/);
   assert.doesNotMatch(css, /\.hero-actions\s*\{[^}]*flex-direction:\s*column/);
   assert.match(css, /min-height: 77px/);
   assert.doesNotMatch(css, /translateX\(-8px\)/);
-  assert.match(css, /max-width: 739px/);
-  assert.match(css, /max-width: 469px/);
+  assert.match(css, /max-width: 887px/);
+  assert.match(css, /max-width: 563px/);
+  assert.match(css, /\.hero-actions \.hero-choice/);
+  assert.match(css, /\.hero-actions \.hero-requirements/);
+  assert.match(css, /grid-template-columns:\s*repeat\(4/);
+
   assert.match(css, /min-height: 86px/);
   assert.match(css, /min-height: 90px/);
   assert.match(css, /min-height: 88px/);
