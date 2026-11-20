@@ -6,6 +6,7 @@
   const iosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (iosDevice) document.documentElement.classList.add('droply-ios');
+  if (/iPhone|iPod/.test(navigator.userAgent)) document.documentElement.classList.add('droply-iphone');
   const store = window.DroplyWebStore, net = window.DroplyWebNetwork, receive = window.DroplyWebReceive;
   const CODE = /^DRP-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
   async function getHistory() { return store.history(); }

@@ -34,3 +34,15 @@ test('iOS landscape uses a fixed bottom bar without altering Android landscape',
   assert.match(css, /html\.droply-web\.droply-ios main \{[^}]*overflow-x: hidden; overflow-y: auto/);
   assert.match(css, /html\.droply-web\.droply-ios #settingsPane \{[^}]*var\(--ios-landscape-nav\)/);
 });
+
+test('iPhone landscape dialogs scroll within the space above the bottom bar', async () => {
+  const bridge = await readFile(new URL('../bridge.js', import.meta.url), 'utf8');
+  const css = await readFile(webCss, 'utf8');
+  assert.match(bridge, /if \(\/iPhone\|iPod\/\.test\(navigator\.userAgent\)\) document\.documentElement\.classList\.add\('droply-iphone'\)/);
+  assert.match(css, /@media \(orientation: landscape\) and \(max-height: 500px\) and \(max-width: 1000px\)/);
+  assert.match(css, /html\.droply-web\.droply-iphone #setup,/);
+  assert.match(css, /align-items: center; justify-content: flex-start;/);
+  assert.match(css, /max-height: none; overflow: visible; margin: 0 auto;/);
+  assert.match(css, /html\.droply-web\.droply-iphone #addFriend \.box/);
+  assert.doesNotMatch(css, /html\.droply-web\.droply-ipad/);
+});

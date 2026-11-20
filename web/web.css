@@ -476,3 +476,78 @@ html.droply-web .web-note p { margin-top: 7px; }
   }
   html.droply-web.droply-ios #br { bottom: calc(var(--ios-landscape-nav) + 8px); }
 }
+
+/* iPhone Safari has very little usable height after its landscape browser
+   chrome and the bottom nav. Scroll the overlay itself, rather than trapping
+   tall setup content in a vertically centered, clipped card. iPads and
+   Android intentionally keep their current dialogs. */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 1000px) {
+  html.droply-web.droply-iphone #setup,
+  html.droply-web.droply-iphone #ask,
+  html.droply-web.droply-iphone #pf,
+  html.droply-web.droply-iphone #appDialog {
+    inset: var(--landscape-title, 34px) 0 var(--ios-landscape-nav);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    overflow-x: hidden; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px max(12px, env(safe-area-inset-right, 0px))
+      12px max(12px, env(safe-area-inset-left, 0px));
+  }
+  html.droply-web.droply-iphone #setup .box,
+  html.droply-web.droply-iphone #ask .box,
+  html.droply-web.droply-iphone #pf .box,
+  html.droply-web.droply-iphone #appDialog .box {
+    flex: none; width: min(380px, 100%); max-width: 100%;
+    max-height: none; overflow: visible; margin: 0 auto;
+    gap: 7px;
+  }
+  html.droply-web.droply-iphone #setup .box h2 {
+    font-size: 20px !important; line-height: 1.2;
+  }
+  html.droply-web.droply-iphone #setup .box p {
+    font-size: 11px; line-height: 1.3; margin-top: 0;
+  }
+  html.droply-web.droply-iphone #setup #setupAvatarWrap .av.big {
+    width: 48px; height: 48px; border-radius: 13px; font-size: 22px;
+  }
+  html.droply-web.droply-iphone #setup input[type=text] {
+    font-size: 16px; padding: 8px 10px; min-height: 38px;
+  }
+  html.droply-web.droply-iphone #setup .field small {
+    font-size: 10px; margin-bottom: 4px;
+  }
+  html.droply-web.droply-iphone #setup .field .hint {
+    font-size: 10px; line-height: 1.3; margin-top: 4px;
+  }
+  html.droply-web.droply-iphone #setup .codebox {
+    min-width: 0; width: 100%; padding: 4px 5px 4px 9px;
+  }
+  html.droply-web.droply-iphone #setup .codebox code {
+    min-width: 0; font-size: 11px; letter-spacing: 0;
+  }
+  html.droply-web.droply-iphone #setup .codebox .cp {
+    width: 32px; height: 32px;
+  }
+  html.droply-web.droply-iphone #setup #saveBtn {
+    padding: 9px 24px; min-height: 38px;
+  }
+  html.droply-web.droply-iphone #setupX {
+    position: fixed; top: calc(var(--landscape-title, 34px) + 6px);
+    right: max(10px, env(safe-area-inset-right, 0px));
+    z-index: 2;
+  }
+  html.droply-web.droply-iphone #ask .box,
+  html.droply-web.droply-iphone #pf .box,
+  html.droply-web.droply-iphone #appDialog .box {
+    padding: 14px 18px;
+  }
+  /* Friend panels also need to remain reachable above the bottom bar. */
+  html.droply-web.droply-iphone #addFriend .box {
+    top: calc(var(--landscape-title, 34px) + 8px);
+    transform: none;
+    width: min(370px, calc(100vw - 24px));
+    max-height: calc(100dvh - var(--landscape-title, 34px) - var(--ios-landscape-nav) - 16px);
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+}
