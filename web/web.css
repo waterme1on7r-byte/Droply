@@ -1,7 +1,10 @@
 html.droply-web body{height:100dvh}
 html.droply-web #titlebar{-webkit-app-region:unset}
 html.droply-web main{overflow:hidden}
-html.droply-web .web-note{font-size:12px;line-height:1.5;color:var(--mute);background:var(--card);border-left:2px solid var(--accent);border-radius:4px 10px 10px 4px;padding:10px 14px;flex:none}
+html.droply-web .web-note{display:flex;flex-direction:column;gap:4px;font-size:12px;line-height:1.5;color:var(--mute);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 15px;flex:none}
+html.droply-web .web-note-title{color:var(--text);font-size:13px;font-weight:650;line-height:1.4}
+html.droply-web .web-note p{margin:0}
+html.droply-web .web-note-privacy{font-size:11px;line-height:1.5}
 html.droply-web #sig{opacity:.45}
 @media (max-width:760px){
   html.droply-web body{padding-top:50px;flex-direction:column;overflow:hidden}
@@ -16,7 +19,7 @@ html.droply-web #sig{opacity:.45}
   html.droply-web h1{font-size:30px;line-height:36px;height:auto}
   html.droply-web .head p{font-size:12px;margin-top:3px}
   html.droply-web #status{margin-top:0;font-size:11px;padding:6px 9px;max-width:46vw;white-space:normal}
-  html.droply-web .web-note{font-size:11px;padding:8px 10px}
+  html.droply-web .web-note{font-size:12px;padding:10px 12px}
   html.droply-web #pair{gap:8px}
   html.droply-web #pair .link{width:43px}
   html.droply-web .link>span{width:36px;height:36px;border-width:4px}
