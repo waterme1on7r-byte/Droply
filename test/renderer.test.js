@@ -136,3 +136,12 @@ test('connected sender starts its transfer without fingerprint-code confirmation
   assert(ch.sent.includes(JSON.stringify({ t: 'done' })));
   assert(!ch.sent.some(x => typeof x === 'string' && JSON.parse(x).t === 'verify'));
 });
+
+test('a failed browser-to-Windows WebRTC connection reports relay configuration, not PNG rejection', () => {
+  const r = loadRenderer();
+  const vm = require('node:vm');
+  const message = vm.runInContext('rtcConnectionError()', r.ctx);
+  assert.match(message, /STUN only/);
+  assert.match(message, /TURN relay/);
+  assert.doesNotMatch(message, /PNG|invalid file format/i);
+});
