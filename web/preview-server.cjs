@@ -334,7 +334,14 @@ function createPreviewServer(options = {}) {
           lastPingAt = now;
           const nonce = crypto.randomBytes(12).toString('hex');
           waitingPing = { id: probe.id, nonce };
-          try { upstream.ping(nonce); } catch { stop(); }
+          try {
+            // An application-level WebSocket message (not only a control ping)
+            // also keeps the upstream signaling service active while a user
+            // is interacting with the browser. Existing servers safely ignore
+            // unknown message types such as this one.
+            upstream.send('{"t":"heartbeat"}', { binary: false });
+            upstream.ping(nonce);
+          } catch { stop(); }
           return;
         }
       }
