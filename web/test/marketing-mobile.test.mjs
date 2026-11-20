@@ -16,6 +16,12 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
   assert.match(html, /id="hero-web"[^>]*aria-label="Use Droply Web"/);
   const actions = html.match(/<div class="hero-actions"[^>]*>([\s\S]*?)<\/div>/);
   assert.ok(actions, 'Expected four choices in one button group');
+  const heroStart = html.indexOf('<div class="hero-copy">');
+  const heroEnd = html.indexOf('<div class="hero-art"', heroStart);
+  const hero = html.slice(heroStart, heroEnd);
+  assert.ok(hero.indexOf('class="hero-meta"') < hero.indexOf('class="hero-trust"'), 'Version details precede the trust line');
+  assert.ok(hero.indexOf('class="hero-trust"') < hero.indexOf('class="hero-actions"'), 'All four buttons must follow the trust line');
+  assert.match(css, /margin-top: 36px/);
   assert.equal((actions[1].match(/class="btn btn-lg/g) || []).length, 4);
   assert.match(css, /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(css, /@media\s*\(max-width:\s*500px\)/);
