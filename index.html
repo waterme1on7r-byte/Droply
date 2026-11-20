@@ -387,7 +387,11 @@ function renderPeers() {
   [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
     const el = document.createElement('div'); el.className = 'peer' + (f.id === sel ? ' sel' : '') + (on.has(f.id) ? '' : ' off');
     el.appendChild(avatar(f.av, f.name));
-    el.appendChild(h('div', null, f.name));
+    const identity = h('div', 'peer-identity');
+    identity.append(h('span', 'peer-name', f.name));
+    if (on.has(f.id) && webPeerIds.has(f.id))
+      identity.append(h('span', 'client-platform-tag', 'Web'));
+    el.appendChild(identity);
     el.onclick = () => { selectFriend(f.id); $('#picker').classList.add('hidden'); };
     l.appendChild(el);
   });
@@ -409,7 +413,12 @@ function renderReqs() {
   } else {
     if (!pendOut.length) box.appendChild(h('div', 'empty', 'No sent friend requests.'));
     pendOut.forEach(o => {
-      const el = h('div', 'req out'), who = h('div', 'who'), label = h('b', null, o.name || o.code), detail = h('span', null, 'Waiting for a reply');
+      const el = h('div', 'req out'), who = h('div', 'who'), label = h('b', null, o.name || o.code);
+      const attempted = [...sentFr.values()].some(entry => entry.code === o.code && entry.last > 0);
+      const status = attempted ? 'Signaling sent · awaiting a response (not yet confirmed)'
+        : ws?.readyState === 1 ? 'Looking for this device online'
+          : 'Saved · waiting to connect to Droply';
+      const detail = h('span', null, status);
       who.append(label, detail);
       const no = h('button', 'ghost', 'Cancel');
       no.onclick = () => { pendOut = pendOut.filter(x => x !== o); persist(); renderReqs(); };
@@ -424,7 +433,7 @@ function renderRail() {
   const l = $('#frList'); l.innerHTML = '';
   const on = new Set(peers.map(p => p.id));
   [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
-    const el = h('div', 'fr' + (on.has(f.id) ? ' on' : '') + (f.id === sel ? ' sel' : '')); el.title = f.name + (on.has(f.id) ? ' · online' : ' · offline');
+    const el = h('div', 'fr' + (on.has(f.id) ? ' on' : '') + (f.id === sel ? ' sel' : '')); el.title = f.name + (on.has(f.id) ? (webPeerIds.has(f.id) ? ' · Online · Using Web' : ' · online') : ' · offline');
     const a = avatar(f.av, f.name); a.classList.add('fav');
     const x = h('button', 'frx'); x.innerHTML = ICON.x; x.title = 'Remove friend'; x.setAttribute('aria-label', 'Remove ' + f.name);
     x.onclick = ev => { ev.stopPropagation(); confirmRemove(f); };
@@ -441,7 +450,7 @@ function updateDrop() {
   $('#drop').classList.toggle('off', !p); $('#pair').classList.toggle('live', !!p);
   $('#dropTitle').textContent = p ? 'Drop files to send' : f ? f.name + ' is offline' : friends.length ? 'Pick a person first' : 'Add a friend to start';
   $('#peerName').textContent = shown ? shown.name : 'Pick a person';
-  $('#peerSub').textContent = p ? 'Online' : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
+  $('#peerSub').textContent = p ? (webPeerIds.has(p.id) ? 'Online · Using Web' : 'Online') : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
   const n = avatar(shown && (shown.av || f?.av), shown ? shown.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
 }
 function setStatus(on, text) {
@@ -517,7 +526,7 @@ function connect() {
     if (event.t === 'state') {
       const connected = event.state === 'connected'; ws.readyState = connected ? 1 : 3;
       setStatus(connected, event.text); known = null; if (connected) syncFriendState();
-      if (!connected) { sentFr.clear(); setOnline([]); }
+      if (!connected) { resetFriendRetries(); webPeerIds.clear(); webAnnouncedTo.clear(); setOnline([]); }
       if (typeof accessState !== 'undefined') { accessState = event; if (typeof renderSettings === 'function' && activeSettingsSection === 'Device access' && !$('#settingsPane').classList.contains('hidden')) renderSettings('Device access'); }
     } else if (event.t === 'message') {
       const m = event.message;
@@ -532,7 +541,85 @@ function connect() {
 /* ---------- Friends ---------- */
 // Device code: derived from this installation's random id (created on first launch, saved with the app data,
 // so it belongs to the device and never changes when the profile is edited). Only a hash is shared, never the id.
-const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ', codes = new Map(), FSIG = new Set(['fr', 'fa', 'fd', 'fx']), sentFr = new Set();
+const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ', codes = new Map(), FSIG = new Set(['fr', 'fa', 'fd', 'fx']);
+const sentFr = new Map(); // peer ID -> last send time and bounded retry state
+const webPeerIds = new Set(), webAnnouncedTo = new Set();
+const lookupTimers = new Map();
+function clearLookupRetries(code) {
+  const timers = lookupTimers.get(code);
+  if (!timers) return;
+  for (const timer of timers) clearTimeout(timer);
+  lookupTimers.delete(code);
+}
+function lookupFriendQuickly(code) {
+  send({ t: 'lookup', code });
+  syncFriendState();
+  if (!window.DroplyWeb || lookupTimers.has(code)) return;
+  // A small, bounded second chance handles missed presence/lookup frames.
+  // No continuous polling: the existing watch subscription handles later joins.
+  const timers = [1100, 3600].map(ms => setTimeout(() => {
+    if (pendOut.some(o => o.code === code) && ws?.readyState === 1) {
+      send({ t: 'lookup', code });
+      syncFriendState();
+    }
+    if (ms === 3600) lookupTimers.delete(code);
+  }, ms));
+  lookupTimers.set(code, timers);
+}
+function resetFriendRetries() {
+  for (const pending of sentFr.values()) clearTimeout(pending.timer);
+  sentFr.clear();
+}
+function dropFinishedFriendRetries() {
+  const codes = new Set(pendOut.map(p => p.code));
+  for (const code of lookupTimers.keys()) if (!codes.has(code)) clearLookupRetries(code);
+  for (const [id, pending] of sentFr) {
+    if (codes.has(pending.code)) continue;
+    clearTimeout(pending.timer);
+    sentFr.delete(id);
+  }
+}
+// A friend request is a transient WebSocket signal, not a durable server job.
+// Repeat a bounded number of times, so a reconnecting recipient does not miss
+// the original frame. Recipients already de-duplicate requests by sender ID.
+function sendPendingFriendRequest(id, code) {
+  if (!me?.name || !pendOut.some(p => p.code === code) || ws?.readyState !== 1) return;
+  let pending = sentFr.get(id);
+  if (!pending || pending.code !== code) {
+    if (pending) clearTimeout(pending.timer);
+    pending = { code, last: 0, attempts: 0, timer: null };
+    sentFr.set(id, pending);
+  }
+  if (Date.now() - pending.last < 2000) return;
+  pending.last = Date.now();
+  sig(id, { t: 'fr', name: me.name, av: me.avatar });
+  renderReqs(); // Make the distinction between lookup and signal visible.
+  if (pending.timer || pending.attempts >= 2) return;
+  const delay = pending.attempts++ === 0 ? 3500 : 8000;
+  pending.timer = setTimeout(() => {
+    pending.timer = null;
+    if (sentFr.get(id) !== pending) return;
+    if (!pendOut.some(p => p.code === code) || ws?.readyState !== 1) {
+      clearTimeout(pending.timer); sentFr.delete(id); return;
+    }
+    // A resolution signal may have retried recently. Avoid duplicate bursts.
+    if (Date.now() - pending.last >= 2000) {
+      pending.last = Date.now();
+      sig(id, { t: 'fr', name: me.name, av: me.avatar });
+    }
+    if (pending.attempts < 2) {
+      pending.timer = setTimeout(() => {
+        pending.timer = null;
+        if (sentFr.get(id) !== pending || !pendOut.some(p => p.code === code) || ws?.readyState !== 1) return;
+        if (Date.now() - pending.last >= 2000) {
+          pending.last = Date.now();
+          sig(id, { t: 'fr', name: me.name, av: me.avatar });
+        }
+      }, 8000);
+      pending.attempts++;
+    }
+  }, delay);
+}
 async function deviceCode(id) {
   if (codes.has(id)) return codes.get(id);
   const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('droply-device:' + id)));
@@ -574,7 +661,7 @@ function formatFriendCodeInput(input) {
 const cleanName = n => Array.from(String(n || '').trim()).slice(0, 40).join('') || 'Friend';
 const cleanAv = a => typeof a === 'string' && a.length < 60000 && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(a) ? a : '';
 let saveT = 0;
-const persist = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { api.saveFriends({ friends, out: pendOut, inc: pendIn, gone }); } catch {} syncFriendState(); }, 150); };
+const persist = () => { dropFinishedFriendRetries(); clearTimeout(saveT); saveT = setTimeout(() => { try { api.saveFriends({ friends, out: pendOut, inc: pendIn, gone }); } catch {} syncFriendState(); }, 150); };
 function syncFriendState() { send({ t: 'watch', friends: friends.map(f => f.id), codes: pendOut.map(o => o.code), notify: gone }); }
 function addFriend(rec) {
   friends = friends.filter(f => f.id !== rec.id); friends.push(rec); friends.sort(byName);
@@ -593,6 +680,16 @@ async function applyOnline(list) {
     if (f.name !== name || f.av !== av) { f.name = name; f.av = av; dirty = true; }
   }
   peers = list.filter(p => isFriend(p.id));
+  const online = new Set(peers.map(p => p.id));
+  for (const id of webPeerIds) if (!online.has(id)) webPeerIds.delete(id);
+  for (const id of webAnnouncedTo) if (!online.has(id)) webAnnouncedTo.delete(id);
+  if (window.DroplyWeb) for (const peer of peers) {
+    if (webAnnouncedTo.has(peer.id)) continue;
+    webAnnouncedTo.add(peer.id);
+    // Reuse friend-only signaling to announce browser presence without a
+    // production server change. Older clients simply ignore this frame.
+    sig(peer.id, { t: 'client-platform', platform: 'web' });
+  }
   if (dirty) persist();
   updateDrop(); renderPeers(); renderRail(); notifyNew();
 }
@@ -601,7 +698,7 @@ async function handleResolved(m) {
   const code = await deviceCode(m.id);
   if (m.code && m.code !== code) return;
   if (gone.includes(m.id)) { sig(m.id, { t: 'fx' }); gone = gone.filter(id => id !== m.id); persist(); return; }
-  if (pendOut.some(o => o.code === code) && !sentFr.has(m.id)) { sentFr.add(m.id); sig(m.id, { t: 'fr', name: me.name, av: me.avatar }); }
+  if (pendOut.some(o => o.code === code)) sendPendingFriendRequest(m.id, code);
 }
 async function friendSig(from, d) {
   if (typeof from !== 'string' || !me || from === me.id) return;
@@ -614,7 +711,9 @@ async function friendSig(from, d) {
     const i = pendIn.findIndex(r => r.id === from);
     if (i >= 0) { pendIn[i] = rec; persist(); return renderPeers(); }
     if (pendIn.length >= MAX_REQ || friends.length >= MAX_FRIENDS) return;
-    pendIn.push(rec); persist(); renderPeers(); notify('Friend request', rec.name + ' wants to add you');
+    pendIn.push(rec); persist(); renderPeers();
+    notify('Friend request', rec.name + ' wants to add you');
+    showIncomingFriendRequest();
   } else if (d.t === 'fa') {                                       // they accepted our request
     const mine = pendOut.find(o => o.code === code); if (!mine || friends.length >= MAX_FRIENDS) return;
     pendOut = pendOut.filter(o => o !== mine);
@@ -639,8 +738,10 @@ async function addByCode(input) {
   if (pendOut.some(o => o.code === code)) return { ok: false, msg: 'Request already sent. Waiting for a reply.' };
   if (friends.length + pendOut.length >= MAX_FRIENDS) return { ok: false, msg: 'Friend list is full.' };
   pendOut.push({ code }); persist(); renderPeers();
-  send({ t: 'lookup', code }); syncFriendState();
-  return { ok: true, msg: 'Saved. The request will be delivered when that person is online.' };
+  lookupFriendQuickly(code);
+  return { ok: true, msg: ws?.readyState === 1
+    ? 'Request sent to Droply. Waiting for the other device to be online.'
+    : 'Request saved. Connecting to Droply before delivery.' };
 }
 function acceptReq(id) {
   const r = pendIn.find(x => x.id === id); if (!r || friends.length >= MAX_FRIENDS) return;
@@ -666,7 +767,7 @@ function copyCode(btn, text) {
 function showProfile(f) {
   const on = peers.some(p => p.id === f.id);
   const x = h('button', 'closeX'); x.innerHTML = ICON.xl; x.title = 'Close'; x.setAttribute('aria-label', 'Close'); x.onclick = closeCard;
-  const st = h('div', 'pstat' + (on ? ' on' : '')); st.innerHTML = '<i></i><span></span>'; st.querySelector('span').textContent = on ? 'Online' : 'Offline';
+  const st = h('div', 'pstat' + (on ? ' on' : '')); st.innerHTML = '<i></i><span></span>'; st.querySelector('span').textContent = on ? (webPeerIds.has(f.id) ? 'Online · Using Web' : 'Online') : 'Offline';
   const field = h('div', 'field'), box = h('div', 'codebox'), cp = h('button', 'cp ghost'); cp.innerHTML = ICON.copy; cp.title = 'Copy code'; cp.setAttribute('aria-label', 'Copy code');
   cp.onclick = () => copyCode(cp, f.code);
   box.append(h('code', null, f.code), cp);
@@ -852,6 +953,13 @@ const validCandidate = c => c && typeof c === 'object' && typeof c.candidate ===
   && (c.usernameFragment == null || (typeof c.usernameFragment === 'string' && c.usernameFragment.length <= 256));
 function onSig(from, d) {
   if (!d || typeof d !== 'object') return;
+  if (d.t === 'client-platform') {
+    if (d.platform !== 'web' || !isFriend(from) || !peers.some(peer => peer.id === from)
+        || webPeerIds.has(from)) return;
+    webPeerIds.add(from);
+    renderPeers(); renderRail(); updateDrop();
+    return;
+  }
   if (FSIG.has(d.t)) return void friendSig(from, d).catch(() => {});
   if (d.t === 'req') {
     if (!validReq(d) || document.getElementById(d.tid) || sess[d.tid] || asks.some(a => a.d.tid === d.tid)) return;
@@ -963,7 +1071,7 @@ function openSetup(edit) {
   $('#setup').classList.remove('hidden'); $('#nameInput').value = edit ? me.name : ''; pendAv = null; setupAv(me.avatar);
   $('#codeRow').classList.toggle('hidden', !edit); $('#setupX').classList.toggle('hidden', !edit); $('#saveBtn').textContent = edit ? 'Save' : 'Get started';
   if (edit) deviceCode(me.id).then(c => { $('#myCode').textContent = c; });
-  $('#updateBtn').classList.toggle('hidden', !edit);
+  $('#updateBtn').classList.toggle('hidden', !edit || !!window.DroplyWeb);
   $('#nameInput').focus();
 }
 const closeSetup = () => $('#setup').classList.add('hidden');
@@ -1026,6 +1134,29 @@ function closeFriendRequests(restoreFocus = true) {
   document.removeEventListener('pointerdown', outsideFriendRequests, true);
   window.removeEventListener('resize', positionFriendRequests);
   if (restoreFocus) $('#peopleBtn').focus();
+}
+let incomingRequestNeedsAttention = false;
+function showIncomingFriendRequest() {
+  // Only the browser auto-expands incoming requests. The existing desktop UI
+  // continues using its own notifications and system behavior.
+  if (!window.DroplyWeb || !pendIn.length) return;
+  if (document.visibilityState === 'hidden' ||
+      !$('#setup').classList.contains('hidden') ||
+      !$('#settingsPane').classList.contains('hidden')) {
+    incomingRequestNeedsAttention = true;
+    return;
+  }
+  incomingRequestNeedsAttention = false;
+  if ($('#friendRequests').classList.contains('hidden')) openFriendRequests();
+  else { activeReqTab = 'received'; renderReqs(); }
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && incomingRequestNeedsAttention) showIncomingFriendRequest();
+  });
+  window.addEventListener('focus', () => {
+    if (incomingRequestNeedsAttention) showIncomingFriendRequest();
+  });
 }
 function openFriendRequests(e) {
   e?.stopPropagation(); $('#picker').classList.add('hidden');

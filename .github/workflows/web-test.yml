@@ -1,0 +1,40 @@
+name: Browser app tests
+on:
+  push:
+    paths:
+      - 'web/**'
+      - 'index.html'
+      - 'settings.js'
+      - 'settings.css'
+      - 'config.js'
+      - '.github/workflows/web-test.yml'
+  pull_request:
+    paths:
+      - 'web/**'
+      - 'index.html'
+      - 'settings.js'
+      - 'settings.css'
+      - 'config.js'
+      - '.github/workflows/web-test.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check browser modules
+        run: |
+          for f in web/*.js web/*.mjs; do node --check "$f"; done
+      - name: Build and test browser app
+        run: |
+          npm run web:build
+          node --test web/test/*.test.mjs

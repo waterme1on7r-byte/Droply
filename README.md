@@ -10,6 +10,19 @@
 
 > The latest public release is available on the [Releases page](https://github.com/waterme1on7r-byte/Droply/releases). macOS downloads are currently unsigned and may require manual approval in macOS. See [Updates and release notes](#updates-and-releases).
 
+## Browser edition (preview)
+
+The web app reuses Droply's desktop interface, friend requests, and peer-to-peer WebRTC transfers. It is publicly accessible at [Use Droply Web](https://waterme1on7r-byte.github.io/Droply/app/), hosted as static files alongside the marketing website.
+
+- Public app: `https://waterme1on7r-byte.github.io/Droply/app/`, built automatically by the GitHub Pages Actions workflow.
+- Private test path: `/internal/preview/` on a **separate Render gateway**, still protected by a server-side password. The production signaling service remains unchanged.
+- Local preview: `npm run web:dev`, then open `http://localhost:4173/app/`.
+- Build and test: `npm run web:build` and `npm run web:test`.
+
+The public web app connects to the existing private Render gateway using a strictly allowlisted GitHub Pages origin, with device-token authentication. GitHub Pages is static hosting; the free-tier gateway and production signaling service can still cause cold-start delays.
+
+Browser identities use IndexedDB/Web Crypto rather than Electron's OS-protected credential storage. Chrome/Edge can stream incoming files into a folder explicitly selected on acceptance; other browsers use a 64 MiB per-transfer download fallback. See [the web app guide](web/README.md) for setup, security differences, browser compatibility, and required end-to-end testing.
+
 ## How it works
 
 1. Install Droply and choose a name and optional photo.

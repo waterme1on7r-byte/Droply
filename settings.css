@@ -70,3 +70,10 @@ html:not([data-theme=light]){color-scheme:dark}
 #drop .folder-action:hover{color:var(--text)}
 button:disabled,input:disabled{opacity:.55;cursor:default}
 html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}
+
+/* Shown only for friends who positively announce they are using Droply Web. */
+.client-platform-tag{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+  border:1px solid var(--line);border-radius:999px;background:var(--card2);color:var(--mute);
+  padding:4px 9px;font-size:11px;font-weight:600;line-height:1.3;letter-spacing:.01em}
+.peer-identity{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.peer-identity .peer-name{min-width:0;overflow-wrap:anywhere}

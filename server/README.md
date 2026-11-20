@@ -11,6 +11,8 @@ Environment variables:
 - DATABASE_URL: the Neon PostgreSQL connection string, stored only in Render's secret environment. TLS certificates are verified outside localhost.
 - ADMIN_TOKEN: a random server-only administrator token of at least 32 characters, used for recovery and revocation. Never package it with the desktop app or put it in Git.
 - PORT: supplied by Render.
+- WEB_ALLOWED_ORIGINS: comma-separated exact HTTPS origins allowed to use browser auth and WebSockets. Public browser origins should **not** be enabled until launch. For local testing only, add `http://localhost:4173`. No paths, wildcards or trailing slashes; Electron/Android without Origin headers remain unaffected.
+- No private preview password or preview hostname is configured on this production signaling service. The standalone private test gateway has its own `WEB_PREVIEW_PASSWORD` and `SIGNALING_UPSTREAM_URL` variables.
 - Legacy WebSocket access is removed. Every connection must authenticate with a registered device credential. Older app versions that use legacy signaling must be updated before deploying this server version.
 
 Coordinate the server rollout with an app update so users can install the new client first. The production server must use the existing Neon database and device records; do not reset them during deployment.
@@ -41,3 +43,11 @@ For a browser-based local tool, run `Start-Droply-Recovery.cmd` on Windows or `n
 Signaling fixes the sender identity from the authenticated connection and limits rates, payloads, output buffering and authentication time. PostgreSQL transactions and a row lock protect shared authentication state. The client requires the receiver to approve each transfer; WebRTC encrypts the peer-to-peer connection automatically, without a manual fingerprint-code comparison. Bearer credentials can still be stolen by malware running as the same OS user.
 
 Run npm test from this directory. GitHub Actions additionally starts PostgreSQL to verify atomic concurrent enrollment across store instances. Local integration checks have exercised two native Electron devices, real WebRTC transfers, restart persistence and revocation. A deployed migration must also verify /auth/status and device connectivity before deleting the old server repository.
+
+## Browser client
+
+The browser app reuses the existing renderer and WebRTC friend-signaling protocol. Private testing runs in a **separate Render web service**, not in this signaling process. See [web/README.md](../web/README.md) for the standalone protected gateway, its build/start commands and the test URL.
+
+The private gateway authenticates users on its own HTTPS hostname and forwards only browser registration requests and WebSocket signaling to the existing server, so no production server origin changes or credentials are required. It does not relay the P2P file bytes. The live PostgreSQL database remains in use for registrations and known devices; never reset it for testing.
+
+Browser credentials use IndexedDB Web Crypto rather than OS-protected Electron safeStorage. Treat browser test identities as separate installations. For an eventual public browser release, configure explicit `WEB_ALLOWED_ORIGINS` entries on the signaling server and test CORS first.
