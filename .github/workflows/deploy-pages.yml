@@ -1,4 +1,4 @@
-# Publish ONLY the public marketing website. Keep the private browser preview on the authenticated server.
+# Publish the marketing website AND standalone public browser app. The private preview remains password protected.
 name: Deploy Droply website
 
 on:
@@ -7,6 +7,11 @@ on:
       - main
     paths:
       - 'docs/**'
+      - 'web/**'
+      - 'index.html'
+      - 'settings.js'
+      - 'settings.css'
+      - 'config.js'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -29,6 +34,16 @@ jobs:
     steps:
       - name: Check out site
         uses: actions/checkout@v4
+      - name: Prepare Node.js for the public browser build
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build and test Droply Web (public gateway only)
+        env:
+          DROPLY_PUBLIC_GATEWAY_URL: wss://droply-internal-preview.onrender.com
+        run: |
+          npm run web:build
+          node --test web/test/*.test.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
