@@ -4,31 +4,31 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 7px;
   width: 100%;
-  max-width: 490px;
+  max-width: 515px;
 }
 .hero-actions .btn {
   width: 100%;
   min-width: 0;
-  min-height: 49px;
-  padding: 7px 6px;
+  min-height: 54px;
+  padding: 8px 7px;
   gap: 6px;
   justify-content: center;
   border-radius: 11px;
-  font-size: .79rem;
+  font-size: .81rem;
   line-height: 1.2;
   text-align: left;
   white-space: normal;
 }
 .hero-actions .btn svg {
-  flex: 0 0 17px;
-  width: 17px;
-  height: 17px;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
 }
 .hero-actions .btn span {
   min-width: 0;
   white-space: nowrap;
 }
-.hero-actions .btn small { font-size: .62rem; }
+.hero-actions .btn small { font-size: .64rem; }
 
 /* Fine-tune desktop alignment with the hero copy; keep phones untouched. */
 @media (min-width: 901px) {
@@ -40,11 +40,11 @@
   .hero-actions .btn {
     flex-direction: column;
     align-items: center;
-    min-height: 54px;
-    gap: 3px;
-    padding: 6px 3px;
+    min-height: 58px;
+    gap: 4px;
+    padding: 7px 4px;
     text-align: center;
-    font-size: .75rem;
+    font-size: .77rem;
   }
   .hero-actions .btn small { display: none; }
 }
@@ -56,10 +56,10 @@
     gap: 5px;
   }
   .hero-actions .btn {
-    min-height: 54px;
-    padding: 6px 2px;
+    min-height: 58px;
+    padding: 7px 3px;
     gap: 4px;
-    font-size: clamp(9.5px, 2.6vw, 11px);
+    font-size: clamp(10px, 2.7vw, 11.5px);
     border-radius: 10px;
   }
   .hero-actions .btn svg {
@@ -71,13 +71,13 @@
 @media (max-width: 360px) {
   .hero-actions { gap: 4px; }
   .hero-actions .btn {
-    min-height: 52px;
-    padding: 5px 1px;
-    font-size: 9.5px;
+    min-height: 55px;
+    padding: 6px 2px;
+    font-size: 9.8px;
   }
   .hero-actions .btn svg {
-    flex-basis: 15px;
-    width: 15px;
-    height: 15px;
+    flex-basis: 16px;
+    width: 16px;
+    height: 16px;
   }
 }
