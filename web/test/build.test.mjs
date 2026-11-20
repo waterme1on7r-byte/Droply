@@ -112,3 +112,20 @@ test('landscape web app matches desktop-style layout on phones and tablets', asy
   assert.match(css, /@media \(max-width:760px\)/);
   assert.doesNotMatch(landscape, /(^|\n)\s*body\s*\{/);
 });
+
+test('portrait browser layout follows the Android reference without hiding transfers', async () => {
+  const css = await readFile(root + '/docs/app/web.css', 'utf8');
+  const bridge = await readFile(root + '/docs/app/bridge.js', 'utf8');
+  assert.match(css, /@media \(orientation: portrait\) and \(max-width: 900px\)/);
+  assert.match(css, /#webFriendsStrip \{ display: block/);
+  assert.match(css, /#pair \{\s*display: grid/);
+  assert.match(css, /grid-template-columns: minmax\(0, 1fr\) 42px minmax\(0, 1fr\)/);
+  assert.match(css, /#drop \{\s*flex: 0 0 auto/);
+  assert.match(css, /#frList \{ display: none !important/);
+  assert.match(css, /#addFriendBtn \{ order: 3/);
+  assert.match(bridge, /friendStrip\.id = 'webFriendsStrip'/);
+  assert.match(bridge, /window\.renderAndroidFriends =/);
+  assert.match(bridge, /button\.onclick = \(\) => selectFriend\(friend\.id\)/);
+  assert.match(bridge, /main\.append\(banner\)/);
+  assert.doesNotThrow(() => new Script(bridge));
+});
