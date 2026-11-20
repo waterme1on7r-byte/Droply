@@ -12,7 +12,7 @@ test('authentication sends the latest profile even if it changed while connectin
   let socket;
   class Socket {
     static OPEN = 1;
-    constructor() { socket = this; this.readyState = 1; this.sent = []; }
+    constructor() { socket = this; this.readyState = 1; this.sent = []; this.bufferedAmount = 0; }
     send(message) { this.sent.push(JSON.parse(message)); }
     close() { this.readyState = 3; }
   }
