@@ -204,6 +204,10 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
                         }
                     }
                 }
+                // Display an already-saved request when the WebView becomes active,
+                // even if the replay is de-duplicated by the shared renderer.
+                webView.evaluateJavascript(
+                    "if(typeof showIncomingFriendRequest==='function')showIncomingFriendRequest();", null)
             }, 250L)
         }
         if (elapsed > 10000L) {
