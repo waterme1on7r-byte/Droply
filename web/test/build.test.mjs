@@ -130,20 +130,22 @@ test('portrait browser layout follows the Android reference without hiding trans
   assert.doesNotThrow(() => new Script(bridge));
 });
 
-test('iOS Web alone gets the approved mobile Add Friend and Select File panel', async () => {
+test('iPhone Web alone gets the approved mobile Add Friend and Select File panel', async () => {
   const bridge = await readFile(root + '/docs/app/bridge.js', 'utf8');
   const css = await readFile(root + '/docs/app/web.css', 'utf8');
   const desktop = await readFile(root + '/index.html', 'utf8');
-  assert.match(bridge, /if \(iosDevice\) \{/);
+  assert.match(bridge, /if \(document\.documentElement\.classList\.contains\('droply-iphone'\)\) \{/);
   assert.match(bridge, /actions\.className = 'ios-upload-actions'/);
   assert.match(bridge, /document\.querySelector\('#addFriendBtn'\)\?\.click\(\)/);
   assert.match(bridge, /document\.querySelector\('#fi'\)\?\.click\(\)/);
   assert.match(bridge, /event\.stopPropagation\(\)/);
-  assert.match(css, /html\.droply-web\.droply-ios #drop > h2/);
-  assert.match(css, /html\.droply-web\.droply-ios #drop > p \{ display: none; \}/);
-  assert.match(css, /html\.droply-web\.droply-ios \.ios-upload-actions/);
+  assert.match(css, /html\.droply-web\.droply-iphone #drop > h2/);
+  assert.match(css, /html\.droply-web\.droply-iphone #drop > p \{ display: none; \}/);
+  assert.match(css, /html\.droply-web\.droply-iphone \.ios-upload-actions/);
   assert.match(css, /@media \(orientation: landscape\)/);
   assert.match(css, /@media \(orientation: portrait\)/);
+  const mobileRules = css.slice(css.indexOf('/* iPhone Web mobile transfer actions only.'));
+  assert.doesNotMatch(mobileRules, /html\.droply-web\.droply-ios(?:\s|\.|\s*\{)/);
   assert.doesNotMatch(desktop, /ios-upload-actions/);
   assert.doesNotThrow(() => new Script(bridge));
 });
