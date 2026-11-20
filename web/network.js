@@ -17,7 +17,40 @@
   // Queue the latest friend subscription until the hello frame is on the wire.
   let helloSent = false, helloRevision = 0, queuedWatch = null, lastWatch = null;
   const queuedLookups = new Set();
+  let heartbeatTimer = null, heartbeatDeadline = null, waitingHeartbeat = 0, heartbeatId = 0;
+  function clearHeartbeat() {
+    clearInterval(heartbeatTimer);
+    clearTimeout(heartbeatDeadline);
+    heartbeatTimer = null;
+    heartbeatDeadline = null;
+    waitingHeartbeat = 0;
+  }
+  function probeHeartbeat(ws) {
+    if (window.DroplyPrivatePreview !== true || socket !== ws || !active ||
+      !authenticated || !helloSent || ws.readyState !== WebSocket.OPEN || waitingHeartbeat) return;
+    const id = heartbeatId = (heartbeatId % 0x7ffffffe) + 1;
+    waitingHeartbeat = id;
+    try { ws.send(JSON.stringify({ t: 'gateway-ping', id })); }
+    catch { waitingHeartbeat = 0; ws.close(); return; }
+    heartbeatDeadline = setTimeout(() => {
+      if (socket === ws && waitingHeartbeat === id) {
+        waitingHeartbeat = 0;
+        // The preview gateway did not prove that the signaling backend is
+        // reachable. Force reconnection instead of displaying stale presence.
+        ws.close();
+      }
+    }, 8000);
+  }
+  function startHeartbeat(ws) {
+    if (window.DroplyPrivatePreview !== true) return;
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState !== 'hidden')
+        probeHeartbeat(ws);
+    }, 15000);
+  }
   function resetHandshake() {
+    clearHeartbeat();
     helloSent = false;
     helloRevision++;
     queuedWatch = null;
@@ -26,8 +59,9 @@
   }
   function writeFrame(ws, message) {
     const encoded = JSON.stringify(message);
-    if (ws.readyState === WebSocket.OPEN && encoded.length < 65536 &&
-      ws.bufferedAmount < 4 * 1024 * 1024) ws.send(encoded);
+    if (ws.readyState !== WebSocket.OPEN || encoded.length >= 65536 ||
+      ws.bufferedAmount >= 4 * 1024 * 1024) return false;
+    try { ws.send(encoded); return true; } catch { return false; }
   }
   function announceProfile(ws) {
     const revision = ++helloRevision;
@@ -39,11 +73,20 @@
         state('connected', 'Finish your profile to appear online');
         return;
       }
-      writeFrame(ws, { t: 'hello', id: latest.id, name: latest.name, av: latest.avatar });
+      if (!writeFrame(ws, { t: 'hello', id: latest.id, name: latest.name, av: latest.avatar })) {
+        ws.close();
+        return;
+      }
       helloSent = true;
-      if (queuedWatch) { writeFrame(ws, queuedWatch); queuedWatch = null; }
-      for (const code of queuedLookups) writeFrame(ws, { t: 'lookup', code });
+      if (queuedWatch) {
+        if (!writeFrame(ws, queuedWatch)) { ws.close(); return; }
+        queuedWatch = null;
+      }
+      for (const code of queuedLookups) {
+        if (!writeFrame(ws, { t: 'lookup', code })) { ws.close(); return; }
+      }
       queuedLookups.clear();
+      startHeartbeat(ws);
       state('connected', 'Connected securely');
     }).catch(() => {
       if (socket === ws) ws.close();
@@ -132,6 +175,14 @@
         if (socket !== ws || typeof event.data !== 'string' || event.data.length > (1 << 20)) return;
         let message;
         try { message = JSON.parse(event.data); } catch { return; }
+        if (message.t === 'gateway-pong') {
+          if (waitingHeartbeat && message.id === waitingHeartbeat) {
+            clearTimeout(heartbeatDeadline);
+            heartbeatDeadline = null;
+            waitingHeartbeat = 0;
+          }
+          return;
+        }
         if (message.t === 'access-denied') {
           denied = true;
           state('enrollment-required', 'Device access rejected. Your profile is preserved; check Device access.');
@@ -198,7 +249,12 @@
       else if (payload.t === 'lookup' && queuedLookups.size < 200) queuedLookups.add(payload.code);
       return;
     }
-    if (socket.bufferedAmount < 4 * 1024 * 1024) socket.send(encoded);
+    if (socket.bufferedAmount >= 4 * 1024 * 1024) {
+      // The socket is stuck: reconnect to replay hello and the latest watch.
+      socket.close();
+      return;
+    }
+    try { socket.send(encoded); } catch { socket.close(); }
   }
   function onReturnToTab() {
     if (!active || document.visibilityState === 'hidden') return;
@@ -209,7 +265,8 @@
     } else if (authenticated && helloSent && socket.readyState === WebSocket.OPEN) {
       // A sleeping browser can miss presence changes. Refresh the existing
       // push subscription when it becomes visible, not on a rapid timer.
-      if (lastWatch) writeFrame(socket, lastWatch);
+      if (lastWatch && !writeFrame(socket, lastWatch)) { socket.close(); return; }
+      probeHeartbeat(socket);
     }
   }
   if (typeof document !== 'undefined') {
