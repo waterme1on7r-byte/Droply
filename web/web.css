@@ -79,102 +79,162 @@ html.droply-web .web-profile-hero .profile-edit-actions button{
   html.droply-web .web-profile-hero .profile-hero-name{font-size:clamp(19px,5vw,23px)}
 }
 
-/* Phone landscape: never fall back to the tall desktop layout or the
-   portrait bottom dock. Short viewports must keep controls scrollable. */
-@media (orientation:landscape) and (max-height:600px) and (max-width:1200px){
-  html.droply-web body{
-    height:100dvh;min-height:0;display:flex;flex-direction:row;overflow:hidden;
-    padding:36px env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)
+/* Landscape phones and tablets use the desktop-style workspace from the
+   reference screenshots: vertical left rail, two horizontal device cards,
+   large transfer zone, and floating friend dialogs. Portrait is unchanged.
+   Pointer-coarse includes large Android tablets whose CSS height > 600px. */
+@media (orientation: landscape) and (pointer: coarse) and (max-width: 1600px),
+       (orientation: landscape) and (max-width: 1100px) and (max-height: 800px) {
+  html.droply-web {
+    --landscape-rail: clamp(56px, 6vw, 76px);
+    --landscape-title: 42px;
   }
-  html.droply-web #titlebar{height:36px;padding-inline:env(safe-area-inset-left,0px) env(safe-area-inset-right,0px)}
-  html.droply-web .rail{
-    order:0;flex:0 0 56px;width:56px;height:auto;min-height:0;max-height:none;
-    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-    gap:6px;padding:7px 2px;border-top:0;border-right:1px solid var(--line);
-    overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain
+  html.droply-web body {
+    height: 100dvh; min-height: 0; display: flex; flex-direction: row; overflow: hidden;
+    padding: var(--landscape-title) env(safe-area-inset-right, 0px)
+             env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   }
-  html.droply-web .rail .rsep{display:none}
-  html.droply-web .rail .rbtn{width:40px;height:40px;border-radius:11px}
-  html.droply-web .rail #railAv,html.droply-web .rail .fav,
-  html.droply-web .rail .fr{width:35px;height:35px;min-width:35px;border-radius:10px}
-  html.droply-web #frList{
-    flex:1 1 auto;width:100%;min-height:0;min-width:0;
-    display:flex;flex-direction:column;align-items:center;
-    gap:7px;padding:3px 0;overflow-y:auto;overflow-x:hidden
+  html.droply-web #titlebar {
+    height: var(--landscape-title); font-size: 13px;
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
   }
-  html.droply-web main{
-    order:1;flex:1 1 auto;min-width:0;min-height:0;overflow-y:auto;
-    overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
-    padding:10px 12px 16px;gap:10px
+  html.droply-web .rail {
+    order: 0; width: var(--landscape-rail); flex: 0 0 var(--landscape-rail);
+    height: auto; min-height: 0; max-height: none; gap: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding: 10px 3px; border-top: 0; border-right: 1px solid var(--line);
+    overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
   }
-  html.droply-web .head{gap:10px;align-items:center}
-  html.droply-web .head h1{font-size:26px;line-height:1.1;height:auto}
-  html.droply-web .head p{margin-top:2px;font-size:11px}
-  html.droply-web #status{
-    margin-top:0;max-width:min(210px,43%);font-size:10px;
-    padding:5px 8px;white-space:normal;line-height:1.3
+  html.droply-web .rail .rsep { display: none; }
+  html.droply-web .rail .rbtn { width: 44px; height: 44px; border-radius: 13px; }
+  html.droply-web .rail #railAv,
+  html.droply-web .rail .fav, html.droply-web .rail .fr {
+    width: 42px; height: 42px; min-width: 42px; border-radius: 12px;
   }
-  html.droply-web .web-note{padding:8px 10px;gap:2px;font-size:11px}
-  html.droply-web .web-note-title{font-size:12px}
-  html.droply-web .web-note-privacy{font-size:10px}
-  html.droply-web #pair{min-width:0}
-  html.droply-web #pair .link{width:58px}
-  html.droply-web #pair .link>span{width:35px;height:35px;border-width:4px}
-  html.droply-web #pair .link>span svg{width:17px;height:17px}
-  html.droply-web .pcard{min-width:0;gap:7px;padding:7px 9px;border-radius:12px}
-  html.droply-web .pcard .av{width:34px;height:34px;min-width:34px}
-  html.droply-web .pcard b{font-size:12px}
-  html.droply-web .pcard small{font-size:10px}
-  html.droply-web #drop{
-    flex:0 0 auto;min-height:106px;padding:10px 12px;gap:2px
+  html.droply-web #frList {
+    flex: 1 1 auto; width: 100%; min-width: 0; min-height: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 9px;
+    padding: 6px 0; overflow-x: hidden; overflow-y: auto;
+    overscroll-behavior: contain;
   }
-  html.droply-web #drop .ico{display:none}
-  html.droply-web #drop h2{font-size:15px}
-  html.droply-web #drop p{font-size:12px;margin-top:3px}
-  html.droply-web #transferFeed{min-height:0;max-height:none}
-  html.droply-web #log{min-height:0;max-height:none;overflow:visible}
-  html.droply-web #picker{width:min(330px,calc(100vw - 94px));max-height:min(44dvh,200px)}
-  html.droply-web #tl{top:42px;max-width:calc(100vw - 80px)}
-  html.droply-web #br{bottom:8px;max-width:calc(100vw - 80px)}
-  /* Center when space permits; scroll the dialogue itself when it does not. */
-  html.droply-web #setup,html.droply-web #ask,
-  html.droply-web #pf,html.droply-web #appDialog{
-    inset:36px 0 0;display:flex;align-items:safe center;
-    overflow-y:auto;overscroll-behavior:contain;
-    padding:8px max(8px,env(safe-area-inset-right,0px)) 8px max(8px,env(safe-area-inset-left,0px))
+  html.droply-web main {
+    order: 1; flex: 1 1 auto; min-width: 0; min-height: 0;
+    display: flex; flex-direction: column; gap: 15px;
+    padding: 18px clamp(12px, 3vw, 28px) 18px;
+    overflow-x: hidden; overflow-y: auto;
+    overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
   }
-  html.droply-web #setup .box,html.droply-web #ask .box,
-  html.droply-web #pf .box,html.droply-web #appDialog .box{
-    width:min(390px,100%);max-width:100%;max-height:calc(100dvh - 52px);
-    overflow-y:auto;gap:9px;margin:auto
+  html.droply-web .head { align-items: center; gap: 12px; }
+  html.droply-web h1 { font-size: clamp(28px, 4vw, 38px); line-height: 1.2; height: auto; }
+  html.droply-web .head p { display: block; font-size: 12px; margin-top: 5px; }
+  html.droply-web #status {
+    flex: 0 1 auto; max-width: 46%; font-size: 11px;
+    white-space: normal; line-height: 1.3; margin-top: 0; padding: 7px 12px;
   }
-  html.droply-web #setup .box{gap:8px}
-  html.droply-web #setup .av.big{width:62px;height:62px;border-radius:17px;font-size:25px}
-  html.droply-web #pf .box{padding:18px 20px}
-  html.droply-web #pf .box .av.big{width:72px;height:72px;font-size:27px;border-radius:17px}
-  html.droply-web #ask .box,html.droply-web #appDialog .box{padding:17px 20px}
-  html.droply-web #setupX{top:41px;right:max(8px,env(safe-area-inset-right,0px))}
-  html.droply-web #addFriend .box{
-    top:42px;left:max(8px,env(safe-area-inset-left,0px));
-    width:min(410px,calc(100vw - 16px));max-height:calc(100dvh - 50px);
-    overflow-y:auto
+  html.droply-web .web-note {
+    font-size: 11px; line-height: 1.35; padding: 7px 11px; gap: 2px;
   }
-  html.droply-web #friendRequests .request-box{
-    top:42px;left:max(8px,env(safe-area-inset-left,0px));
-    width:min(390px,calc(100vw - 16px));max-height:calc(100dvh - 50px)
+  html.droply-web .web-note-title { font-size: 12px; }
+  html.droply-web .web-note-privacy { font-size: 10px; }
+  html.droply-web .pairwrap, html.droply-web #pair { min-width: 0; }
+  html.droply-web #pair { display: flex; flex-direction: row; align-items: center; gap: 0; }
+  html.droply-web #pair .link { width: clamp(55px, 8vw, 95px); flex: none; }
+  html.droply-web #pair .link>span { width: 44px; height: 44px; border-width: 5px; }
+  html.droply-web #pair .link>span svg { width: 20px; height: 20px; }
+  html.droply-web .pcard {
+    flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 14px;
   }
-  html.droply-web #friendRequestList{max-height:calc(100dvh - 160px)}
-  html.droply-web #settingsPane{
-    inset:36px env(safe-area-inset-right,0px) 0 calc(56px + env(safe-area-inset-left,0px));
-    min-height:0;overflow:hidden
+  html.droply-web .pcard .av { width: 44px; height: 44px; min-width: 44px; }
+  html.droply-web .pcard b { font-size: 14px; }
+  html.droply-web .pcard small { font-size: 11px; }
+  html.droply-web #drop {
+    flex: 1 0 170px; min-height: 170px; padding: 20px 12px; gap: 4px;
   }
-  html.droply-web .settings-head{padding:8px 12px;min-height:45px}
-  html.droply-web .settings-head h2{font-size:21px}
-  html.droply-web .settings-layout{min-height:0}
-  html.droply-web .settings-nav{width:112px;padding:5px 4px}
-  html.droply-web .settings-nav button{font-size:11px;padding:8px 6px}
-  html.droply-web .settings-content{min-height:0;overflow:auto;padding:11px 14px}
-  html.droply-web .web-profile-hero{margin:4px auto 12px;gap:7px}
-  html.droply-web .web-profile-hero .profile-hero-avatar{width:68px;height:68px;border-radius:16px}
-  html.droply-web .web-profile-hero .profile-hero-name{font-size:19px}
+  html.droply-web #drop .ico { display: flex; }
+  html.droply-web #drop h2 { font-size: 16px; }
+  html.droply-web #drop p { font-size: 12px; }
+  html.droply-web #transferFeed { min-height: 0; max-height: none; }
+  html.droply-web #log { max-height: none; overflow: visible; }
+  html.droply-web #sig { display: none; }
+  html.droply-web #picker {
+    right: 0; width: min(370px, calc(100vw - var(--landscape-rail) - 32px));
+    max-width: 100%; max-height: min(50dvh, 250px); overflow: auto;
+  }
+  html.droply-web #tl { top: calc(var(--landscape-title) + 8px); max-width: calc(100vw - 90px); }
+  html.droply-web #br { bottom: 12px; max-width: calc(100vw - 90px); }
+
+  /* Normal full-screen confirmations fit even the shortest landscape phone. */
+  html.droply-web #setup, html.droply-web #ask,
+  html.droply-web #pf, html.droply-web #appDialog {
+    inset: var(--landscape-title) 0 0; overflow-y: auto;
+    align-items: safe center; overscroll-behavior: contain;
+    padding: 10px max(10px, env(safe-area-inset-right, 0px))
+             10px max(10px, env(safe-area-inset-left, 0px));
+  }
+  html.droply-web #setup .box, html.droply-web #ask .box,
+  html.droply-web #pf .box, html.droply-web #appDialog .box {
+    width: min(400px, 100%); max-width: 100%;
+    max-height: calc(100dvh - var(--landscape-title) - 20px);
+    overflow-y: auto; gap: 10px; margin: auto;
+  }
+  html.droply-web #setup .av.big { width: 68px; height: 68px; border-radius: 18px; font-size: 28px; }
+  html.droply-web #setupX { top: calc(var(--landscape-title) + 5px); right: 9px; }
+  html.droply-web #pf .box { padding: 18px 22px; }
+  html.droply-web #pf .box .av.big {
+    width: 78px; height: 78px; font-size: 30px; border-radius: 19px;
+  }
+  html.droply-web #ask .box, html.droply-web #appDialog .box { padding: 17px 20px; }
+
+  /* Desktop-style floating friend panels, offset so they never cover the rail. */
+  html.droply-web #addFriend .box {
+    top: 50%; left: calc(var(--landscape-rail) + env(safe-area-inset-left, 0px) + 12px);
+    transform: translateY(-50%); animation: none;
+    width: min(400px, calc(100vw - var(--landscape-rail) - 24px));
+    max-height: calc(100dvh - 32px); overflow-y: auto;
+  }
+  html.droply-web #friendRequests .request-box {
+    top: auto; bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    left: calc(var(--landscape-rail) + env(safe-area-inset-left, 0px) + 12px);
+    width: min(360px, calc(100vw - var(--landscape-rail) - 24px));
+    max-height: calc(100dvh - var(--landscape-title) - 20px);
+  }
+  html.droply-web #friendRequestList {
+    max-height: min(50dvh, 330px); overflow-y: auto;
+  }
+  html.droply-web #settingsPane {
+    inset: var(--landscape-title) env(safe-area-inset-right, 0px) 0
+      calc(var(--landscape-rail) + env(safe-area-inset-left, 0px));
+    min-height: 0; overflow: hidden;
+  }
+  html.droply-web .settings-head { min-height: 48px; padding: 9px 14px; }
+  html.droply-web .settings-head h2 { font-size: 22px; }
+  html.droply-web .settings-layout { min-height: 0; }
+  html.droply-web .settings-nav { width: 118px; padding: 6px 5px; }
+  html.droply-web .settings-nav button { font-size: 11px; padding: 9px 6px; }
+  html.droply-web .settings-content {
+    min-height: 0; overflow-y: auto; padding: 14px 16px;
+  }
+  html.droply-web .web-profile-hero { margin: 4px auto 12px; gap: 8px; }
+  html.droply-web .web-profile-hero .profile-hero-avatar { width: 72px; height: 72px; border-radius: 18px; }
+  html.droply-web .web-profile-hero .profile-hero-name { font-size: 20px; }
+}
+
+/* Short, rotated phones still show the same desktop-like workspace but
+   use tighter spacing so the title, cards and upload area stay usable. */
+@media (orientation: landscape) and (max-height: 430px) and (max-width: 1100px) {
+  html.droply-web { --landscape-title: 34px; --landscape-rail: 54px; }
+  html.droply-web .rail { gap: 5px; padding: 4px 2px; }
+  html.droply-web .rail .rbtn { width: 40px; height: 40px; }
+  html.droply-web .rail #railAv, html.droply-web .rail .fav,
+  html.droply-web .rail .fr { width: 36px; height: 36px; min-width: 36px; }
+  html.droply-web main { padding: 9px 12px 12px; gap: 9px; }
+  html.droply-web .head p { display: none; }
+  html.droply-web h1 { font-size: 26px; }
+  html.droply-web .web-note { max-height: 55px; overflow-y: auto; }
+  html.droply-web .pcard { padding: 6px 8px; gap: 6px; }
+  html.droply-web .pcard .av { width: 34px; height: 34px; min-width: 34px; }
+  html.droply-web #pair .link { width: 50px; }
+  html.droply-web #pair .link>span { width: 34px; height: 34px; border-width: 4px; }
+  html.droply-web #drop { min-height: 120px; flex-basis: 120px; }
 }
