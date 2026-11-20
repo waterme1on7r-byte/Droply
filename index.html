@@ -387,7 +387,11 @@ function renderPeers() {
   [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
     const el = document.createElement('div'); el.className = 'peer' + (f.id === sel ? ' sel' : '') + (on.has(f.id) ? '' : ' off');
     el.appendChild(avatar(f.av, f.name));
-    el.appendChild(h('div', null, f.name));
+    const identity = h('div', 'peer-identity');
+    identity.append(h('span', 'peer-name', f.name));
+    if (on.has(f.id) && webPeerIds.has(f.id))
+      identity.append(h('span', 'client-platform-tag', 'Web'));
+    el.appendChild(identity);
     el.onclick = () => { selectFriend(f.id); $('#picker').classList.add('hidden'); };
     l.appendChild(el);
   });
@@ -424,7 +428,7 @@ function renderRail() {
   const l = $('#frList'); l.innerHTML = '';
   const on = new Set(peers.map(p => p.id));
   [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
-    const el = h('div', 'fr' + (on.has(f.id) ? ' on' : '') + (f.id === sel ? ' sel' : '')); el.title = f.name + (on.has(f.id) ? ' · online' : ' · offline');
+    const el = h('div', 'fr' + (on.has(f.id) ? ' on' : '') + (f.id === sel ? ' sel' : '')); el.title = f.name + (on.has(f.id) ? (webPeerIds.has(f.id) ? ' · Online · Using Web' : ' · online') : ' · offline');
     const a = avatar(f.av, f.name); a.classList.add('fav');
     const x = h('button', 'frx'); x.innerHTML = ICON.x; x.title = 'Remove friend'; x.setAttribute('aria-label', 'Remove ' + f.name);
     x.onclick = ev => { ev.stopPropagation(); confirmRemove(f); };
@@ -441,7 +445,7 @@ function updateDrop() {
   $('#drop').classList.toggle('off', !p); $('#pair').classList.toggle('live', !!p);
   $('#dropTitle').textContent = p ? 'Drop files to send' : f ? f.name + ' is offline' : friends.length ? 'Pick a person first' : 'Add a friend to start';
   $('#peerName').textContent = shown ? shown.name : 'Pick a person';
-  $('#peerSub').textContent = p ? 'Online' : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
+  $('#peerSub').textContent = p ? (webPeerIds.has(p.id) ? 'Online · Using Web' : 'Online') : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
   const n = avatar(shown && (shown.av || f?.av), shown ? shown.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
 }
 function setStatus(on, text) {
@@ -517,7 +521,7 @@ function connect() {
     if (event.t === 'state') {
       const connected = event.state === 'connected'; ws.readyState = connected ? 1 : 3;
       setStatus(connected, event.text); known = null; if (connected) syncFriendState();
-      if (!connected) { sentFr.clear(); setOnline([]); }
+      if (!connected) { sentFr.clear(); webPeerIds.clear(); webAnnouncedTo.clear(); setOnline([]); }
       if (typeof accessState !== 'undefined') { accessState = event; if (typeof renderSettings === 'function' && activeSettingsSection === 'Device access' && !$('#settingsPane').classList.contains('hidden')) renderSettings('Device access'); }
     } else if (event.t === 'message') {
       const m = event.message;
@@ -533,6 +537,7 @@ function connect() {
 // Device code: derived from this installation's random id (created on first launch, saved with the app data,
 // so it belongs to the device and never changes when the profile is edited). Only a hash is shared, never the id.
 const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ', codes = new Map(), FSIG = new Set(['fr', 'fa', 'fd', 'fx']), sentFr = new Set();
+const webPeerIds = new Set(), webAnnouncedTo = new Set();
 async function deviceCode(id) {
   if (codes.has(id)) return codes.get(id);
   const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('droply-device:' + id)));
@@ -593,6 +598,16 @@ async function applyOnline(list) {
     if (f.name !== name || f.av !== av) { f.name = name; f.av = av; dirty = true; }
   }
   peers = list.filter(p => isFriend(p.id));
+  const online = new Set(peers.map(p => p.id));
+  for (const id of webPeerIds) if (!online.has(id)) webPeerIds.delete(id);
+  for (const id of webAnnouncedTo) if (!online.has(id)) webAnnouncedTo.delete(id);
+  if (window.DroplyWeb) for (const peer of peers) {
+    if (webAnnouncedTo.has(peer.id)) continue;
+    webAnnouncedTo.add(peer.id);
+    // Reuse friend-only signaling to announce browser presence without a
+    // production server change. Older clients simply ignore this frame.
+    sig(peer.id, { t: 'client-platform', platform: 'web' });
+  }
   if (dirty) persist();
   updateDrop(); renderPeers(); renderRail(); notifyNew();
 }
@@ -666,7 +681,7 @@ function copyCode(btn, text) {
 function showProfile(f) {
   const on = peers.some(p => p.id === f.id);
   const x = h('button', 'closeX'); x.innerHTML = ICON.xl; x.title = 'Close'; x.setAttribute('aria-label', 'Close'); x.onclick = closeCard;
-  const st = h('div', 'pstat' + (on ? ' on' : '')); st.innerHTML = '<i></i><span></span>'; st.querySelector('span').textContent = on ? 'Online' : 'Offline';
+  const st = h('div', 'pstat' + (on ? ' on' : '')); st.innerHTML = '<i></i><span></span>'; st.querySelector('span').textContent = on ? (webPeerIds.has(f.id) ? 'Online · Using Web' : 'Online') : 'Offline';
   const field = h('div', 'field'), box = h('div', 'codebox'), cp = h('button', 'cp ghost'); cp.innerHTML = ICON.copy; cp.title = 'Copy code'; cp.setAttribute('aria-label', 'Copy code');
   cp.onclick = () => copyCode(cp, f.code);
   box.append(h('code', null, f.code), cp);
@@ -852,6 +867,13 @@ const validCandidate = c => c && typeof c === 'object' && typeof c.candidate ===
   && (c.usernameFragment == null || (typeof c.usernameFragment === 'string' && c.usernameFragment.length <= 256));
 function onSig(from, d) {
   if (!d || typeof d !== 'object') return;
+  if (d.t === 'client-platform') {
+    if (d.platform !== 'web' || !isFriend(from) || !peers.some(peer => peer.id === from)
+        || webPeerIds.has(from)) return;
+    webPeerIds.add(from);
+    renderPeers(); renderRail(); updateDrop();
+    return;
+  }
   if (FSIG.has(d.t)) return void friendSig(from, d).catch(() => {});
   if (d.t === 'req') {
     if (!validReq(d) || document.getElementById(d.tid) || sess[d.tid] || asks.some(a => a.d.tid === d.tid)) return;
