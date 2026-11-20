@@ -251,7 +251,9 @@ function start() {
     width: 780, height: 740, minWidth: 640, minHeight: 560, backgroundColor: '#0f1b2e', show: false, titleBarStyle: 'hidden',
     ...(process.platform === 'darwin' ? { trafficLightPosition: { x: 16, y: 13 } } : process.platform === 'win32' ? { frame: false, thickFrame: true } : { titleBarOverlay: { color: '#0e1523', symbolColor: '#9aa7bd', height: 40 } }),
     autoHideMenuBar: true, title: 'Droply', icon: iconPath(),
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true }
+    // Friend invitations must be processed even if Droply is hidden in the tray.
+    // Electron otherwise throttles background renderer execution.
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false }
   });
   ipcMain.handle('get-window-chrome', e => fromUI(e) ? { custom: process.platform === 'win32', rightControls: process.platform !== 'darwin', maximized: win.isMaximized() } : null);
   ipcMain.handle('window-control', (e, action) => {
