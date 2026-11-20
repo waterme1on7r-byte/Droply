@@ -18,6 +18,7 @@ test('pending friend requests retry quickly, but never flood an already-online r
     Date: { now: () => now }, me: { name: 'Alice', avatar: '' }, pendOut: [{ code }],
     ws: { readyState: 1 },
     sig: (to, data) => signals.push({ to, data }),
+    renderReqs: () => {},
     setTimeout(fn, ms) { const id = ++n; timers.set(id, { fn, ms }); return id; },
     clearTimeout(id) { timers.delete(id); }
   };
@@ -69,6 +70,7 @@ test('queued friend retries are cancelled on disconnect', () => {
     Date: { now: () => 50000 }, me: { name: 'Alice', avatar: '' },
     pendOut: [{ code }], ws: { readyState: 1 },
     sig: (to, data) => signals.push({ to, data }),
+    renderReqs: () => {},
     setTimeout(fn) { const value = ++id; timers.set(value, fn); return value; },
     clearTimeout(key) { timers.delete(key); }
   };
