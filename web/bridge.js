@@ -68,14 +68,63 @@
   };
   window.api = api;
   window.DroplyWeb = true;
+
+  // Use the same friend-strip hook as the Android renderer, without changing
+  // the shared desktop HTML or duplicating its friend and selection state.
+  const friendStrip = document.createElement('section');
+  friendStrip.id = 'webFriendsStrip';
+  friendStrip.setAttribute('aria-label', 'Friends');
+  friendStrip.innerHTML = '<div class="strip-heading"><b>Friends</b><small>0 online · 0 offline</small></div><div class="strip-friends"></div>';
+  document.querySelector('.pairwrap').before(friendStrip);
+  window.renderAndroidFriends = (friends, peers, selected, resolvePlatform) => {
+    const online = new Set(peers.map(peer => peer.id));
+    const list = friendStrip.querySelector('.strip-friends');
+    list.replaceChildren();
+    friendStrip.querySelector('.strip-heading small').textContent =
+      `${friends.filter(friend => online.has(friend.id)).length} online · ${friends.filter(friend => !online.has(friend.id)).length} offline`;
+    if (!friends.length) {
+      const empty = document.createElement('button');
+      empty.type = 'button';
+      empty.className = 'strip-empty ghost';
+      empty.textContent = 'Add your first friend';
+      empty.onclick = () => document.querySelector('#addFriendBtn').click();
+      list.append(empty);
+    }
+    [...friends].sort((a, b) =>
+      Number(online.has(b.id)) - Number(online.has(a.id)) || a.name.localeCompare(b.name)
+    ).forEach(friend => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'strip-friend' +
+        (online.has(friend.id) ? ' online' : '') + (friend.id === selected ? ' selected' : '');
+      button.setAttribute('aria-pressed', String(friend.id === selected));
+      button.setAttribute('aria-label', friend.name + ', ' + (online.has(friend.id) ? 'online' : 'offline'));
+      const frame = document.createElement('span');
+      frame.className = 'strip-avatar';
+      const image = avatar(friend.av, friend.name);
+      const badge = withDeviceBadge(image, resolvePlatform?.(friend.id));
+      const dot = document.createElement('i');
+      dot.className = 'strip-dot';
+      frame.append(badge, dot);
+      const name = document.createElement('span');
+      name.className = 'strip-name';
+      name.textContent = friend.name;
+      const status = document.createElement('small');
+      status.textContent = online.has(friend.id) ? 'Online' : 'Offline';
+      attachFriendHover(frame, friend.id);
+      button.append(frame, name, status);
+      button.onclick = () => selectFriend(friend.id);
+      list.append(button);
+    });
+  };
   document.addEventListener('DOMContentLoaded', () => {
     const main = document.querySelector('main');
     const head = main?.querySelector('.head');
     if (head) {
-      const banner = document.createElement('div');
+      const banner = document.createElement('details');
       banner.className = 'web-note';
       banner.setAttribute('role', 'note');
-      const heading = document.createElement('strong');
+      const heading = document.createElement('summary');
       heading.className = 'web-note-title';
       heading.textContent = window.DroplyPrivatePreview
         ? 'Welcome to the Droply Web preview'
@@ -86,7 +135,7 @@
       privacy.className = 'web-note-privacy';
       privacy.textContent = 'A quick privacy note: Your identity credentials are stored in this browser, not protected by your device’s secure keychain.';
       banner.append(heading, introduction, privacy);
-      head.after(banner);
+      main.append(banner);
     }
     const label = document.querySelector('#titlebar');
     if (label) label.firstChild.textContent = window.DroplyPrivatePreview ? 'Droply · Private test' : 'Droply · Web';
