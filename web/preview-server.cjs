@@ -46,6 +46,18 @@ function createPreviewServer(options = {}) {
   const attempts = new Map();
   const wss = new WebSocketServer({ noServer: true, maxPayload: 1 << 20, perMessageDeflate: false });
   const secureCookies = env.PREVIEW_LOCAL_HTTP !== '1';
+  // Public GitHub Pages clients can reach ONLY the authenticated signaling
+  // protocol through these explicit origins. Preview HTML stays password-only.
+  const publicOrigins = new Set();
+  for (const origin of String(env.WEB_PUBLIC_ALLOWED_ORIGINS || '').split(',').map(x => x.trim()).filter(Boolean)) {
+    const url = new URL(origin);
+    if (url.origin !== origin || url.protocol !== 'https:' || url.username ||
+      url.password || url.search || url.hash || url.pathname !== '/')
+      throw Error('WEB_PUBLIC_ALLOWED_ORIGINS must contain exact HTTPS origins');
+    publicOrigins.add(origin);
+  }
+  const publicRequest = req => typeof req.headers.origin === 'string' &&
+    publicOrigins.has(req.headers.origin);
   let traceSequence = 0;
 
   function reply(res, status, body = '', headers = {}) {
@@ -178,7 +190,20 @@ function createPreviewServer(options = {}) {
     } catch { reply(res, 503, 'The test build is not available yet.'); }
   }
   async function proxyAuth(req, res, pathname) {
-    if (!authorized(req) || !validOrigin(req)) return reply(res, 403, 'Forbidden');
+    // The public browser uses device tokens for its authentication. No preview
+    // cookie is sent cross-origin; the private preview still requires one.
+    const publicAccess = publicRequest(req);
+    const privateAccess = authorized(req) && validOrigin(req);
+    if (!publicAccess && !privateAccess) return reply(res, 403, 'Forbidden');
+    if (publicAccess) {
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+      res.setHeader('Vary', 'Origin');
+      if (req.method === 'OPTIONS') return reply(res, 204, '', {
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '300'
+      });
+    }
     if (req.method !== 'POST' || !/^application\/json(?:;|$)/i.test(req.headers['content-type'] || ''))
       return reply(res, 405, 'Not allowed');
     let body;
@@ -269,8 +294,9 @@ function createPreviewServer(options = {}) {
     let pathname;
     try { pathname = new URL(req.url, 'http://localhost').pathname; }
     catch { return socket.destroy(); }
-    if (pathname !== '/device' || !authorized(req) || !validOrigin(req)
-      || wss.clients.size >= 100) {
+    if (pathname !== '/device' ||
+      !(publicRequest(req) || (authorized(req) && validOrigin(req))) ||
+      wss.clients.size >= 100) {
       socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
       return;
     }
