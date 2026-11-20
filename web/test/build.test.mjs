@@ -87,20 +87,28 @@ test('browser intro uses friendly language without hiding identity security guid
   assert.doesNotMatch(css, /\.web-note\{[^}]*border-left:/);
 });
 
-test('mobile landscape app keeps navigation and dialogs reachable without affecting desktop UI', async () => {
+test('landscape web app matches desktop-style layout on phones and tablets', async () => {
   const css = await readFile(root + '/docs/app/web.css', 'utf8');
   const src = await readFile(root + '/web/web.css', 'utf8');
-  assert.equal(css, src, 'Landscape fix must be included in the published browser bundle');
-  assert.match(css, /@media\s*\(orientation:landscape\) and \(max-height:600px\) and \(max-width:1200px\)/);
-  const landscape = css.slice(css.indexOf('/* Phone landscape: never fall back'));
-  assert.ok(landscape.startsWith('/* Phone landscape:'));
-  assert.match(landscape, /html\.droply-web body\s*\{[^}]*flex-direction:row/);
-  assert.match(landscape, /html\.droply-web \.rail\s*\{[^}]*flex-direction:column/);
-  assert.match(landscape, /html\.droply-web #frList\s*\{[^}]*overflow-y:auto/);
-  assert.match(landscape, /html\.droply-web main\s*\{[^}]*overflow-y:auto/);
-  assert.match(landscape, /html\.droply-web #settingsPane\s*\{[^}]*calc\(56px \+ env\(safe-area-inset-left/);
-  assert.match(landscape, /html\.droply-web #friendRequests \.request-box\s*\{[^}]*max-height:calc\(100dvh - 50px\)/);
-  assert.match(landscape, /html\.droply-web #setup \.box,html\.droply-web #ask \.box,[\s\S]*max-height:calc\(100dvh - 52px\)/);
-  assert.match(landscape, /html\.droply-web \.settings-content\s*\{[^}]*overflow:auto/);
+  assert.equal(css, src, 'Landscape styling must be included in the published app bundle');
+  assert.match(css, /@media \(orientation: landscape\) and \(pointer: coarse\) and \(max-width: 1600px\)/);
+  assert.match(css, /\(orientation: landscape\) and \(max-width: 1100px\) and \(max-height: 800px\)/);
+  assert.match(css, /@media \(orientation: landscape\) and \(max-height: 430px\)/);
+  const landscape = css.slice(css.indexOf('/* Landscape phones and tablets'));
+  assert.ok(landscape.startsWith('/* Landscape phones and tablets'));
+  assert.match(landscape, /html\.droply-web body\s*\{[^}]*flex-direction: row/);
+  assert.match(landscape, /html\.droply-web \.rail\s*\{[^}]*flex-direction: column/);
+  assert.match(landscape, /html\.droply-web #frList\s*\{[^}]*flex-direction: column/);
+  assert.match(landscape, /html\.droply-web main\s*\{[^}]*overflow-x: hidden; overflow-y: auto/);
+  assert.match(landscape, /html\.droply-web #pair\s*\{[^}]*flex-direction: row/);
+  assert.match(landscape, /html\.droply-web #drop\s*\{[^}]*min-height: 170px/);
+  assert.match(landscape, /html\.droply-web #addFriend \.box\s*\{[^}]*left: calc\(var\(--landscape-rail\)/);
+  assert.match(landscape, /html\.droply-web #friendRequests \.request-box\s*\{[^}]*bottom: max\(12px/);
+  assert.match(landscape, /html\.droply-web #settingsPane\s*\{[^}]*var\(--landscape-rail\)/);
+  assert.match(landscape, /html\.droply-web \.settings-content\s*\{[^}]*overflow-y: auto/);
+  assert.match(landscape, /html\.droply-web #setup \.box,[\s\S]*max-height: calc\(100dvh - var\(--landscape-title\) - 20px\)/);
+  // The ordinary narrow portrait layout remains in its own orientation-neutral
+  // breakpoint and the landscape overrides do not target the desktop renderer.
+  assert.match(css, /@media \(max-width:760px\)/);
   assert.doesNotMatch(landscape, /(^|\n)\s*body\s*\{/);
 });
