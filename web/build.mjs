@@ -10,7 +10,13 @@ const source = await readFile(join(root, 'index.html'), 'utf8');
 const config = await readFile(join(root, 'config.js'), 'utf8');
 const context = { window: {} };
 runInNewContext(config, context, { timeout: 1000 });
-const url = new URL(context.window.CONFIG?.SERVER_URL || '');
+// Public Pages uses the separate gateway, which proxies to the existing
+// signaling backend. Keep the production signaling server's CORS unchanged.
+const publicGateway = process.env.DROPLY_PUBLIC_GATEWAY_URL || '';
+const url = new URL(publicGateway || context.window.CONFIG?.SERVER_URL || '');
+if (publicGateway && (url.protocol !== 'wss:' || url.pathname !== '/' ||
+  url.origin + '/' !== url.href))
+  throw Error('DROPLY_PUBLIC_GATEWAY_URL must be an exact WSS origin');
 if (!['wss:', 'ws:'].includes(url.protocol) || url.username || url.password || url.search || url.hash
   || (url.protocol === 'ws:' && !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))
   throw Error('config.js must contain a valid secure public signaling URL');
@@ -46,7 +52,10 @@ replaceOnce("script-src 'self' 'unsafe-inline'", "script-src 'self' 'sha256-" + 
 replaceOnce("connect-src 'self' ws: wss:", "connect-src 'self' " + url.origin + ' ' + httpUrl.origin + (process.env.DROPLY_PRIVATE_PREVIEW === '1' ? ' wss:' : ''));
 await mkdir(output, { recursive: true });
 await writeFile(join(output, 'index.html'), html);
-await writeFile(join(output, 'config.js'), config);
+const outputConfig = publicGateway
+  ? config + '\nwindow.CONFIG.SERVER_URL = ' + JSON.stringify(url.origin) + ';\n'
+  : config;
+await writeFile(join(output, 'config.js'), outputConfig);
 for (const name of ['settings.js', 'settings.css'])
   await copyFile(join(root, name), join(output, name));
 for (const name of ['storage.js', 'network.js', 'receive.js', 'bridge.js', 'web.css'])
