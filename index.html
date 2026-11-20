@@ -367,6 +367,11 @@ function deviceBadge(platform) {
   badge.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + shape + '</svg>';
   return badge;
 }
+const SUPPORTED_PLATFORMS = new Set(['win32', 'darwin', 'linux', 'android-phone', 'android-tablet', 'android-tv', 'web']);
+function peerPlatform(id) {
+  const live = peers.find(p => p.id === id);
+  return live?.platform || announcedPeerPlatforms.get(id) || (webPeerIds.has(id) ? 'web' : undefined);
+}
 function withDeviceBadge(image, platform) {
   const badge = deviceBadge(platform);
   if (!badge) return image;
@@ -385,7 +390,7 @@ function attachFriendHover(target, friendId) {
       document.body.append(friendHoverCard);
     }
     friendHoverCard.replaceChildren();
-    const icon = deviceBadge(online?.platform);
+    const icon = deviceBadge(online?.platform || peerPlatform(friendId));
     if (icon) { icon.className = 'friend-hover-device'; friendHoverCard.append(icon); }
     const text = h('div', 'friend-hover-text'); text.append(h('b', null, online?.name || friend.name));
     const device = icon ? ' · ' + icon.title : '';
@@ -440,7 +445,7 @@ function renderPeers() {
   l.appendChild(h('div', 'sect', 'Friends · ' + peers.length + ' online'));
   [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
     const el = document.createElement('div'); el.className = 'peer' + (f.id === sel ? ' sel' : '') + (on.has(f.id) ? '' : ' off');
-    const photo = withDeviceBadge(avatar(f.av, f.name), peers.find(p => p.id === f.id)?.platform);
+    const photo = withDeviceBadge(avatar(f.av, f.name), peerPlatform(f.id));
     attachFriendHover(photo, f.id); el.appendChild(photo);
     const identity = h('div', 'peer-identity');
     identity.append(h('span', 'peer-name', f.name));
@@ -485,17 +490,17 @@ function renderReqs() {
 // Left sidebar: every accepted friend, online ones first. Green dot = online, red = offline.
 function renderRail() {
   hideFriendHover();
-  window.renderAndroidFriends?.(friends, peers, sel);
+  window.renderAndroidFriends?.(friends, peers, sel, peerPlatform);
   const l = $('#frList'); l.innerHTML = '';
   const on = new Set(peers.map(p => p.id));
   [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
-    const el = h('div', 'fr' + (on.has(f.id) ? ' on' : '') + (f.id === sel ? ' sel' : '')); el.title = f.name + (on.has(f.id) ? (webPeerIds.has(f.id) ? ' · Online · Using Web' : ' · online') : ' · offline');
+    const el = h('div', 'fr' + (on.has(f.id) ? ' on' : '') + (f.id === sel ? ' sel' : '')); const platform = on.has(f.id) ? peerPlatform(f.id) : undefined; const deviceName = platform === 'darwin' ? 'macOS' : platform === 'win32' ? 'Windows' : platform?.replace('android-', 'Android '); el.title = f.name + (on.has(f.id) ? (deviceName ? ' · Online · Using ' + deviceName : ' · online') : ' · offline');
     const a = avatar(f.av, f.name); a.classList.add('fav');
     el.removeAttribute?.('title'); attachFriendHover(a, f.id);
     const x = h('button', 'frx'); x.innerHTML = ICON.x; x.title = 'Remove friend'; x.setAttribute('aria-label', 'Remove ' + f.name);
     x.onclick = ev => { ev.stopPropagation(); confirmRemove(f); };
     el.append(a, h('i', 'dot'), x);
-    const badge = deviceBadge(peers.find(p => p.id === f.id)?.platform); if (badge) el.append(badge);
+    const badge = deviceBadge(on.has(f.id) ? peerPlatform(f.id) : undefined); if (badge) el.append(badge);
     el.onclick = () => { selectFriend(f.id); showProfile(f); };
     l.appendChild(el);
   });
@@ -508,8 +513,10 @@ function updateDrop() {
   $('#drop').classList.toggle('off', !p); $('#pair').classList.toggle('live', !!p);
   $('#dropTitle').textContent = p ? 'Drop files to send' : f ? f.name + ' is offline' : friends.length ? 'Pick a person first' : 'Add a friend to start';
   $('#peerName').textContent = shown ? shown.name : 'Pick a person';
-  $('#peerSub').textContent = p ? (webPeerIds.has(p.id) ? 'Online · Using Web' : 'Online') : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
-  const n = withDeviceBadge(avatar(shown && (shown.av || f?.av), shown ? shown.name : '+'), p?.platform); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
+  const device = p ? peerPlatform(p.id) : undefined;
+  const deviceName = device === 'darwin' ? 'macOS' : device === 'win32' ? 'Windows' : device?.replace('android-', 'Android ');
+  $('#peerSub').textContent = p ? (deviceName ? 'Online · Using ' + deviceName : 'Online') : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
+  const n = withDeviceBadge(avatar(shown && (shown.av || f?.av), shown ? shown.name : '+'), device); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
   if (shown) attachFriendHover(n, shown.id);
 }
 function setStatus(on, text) {
@@ -602,7 +609,7 @@ function connect() {
     if (event.t === 'state') {
       const connected = event.state === 'connected'; ws.readyState = connected ? 1 : 3;
       setStatus(connected, event.text); known = null; if (connected) syncFriendState();
-      if (!connected) { resetFriendRetries(); webPeerIds.clear(); webAnnouncedTo.clear(); setOnline([]); }
+      if (!connected) { resetFriendRetries(); webPeerIds.clear(); announcedPeerPlatforms.clear(); platformAnnouncedTo.clear(); setOnline([]); }
       if (typeof accessState !== 'undefined') { accessState = event; if (typeof renderSettings === 'function' && activeSettingsSection === 'Device access' && !$('#settingsPane').classList.contains('hidden')) renderSettings('Device access'); }
     } else if (event.t === 'message') {
       const m = event.message;
@@ -619,7 +626,7 @@ function connect() {
 // so it belongs to the device and never changes when the profile is edited). Only a hash is shared, never the id.
 const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ', codes = new Map(), FSIG = new Set(['fr', 'fa', 'fd', 'fx']);
 const sentFr = new Map(); // peer ID -> last send time and bounded retry state
-const webPeerIds = new Set(), webAnnouncedTo = new Set();
+const webPeerIds = new Set(), announcedPeerPlatforms = new Map(), platformAnnouncedTo = new Set();
 const lookupTimers = new Map();
 function clearLookupRetries(code) {
   const timers = lookupTimers.get(code);
@@ -758,13 +765,16 @@ async function applyOnline(list) {
   peers = list.filter(p => isFriend(p.id));
   const online = new Set(peers.map(p => p.id));
   for (const id of webPeerIds) if (!online.has(id)) webPeerIds.delete(id);
-  for (const id of webAnnouncedTo) if (!online.has(id)) webAnnouncedTo.delete(id);
-  if (window.DroplyWeb) for (const peer of peers) {
-    if (webAnnouncedTo.has(peer.id)) continue;
-    webAnnouncedTo.add(peer.id);
-    // Reuse friend-only signaling to announce browser presence without a
-    // production server change. Older clients simply ignore this frame.
-    sig(peer.id, { t: 'client-platform', platform: 'web' });
+  for (const id of announcedPeerPlatforms.keys()) if (!online.has(id)) announcedPeerPlatforms.delete(id);
+  for (const id of platformAnnouncedTo) if (!online.has(id)) platformAnnouncedTo.delete(id);
+  const ownPlatformForPeers = typeof ownPlatform === 'string' && SUPPORTED_PLATFORMS.has(ownPlatform)
+    ? ownPlatform : window.DroplyWeb ? 'web' : undefined;
+  if (ownPlatformForPeers) for (const peer of peers) {
+    if (platformAnnouncedTo.has(peer.id)) continue;
+    platformAnnouncedTo.add(peer.id);
+    // Friend-only signaling also supports servers without platform metadata in
+    // their online-friends roster.
+    sig(peer.id, { t: 'client-platform', platform: ownPlatformForPeers });
   }
   if (dirty) persist();
   updateDrop(); renderPeers(); renderRail(); notifyNew();
@@ -843,12 +853,12 @@ function copyCode(btn, text) {
 function showProfile(f) {
   const on = peers.some(p => p.id === f.id);
   const x = h('button', 'closeX'); x.innerHTML = ICON.xl; x.title = 'Close'; x.setAttribute('aria-label', 'Close'); x.onclick = closeCard;
-  const st = h('div', 'pstat' + (on ? ' on' : '')); st.innerHTML = '<i></i><span></span>'; st.querySelector('span').textContent = on ? (webPeerIds.has(f.id) ? 'Online · Using Web' : 'Online') : 'Offline';
+  const st = h('div', 'pstat' + (on ? ' on' : '')); st.innerHTML = '<i></i><span></span>'; const platform = on ? peerPlatform(f.id) : undefined; const deviceName = platform === 'darwin' ? 'macOS' : platform === 'win32' ? 'Windows' : platform?.replace('android-', 'Android '); st.querySelector('span').textContent = on ? (deviceName ? 'Online · Using ' + deviceName : 'Online') : 'Offline';
   const field = h('div', 'field'), box = h('div', 'codebox'), cp = h('button', 'cp ghost'); cp.innerHTML = ICON.copy; cp.title = 'Copy code'; cp.setAttribute('aria-label', 'Copy code');
   cp.onclick = () => copyCode(cp, f.code);
   box.append(h('code', null, f.code), cp);
   field.append(h('small', null, 'Unique code'), box, h('small', 'hint', 'Share this code so someone else can add ' + f.name + '.'));
-  openCard(x, withDeviceBadge(avatar(f.av, f.name, true), peers.find(p => p.id === f.id)?.platform), h('h2', null, f.name), st, field);
+  openCard(x, withDeviceBadge(avatar(f.av, f.name, true), platform), h('h2', null, f.name), st, field);
 }
 function confirmRemove(f) {
   const btns = h('div', 'btns'), no = h('button', 'ghost', 'Cancel'), yes = h('button', 'danger', 'Remove');
@@ -1031,9 +1041,10 @@ const validCandidate = c => c && typeof c === 'object' && typeof c.candidate ===
 function onSig(from, d) {
   if (!d || typeof d !== 'object') return;
   if (d.t === 'client-platform') {
-    if (d.platform !== 'web' || !isFriend(from) || !peers.some(peer => peer.id === from)
-        || webPeerIds.has(from)) return;
-    webPeerIds.add(from);
+    if (!SUPPORTED_PLATFORMS.has(d.platform) || !isFriend(from) || !peers.some(peer => peer.id === from)
+        || announcedPeerPlatforms.get(from) === d.platform) return;
+    announcedPeerPlatforms.set(from, d.platform);
+    if (d.platform === 'web') webPeerIds.add(from);
     renderPeers(); renderRail(); updateDrop();
     return;
   }

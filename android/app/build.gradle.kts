@@ -18,8 +18,8 @@ android {
         applicationId = "com.droply.android"
         minSdk = 29
         targetSdk = 36
-        versionCode = 8
-        versionName = "2.8.14"
+        versionCode = 9
+        versionName = "2.8.15"
     }
 
     buildFeatures { buildConfig = false }
