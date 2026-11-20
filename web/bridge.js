@@ -1,6 +1,11 @@
 (() => {
   'use strict';
   document.documentElement.classList.add('droply-web');
+  // iPadOS can advertise itself as macOS; touch capability distinguishes it
+  // from a Mac without affecting Android or desktop browser layouts.
+  const iosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (iosDevice) document.documentElement.classList.add('droply-ios');
   const store = window.DroplyWebStore, net = window.DroplyWebNetwork, receive = window.DroplyWebReceive;
   const CODE = /^DRP-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
   async function getHistory() { return store.history(); }
