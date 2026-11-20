@@ -44,11 +44,26 @@ function renderSettings(section) {
   if (section === 'Profile') {
     intro(window.DroplyWeb ? 'Your name and photo are visible to friends. Your code belongs to this browser profile and depends on this browser’s site data.' : 'Your name and photo are visible to your friends. Your code belongs to this device.');
     const av = avatar(me.avatar, me.name, true, true); av.onclick = () => openSetup(true);
-    if (window.DroplyAndroid) {
-      const hero = h('div', 'profile-hero'); av.classList.add('profile-hero-avatar');
-      hero.append(av, h('strong', 'profile-hero-name', me.name)); body.append(hero);
-    } else body.append(av, h('p', 'intro', me.name));
-    settingAction(actions(), 'Edit name & photo', () => openSetup(true));
+    if (window.DroplyWeb) {
+      // Keep the original Droply avatar and controls, but give the browser
+      // profile a centered, readable name and an explicit platform label.
+      const hero = h('div', 'profile-hero web-profile-hero');
+      av.classList.add('profile-hero-avatar');
+      av.setAttribute('role', 'button'); av.setAttribute('tabindex', '0');
+      av.setAttribute('aria-label', 'Edit profile photo');
+      av.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openSetup(true); } };
+      const name = h('strong', 'profile-hero-name', me.name);
+      const platform = h('span', 'client-platform-tag profile-web-status', 'Using Web');
+      const edit = h('div', 'profile-edit-actions');
+      settingAction(edit, 'Edit name & photo', () => openSetup(true));
+      hero.append(av, name, platform, edit); body.append(hero);
+    } else {
+      if (window.DroplyAndroid) {
+        const hero = h('div', 'profile-hero'); av.classList.add('profile-hero-avatar');
+        hero.append(av, h('strong', 'profile-hero-name', me.name)); body.append(hero);
+      } else body.append(av, h('p', 'intro', me.name));
+      settingAction(actions(), 'Edit name & photo', () => openSetup(true));
+    }
     const field = h('div', 'field settings-code'), box = h('div', 'codebox'), code = h('code'), copy = h('button', 'cp ghost');
     field.append(h('small', '', 'Your device code')); copy.innerHTML = ICON.copy; copy.setAttribute('aria-label', 'Copy device code');
     deviceCode(me.id).then(c => { code.textContent = c; copy.onclick = () => copyCode(copy, c); }); box.append(code, copy); field.append(box); body.append(field);
