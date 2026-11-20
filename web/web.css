@@ -238,3 +238,170 @@ html.droply-web .web-profile-hero .profile-edit-actions button{
   html.droply-web #pair .link>span { width: 34px; height: 34px; border-width: 4px; }
   html.droply-web #drop { min-height: 120px; flex-basis: 120px; }
 }
+
+/* Portrait reference: a readable Friends strip, two linked devices, a large
+   upload target and a four-control bottom navigation. Landscape retains the
+   existing left rail and desktop-size workspace. */
+html.droply-web h1.wordmark { text-transform: capitalize; }
+html.droply-web h1.wordmark span { display: none; }
+html.droply-web #webFriendsStrip { display: none; }
+html.droply-web .web-note { display: block; padding: 9px 12px; }
+html.droply-web .web-note summary { cursor: pointer; }
+html.droply-web .web-note p { margin-top: 7px; }
+
+@media (orientation: portrait) and (max-width: 900px) {
+  html.droply-web {
+    --portrait-title: calc(46px + env(safe-area-inset-top, 0px));
+    --portrait-nav: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+  html.droply-web body {
+    width: 100%; height: 100dvh; min-height: 0;
+    display: flex; flex-direction: column; overflow: hidden;
+    padding: var(--portrait-title) 0 var(--portrait-nav);
+  }
+  html.droply-web #titlebar {
+    height: var(--portrait-title);
+    padding-top: env(safe-area-inset-top, 0px);
+    font-size: 12px; letter-spacing: .055em;
+  }
+  html.droply-web main {
+    order: 1; flex: 1 1 auto; width: 100%; min-width: 0; min-height: 0;
+    display: flex; flex-direction: column; gap: 13px;
+    padding: 12px 14px 18px; overflow-x: hidden; overflow-y: auto;
+    overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  }
+  html.droply-web .rail {
+    position: fixed; z-index: 30; left: 0; right: 0; bottom: 0;
+    order: 2; width: 100%; height: var(--portrait-nav);
+    min-height: 0; max-height: none; flex: none;
+    display: flex; flex-direction: row; align-items: flex-start; justify-content: center;
+    gap: clamp(12px, 5vw, 26px);
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+    border-right: 0; border-top: 1px solid var(--line);
+    background: #0d1524; overflow: visible;
+  }
+  html.droply-web .rail > .rbtn.active,
+  html.droply-web .rail > .rsep,
+  html.droply-web .rail #frList { display: none !important; }
+  html.droply-web .rail #railAv {
+    display: flex; order: 0; width: 44px; height: 44px; min-width: 44px;
+    border-radius: 12px; font-size: 17px;
+  }
+  html.droply-web .rail #peopleBtn { order: 1; }
+  html.droply-web .rail #gearBtn { order: 2; }
+  html.droply-web .rail #addFriendBtn { order: 3; }
+  html.droply-web .rail #peopleBtn,
+  html.droply-web .rail #gearBtn,
+  html.droply-web .rail #addFriendBtn {
+    width: 44px; height: 44px; min-width: 44px; padding: 0; border-radius: 12px;
+  }
+  html.droply-web .head { align-items: center; gap: 9px; }
+  html.droply-web h1 { height: auto; font-size: 30px; line-height: 1.12; }
+  html.droply-web .head p {
+    display: block; font-size: 11px; line-height: 1.3; margin-top: 4px;
+  }
+  html.droply-web #status {
+    flex: 0 1 auto; min-width: 0; max-width: 49%;
+    margin-top: 0; padding: 6px 9px; gap: 6px;
+    font-size: 10px; line-height: 1.25; white-space: normal;
+  }
+  html.droply-web #webFriendsStrip { display: block; flex: none; min-width: 0; }
+  html.droply-web .strip-heading {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 7px; gap: 10px;
+  }
+  html.droply-web .strip-heading b { color: var(--text); font-size: 14px; }
+  html.droply-web .strip-heading small { color: var(--mute); font-size: 11px; }
+  html.droply-web .strip-friends {
+    display: flex; align-items: flex-start; gap: 14px;
+    min-height: 72px; padding: 3px 2px 7px; max-width: 100%;
+    overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+  }
+  html.droply-web .strip-friend {
+    display: flex; flex: 0 0 76px; min-width: 0; flex-direction: column;
+    align-items: center; gap: 3px; padding: 0;
+    border: 0; background: transparent; color: var(--text); box-shadow: none;
+  }
+  html.droply-web .strip-avatar {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; flex: none;
+  }
+  html.droply-web .strip-avatar .av,
+  html.droply-web .strip-avatar .av-frame {
+    display: flex; width: 44px; height: 44px; min-width: 44px;
+    border-radius: 12px; font-size: 18px;
+  }
+  html.droply-web .strip-avatar img { border-radius: 12px; }
+  html.droply-web .strip-friend.selected .strip-avatar {
+    outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 12px;
+  }
+  html.droply-web .strip-dot {
+    position: absolute; right: -3px; bottom: -2px; width: 13px; height: 13px;
+    border: 3px solid #0f1b2e; border-radius: 50%; background: var(--err);
+  }
+  html.droply-web .strip-friend.online .strip-dot { background: #22c55e; }
+  html.droply-web .strip-name {
+    display: block; width: 100%; font-size: 11px; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  html.droply-web .strip-friend small { font-size: 10px; color: var(--mute); }
+  html.droply-web .strip-empty {
+    min-height: 42px; padding: 9px 12px; font-size: 12px; border-radius: 12px;
+  }
+  html.droply-web #pair {
+    display: grid; grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr);
+    width: 100%; gap: 6px; align-items: center;
+  }
+  html.droply-web #pair .link { width: 42px; min-width: 42px; }
+  html.droply-web #pair .link > span { width: 38px; height: 38px; border-width: 4px; }
+  html.droply-web #pair .link > span svg { width: 18px; height: 18px; }
+  html.droply-web .pcard { min-width: 0; gap: 7px; padding: 8px; border-radius: 12px; }
+  html.droply-web .pcard .av {
+    display: flex; width: 34px; height: 34px; min-width: 34px;
+    border-radius: 10px; font-size: 14px;
+  }
+  html.droply-web .pcard b { font-size: 12px; }
+  html.droply-web .pcard small { font-size: 10px; }
+  html.droply-web #picker {
+    left: 0; right: 0; top: calc(100% + 8px); width: auto; max-width: none;
+    max-height: min(46dvh, 350px);
+  }
+  html.droply-web #drop {
+    flex: 0 0 auto; height: clamp(160px, 28dvh, 260px);
+    min-height: 160px; padding: 16px 10px; border-radius: 16px;
+  }
+  html.droply-web #drop .ico svg { width: 30px; height: 30px; }
+  html.droply-web #drop h2 { font-size: 16px; }
+  html.droply-web #drop p { font-size: 11px; line-height: 1.5; }
+  html.droply-web #folderBtn { padding: 4px 6px; font-size: 11px; }
+  html.droply-web #transferFeed { min-height: 0; max-height: none; }
+  html.droply-web #log { max-height: none; overflow: visible; }
+  html.droply-web #sig { display: none; }
+  html.droply-web .web-note { margin-top: 10px; }
+  html.droply-web #settingsPane { inset: var(--portrait-title) 0 var(--portrait-nav); }
+  html.droply-web #setup, html.droply-web #ask,
+  html.droply-web #pf, html.droply-web #appDialog {
+    inset: var(--portrait-title) 0 var(--portrait-nav);
+    padding: 10px; overflow-y: auto; align-items: safe center;
+  }
+  html.droply-web #setup .box, html.droply-web #ask .box,
+  html.droply-web #pf .box, html.droply-web #appDialog .box {
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - var(--portrait-title) - var(--portrait-nav) - 20px);
+    overflow-y: auto; margin: auto;
+  }
+  html.droply-web #addFriend .box,
+  html.droply-web #friendRequests .request-box {
+    width: min(355px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+  html.droply-web #tl { top: calc(var(--portrait-title) + 8px); }
+  html.droply-web #br { bottom: calc(var(--portrait-nav) + 8px); }
+}
+@media (orientation: portrait) and (max-width: 390px) {
+  html.droply-web main { padding-inline: 12px; gap: 11px; }
+  html.droply-web .head p { display: block; }
+  html.droply-web .pcard .av { display: flex; }
+  html.droply-web #status { max-width: 45%; font-size: 9px; }
+}
