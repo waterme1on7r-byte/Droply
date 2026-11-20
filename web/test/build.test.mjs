@@ -86,3 +86,21 @@ test('browser intro uses friendly language without hiding identity security guid
   assert.match(css, /\.web-note-privacy/);
   assert.doesNotMatch(css, /\.web-note\{[^}]*border-left:/);
 });
+
+test('mobile landscape app keeps navigation and dialogs reachable without affecting desktop UI', async () => {
+  const css = await readFile(root + '/docs/app/web.css', 'utf8');
+  const src = await readFile(root + '/web/web.css', 'utf8');
+  assert.equal(css, src, 'Landscape fix must be included in the published browser bundle');
+  assert.match(css, /@media\s*\(orientation:landscape\) and \(max-height:600px\) and \(max-width:1200px\)/);
+  const landscape = css.slice(css.indexOf('/* Phone landscape: never fall back'));
+  assert.ok(landscape.startsWith('/* Phone landscape:'));
+  assert.match(landscape, /html\.droply-web body\s*\{[^}]*flex-direction:row/);
+  assert.match(landscape, /html\.droply-web \.rail\s*\{[^}]*flex-direction:column/);
+  assert.match(landscape, /html\.droply-web #frList\s*\{[^}]*overflow-y:auto/);
+  assert.match(landscape, /html\.droply-web main\s*\{[^}]*overflow-y:auto/);
+  assert.match(landscape, /html\.droply-web #settingsPane\s*\{[^}]*calc\(56px \+ env\(safe-area-inset-left/);
+  assert.match(landscape, /html\.droply-web #friendRequests \.request-box\s*\{[^}]*max-height:calc\(100dvh - 50px\)/);
+  assert.match(landscape, /html\.droply-web #setup \.box,html\.droply-web #ask \.box,[\s\S]*max-height:calc\(100dvh - 52px\)/);
+  assert.match(landscape, /html\.droply-web \.settings-content\s*\{[^}]*overflow:auto/);
+  assert.doesNotMatch(landscape, /(^|\n)\s*body\s*\{/);
+});
