@@ -13,6 +13,41 @@
   };
   let last = { state: 'idle', text: 'Ready to connect' };
   let socket = null, retryTimer = null, pending = null, attempt = 0, active = false, authenticated = false;
+  // The signaling server ignores watches/lookups until it processes "hello".
+  // Queue the latest friend subscription until the hello frame is on the wire.
+  let helloSent = false, helloRevision = 0, queuedWatch = null;
+  const queuedLookups = new Set();
+  function resetHandshake() {
+    helloSent = false;
+    helloRevision++;
+    queuedWatch = null;
+    queuedLookups.clear();
+  }
+  function writeFrame(ws, message) {
+    const encoded = JSON.stringify(message);
+    if (ws.readyState === WebSocket.OPEN && encoded.length < 65536 &&
+      ws.bufferedAmount < 4 * 1024 * 1024) ws.send(encoded);
+  }
+  function announceProfile(ws) {
+    const revision = ++helloRevision;
+    store.profile().then(latest => {
+      if (revision !== helloRevision || socket !== ws || !authenticated ||
+          ws.readyState !== WebSocket.OPEN) return;
+      if (!latest.name?.trim()) {
+        // First-launch setup must still be able to save a name and call hello.
+        state('connected', 'Finish your profile to appear online');
+        return;
+      }
+      writeFrame(ws, { t: 'hello', id: latest.id, name: latest.name, av: latest.avatar });
+      helloSent = true;
+      if (queuedWatch) { writeFrame(ws, queuedWatch); queuedWatch = null; }
+      for (const code of queuedLookups) writeFrame(ws, { t: 'lookup', code });
+      queuedLookups.clear();
+      state('connected', 'Connected securely');
+    }).catch(() => {
+      if (socket === ws) ws.close();
+    });
+  }
   function state(type, text) {
     last = { state: type, text };
     emit('server-event', { t: 'state', ...last });
@@ -34,6 +69,7 @@
     clearTimeout(retryTimer);
     retryTimer = null;
     authenticated = false;
+    resetHandshake();
     if (socket) { socket.onclose = null; socket.close(); socket = null; }
   }
   function schedule() {
@@ -87,6 +123,7 @@
       catch { schedule(); return; }
       socket = ws;
       authenticated = false;
+      resetHandshake();
       const deadline = setTimeout(() => { if (socket === ws && !authenticated) ws.close(); }, 15000);
       let denied = false;
       ws.onopen = () => { if (socket === ws) ws.send(JSON.stringify({ t: 'auth', token: credential.token })); };
@@ -110,13 +147,9 @@
           authenticated = true;
           attempt = 0;
           clearTimeout(deadline);
-          // Read the latest profile: the user may have chosen a name while
-          // initial registration or the WebSocket handshake was in progress.
-          store.profile().then(latest => {
-            if (socket === ws && ws.readyState === WebSocket.OPEN)
-              ws.send(JSON.stringify({ t: 'hello', id: latest.id, name: latest.name, av: latest.avatar }));
-          }).catch(() => {});
-          state('connected', 'Connected securely');
+          // Announce the latest profile before publishing the connected state.
+          // The renderer subscribes to friend-code updates on that state event.
+          announceProfile(ws);
         } else if (authenticated && ['peers', 'sig', 'resolved'].includes(message.t))
           emit('server-event', { t: 'message', message });
       };
@@ -126,6 +159,7 @@
         if (socket !== ws) return;
         socket = null;
         authenticated = false;
+        resetHandshake();
         if (event.code === 4401) {
           denied = true;
           state('enrollment-required', 'Device credential rejected. Use Device access recovery.');
@@ -138,27 +172,47 @@
     return last;
   }
   function sendSignal(message) {
-    if (!authenticated || socket?.readyState !== WebSocket.OPEN || !message || typeof message !== 'object') return;
-    let payload;
+    if (!authenticated || socket?.readyState !== WebSocket.OPEN ||
+      !message || typeof message !== 'object') return;
     if (message.t === 'hello') {
-      // The profile, not a renderer-supplied identity, is authoritative.
-      store.profile().then(user => {
-        if (socket?.readyState === WebSocket.OPEN)
-          socket.send(JSON.stringify({ t: 'hello', id: user.id, name: user.name, av: user.avatar }));
-      }).catch(() => {});
+      announceProfile(socket);
       return;
     }
+    let payload;
     if (message.t === 'sig' && typeof message.to === 'string' && message.to.length <= 64
       && message.data && typeof message.data === 'object')
       payload = { t: 'sig', to: message.to, data: message.data };
-    else if (message.t === 'watch' && ['friends', 'codes', 'notify'].every(key => Array.isArray(message[key])
-      && message[key].length <= 200)) payload = message;
-    else if (message.t === 'lookup' && /^DRP-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/.test(message.code))
-      payload = message;
+    else if (message.t === 'watch' && ['friends', 'codes', 'notify'].every(key =>
+      Array.isArray(message[key]) && message[key].length <= 200))
+      payload = { t: 'watch', friends: message.friends, codes: message.codes, notify: message.notify };
+    else if (message.t === 'lookup' &&
+      /^DRP-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/.test(message.code))
+      payload = { t: 'lookup', code: message.code };
     if (!payload) return;
     const encoded = JSON.stringify(payload);
-    if (encoded.length < (message.t === 'sig' ? (1 << 20) : 65536) && socket.bufferedAmount < 4 * 1024 * 1024)
-      socket.send(encoded);
+    if (encoded.length >= (payload.t === 'sig' ? (1 << 20) : 65536)) return;
+    if (!helloSent) {
+      if (payload.t === 'watch') queuedWatch = payload;
+      else if (payload.t === 'lookup' && queuedLookups.size < 200) queuedLookups.add(payload.code);
+      return;
+    }
+    if (socket.bufferedAmount < 4 * 1024 * 1024) socket.send(encoded);
+  }
+  function onReturnToTab() {
+    if (!active || document.visibilityState === 'hidden') return;
+    if (!socket || socket.readyState === WebSocket.CLOSED) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+      connect();
+    } else if (authenticated && helloSent && socket.readyState === WebSocket.OPEN) {
+      // A sleeping browser can miss presence changes. Refresh the existing
+      // push subscription when it becomes visible, not on a rapid timer.
+      emit('server-event', { t: 'refresh-friends' });
+    }
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', onReturnToTab);
+    window.addEventListener('pageshow', onReturnToTab);
   }
   async function enrollDevice(invitation) {
     if (!/^[A-Za-z0-9_-]{43}$/.test(String(invitation || '').trim())) throw Error('Enter a valid recovery invitation');
