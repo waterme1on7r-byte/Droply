@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0c1018">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-XInSV9diZRmQ1v8fddxcHeG3TfOCQxaGbKDBX17HSTs='; style-src 'self' 'sha256-ecVqxx2VNg8tUdAQ5oxLws6w8PWK48UqbFGKpml5uE4=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-E7nI5Hw5fMUUAzKTSWTxmqe5xG/vweXmZB9L7CRwXN0='; style-src 'self' 'sha256-UnbC4FF2myn/hNU+6fhd8jENMfhuAYcax18p6F0Yh9E=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -229,7 +229,8 @@
     .download-panel-head .brand-icon { width: 65px; height: 65px; margin: 0 auto 20px; filter: drop-shadow(0 15px 20px #73b7ff50); }
     .download-panel-head h2 { margin: 0; font-size: clamp(2.15rem,4.5vw,3.15rem); letter-spacing: -.06em; line-height: 1.18; }
     .download-panel-head p { color: var(--muted); margin: 13px auto 0; font-size: 1.01rem; }
-    .download-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 19px; margin: 38px auto 0; max-width: 810px; }
+    .download-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 19px; margin: 38px auto 0; max-width: 1050px; }
+    @media (max-width: 1000px) { .download-grid { grid-template-columns: 1fr; max-width: 430px; } }
     .download-card { border: 1px solid #ffffff1f; border-radius: 19px; background: #121317a8; padding: 27px; transition: border-color .2s,transform .2s; }
     .download-card:hover { border-color: #85c0ff6b; transform: translateY(-3px); }
     .download-card-title { display: flex; align-items: center; gap: 14px; }
@@ -1725,6 +1726,7 @@ html[data-theme="light"] .droply-chat-status.error {
       <symbol id="droply-mark" viewBox="0 0 64 64"><rect x="0" y="0" width="64" height="64" rx="16" fill="url(#droply-gradient)"/><path d="M32 13C29.4 17.1 20 28.5 20 37a12 12 0 0 0 24 0c0-8.5-9.4-19.9-12-24Z" fill="#fff"/></symbol>
       <symbol id="apple-logo" viewBox="0 0 24 24"><path fill="currentColor" d="M17.1 12.5c0-1.9 1.55-2.82 1.62-2.87-.88-1.28-2.25-1.45-2.74-1.46-1.16-.12-2.29.7-2.88.7-.58 0-1.48-.68-2.44-.66-1.26.02-2.46.73-3.1 1.88-1.33 2.31-.34 5.7.95 7.57.65.92 1.39 1.96 2.34 1.92.94-.04 1.31-.62 2.45-.62 1.14 0 1.46.62 2.44.6 1.01-.02 1.65-.92 2.3-1.85a8.2 8.2 0 0 0 1.05-2.16c-2.44-.93-2.47-3.7-2.48-3.78ZM15.1 6.93c.55-.66.92-1.58.82-2.48-.79.03-1.75.53-2.32 1.2-.52.59-.97 1.53-.85 2.41.88.07 1.79-.46 2.35-1.13Z"/></symbol>
       <symbol id="windows-logo" viewBox="0 0 24 24"><path fill="currentColor" d="M2.5 4.6 11 3.4v8H2.5V4.6Zm9.75-1.37L21.5 2v9.4h-9.25V3.23ZM2.5 12.6H11v8L2.5 19.4v-6.8Zm9.75 0h9.25V22l-9.25-1.3v-8.1Z"/></symbol>
+      <symbol id="android-logo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9.5a6.5 6.5 0 0 1 13 0v7h-13zM7.2 4.8 5.8 2.7m11 2.1 1.4-2.1M2.5 10.5v5m19-5v5M8.5 16.5v4m7-4v4"/><path d="M5.5 9.5h13"/></g><circle cx="9" cy="7.7" r=".75" fill="currentColor"/><circle cx="15" cy="7.7" r=".75" fill="currentColor"/></symbol>
     </defs>
   </svg>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -1768,9 +1770,11 @@ html[data-theme="light"] .droply-chat-status.error {
             <a id="hero-mac" class="btn btn-lg btn-primary" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.13/Droply-2.8.13-universal.dmg"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#apple-logo"/></svg>Download for macOS</a>
             <!-- STABLE RELEASE URL: Update the tag and filename when publishing a new Windows installer. -->
             <a id="hero-win" class="btn btn-lg btn-outline" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.13/Droply-Setup-2.8.13.exe"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#windows-logo"/></svg>Download for Windows</a>
+            <!-- Android preview APK from the published stable release. -->
+            <a id="hero-android" class="btn btn-lg btn-outline" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.13/Droply-2.8.13-Android-preview.apk"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#android-logo"/></svg>Download for Android</a>
           </div>
           <!-- VERSION: Update this display string when you publish a new version. -->
-          <p class="hero-meta">Free <span>·</span> Version 2.8.13 <span>·</span> macOS 12+ / Windows 10+</p>
+          <p class="hero-meta">Free <span>·</span> Version 2.8.13 <span>·</span> macOS 12+ / Windows 10+ / Android 10+</p>
           <div class="hero-trust"><span class="trust-mark"><svg class="icon-stroke" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>Your files stay between you and the person you choose.</div>
         </div>
         <div class="hero-art" role="img" aria-label="Actual Droply desktop screenshot with an animated demonstration of selecting a friend and sending a file">
@@ -1873,7 +1877,7 @@ html[data-theme="light"] .droply-chat-status.error {
     <section class="section download-section" id="download" aria-labelledby="download-title">
       <div class="container">
         <div class="download-panel reveal">
-          <div class="download-panel-head"><svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#droply-mark"/></svg><span class="eyebrow">Make your move</span><h2 id="download-title">Ready to <span class="gradient-text">drop in?</span></h2><p>Choose your desktop. We'll handle the rest.</p></div>
+          <div class="download-panel-head"><svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#droply-mark"/></svg><span class="eyebrow">Make your move</span><h2 id="download-title">Ready to <span class="gradient-text">drop in?</span></h2><p>Choose your device. We'll handle the rest.</p></div>
           <div class="download-grid">
             <div class="download-card"><div class="download-card-title"><span class="os-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#apple-logo"/></svg></span><div><h3>macOS</h3><p>macOS 12 or newer</p></div></div>
               <!-- STABLE RELEASE URL: macOS universal installer (both Apple Silicon and Intel). -->
@@ -1888,6 +1892,11 @@ html[data-theme="light"] .droply-chat-status.error {
               <a class="download-other" href="https://github.com/waterme1on7r-byte/Droply/releases/tag/v2.8.13">View all release files</a>
               <!-- VERSION / FILE SIZE: Update these when publishing new release assets. File sizes shown are decimal MB, rounded. -->
               <div class="download-specs"><span>64-bit</span><span>v2.8.13 · 113 MB</span></div>
+            </div>
+            <div class="download-card"><div class="download-card-title"><span class="os-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#android-logo"/></svg></span><div><h3>Android</h3><p>Android 10 or newer</p></div></div>
+              <!-- Android 10+ preview APK (direct download from the published release). -->
+              <a id="download-android" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.13/Droply-2.8.13-Android-preview.apk" class="btn btn-outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m-4-4 4 4 4-4M4 20h16"/></svg>Download .apk</a>
+              <div class="download-specs"><span>Preview APK</span><span>v2.8.13 · 4 MB</span></div>
             </div>
           </div>
           <p class="download-footer-note">Free to use. No account required. Just install and connect.</p>
@@ -2069,14 +2078,17 @@ html[data-theme="light"] .droply-chat-status.error {
         }
       });
 
-      // OS-aware CTA styling. On other platforms, macOS is shown as the default option.
+      // Highlight the visitor's platform, keeping macOS as the fallback.
       const platform = `${navigator.userAgent || ''} ${navigator.platform || ''}`;
-      const isWindows = /Win(dows|32|64|CE)/i.test(platform);
+      const isAndroid = /Android/i.test(navigator.userAgent || '');
+      const isWindows = !isAndroid && /Win(dows|32|64|CE)/i.test(platform);
       const macButtons = [document.getElementById('hero-mac'), document.getElementById('download-mac')];
       const winButtons = [document.getElementById('hero-win'), document.getElementById('download-win')];
-      [...macButtons, ...winButtons].forEach(btn => btn.classList.remove('btn-primary', 'btn-outline'));
-      macButtons.forEach(btn => btn.classList.add(isWindows ? 'btn-outline' : 'btn-primary'));
+      const androidButtons = [document.getElementById('hero-android'), document.getElementById('download-android')];
+      [...macButtons, ...winButtons, ...androidButtons].forEach(btn => btn.classList.remove('btn-primary', 'btn-outline'));
+      macButtons.forEach(btn => btn.classList.add(!isWindows && !isAndroid ? 'btn-primary' : 'btn-outline'));
       winButtons.forEach(btn => btn.classList.add(isWindows ? 'btn-primary' : 'btn-outline'));
+      androidButtons.forEach(btn => btn.classList.add(isAndroid ? 'btn-primary' : 'btn-outline'));
 
       // REMAINING PLACEHOLDER LINKS: Privacy / Terms until real URLs are provided.
       // Remove data-placeholder (and set a real href) to enable the actual destination.
