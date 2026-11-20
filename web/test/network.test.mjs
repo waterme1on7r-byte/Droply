@@ -166,3 +166,68 @@ test('returning to a backgrounded tab refreshes the friend-code subscription imm
   assert.equal(socket.sent.filter(x => x.t === 'watch').length, before + 1);
   net.close();
 });
+
+
+test('private preview detects stale upstream connections after tab wake and reconnects', async () => {
+  const id = 'b0f0f0b4-9f11-443f-aa3e-c597fe31006d';
+  let socket, closed = 0, timerId = 0;
+  const timers = new Map(), intervals = new Map(), listeners = {};
+  const doc = { visibilityState: 'visible',
+    addEventListener: (name, fn) => { listeners[name] = fn; } };
+  class Socket {
+    static OPEN = 1;
+    static CLOSED = 3;
+    constructor() { socket = this; this.readyState = 1; this.sent = []; this.bufferedAmount = 0; }
+    send(m) { this.sent.push(JSON.parse(m)); }
+    close() { this.readyState = 3; closed++; }
+  }
+  const sandbox = {
+    window: { CONFIG: { SERVER_URL: 'wss://signal.example' },
+      DroplyPrivatePreview: true,
+      addEventListener: (name, fn) => { listeners[name] = fn; },
+      DroplyWebStore: {
+        profile: async () => ({ id, name: 'Alice', avatar: '' }),
+        credential: async () => ({ token: 'A'.repeat(43), registered: true })
+      } },
+    document: doc, WebSocket: Socket, URL, console, Math,
+    setTimeout: (fn, ms) => { const n = ++timerId; timers.set(n, { fn, ms }); return n; },
+    clearTimeout: n => timers.delete(n),
+    setInterval: (fn, ms) => { const n = ++timerId; intervals.set(n, { fn, ms }); return n; },
+    clearInterval: n => intervals.delete(n)
+  };
+  runInNewContext(source, sandbox, { timeout: 1000 });
+  const net = sandbox.window.DroplyWebNetwork;
+  net.on('server-event', event => {
+    if (event.t === 'state' && event.state === 'connected')
+      net.sendSignal({ t: 'watch', friends: [], codes: [], notify: [] });
+  });
+  await net.start();
+  await new Promise(resolve => setImmediate(resolve));
+  socket.onopen();
+  socket.onmessage({ data: JSON.stringify({ t: 'authenticated', id }) });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.ok(socket.sent.some(m => m.t === 'hello'));
+  const ticker = [...intervals.values()].find(x => x.ms === 15000);
+  assert.ok(ticker, 'Preview must check upstream health while visible');
+  ticker.fn();
+  const probe = socket.sent.find(m => m.t === 'gateway-ping');
+  assert.ok(probe && probe.id > 0);
+  assert.equal([...timers.values()].filter(x => x.ms === 8000).length, 1);
+  socket.onmessage({ data: JSON.stringify({ t: 'gateway-pong', id: probe.id }) });
+  assert.equal([...timers.values()].filter(x => x.ms === 8000).length, 0,
+    'Valid upstream pong cancels reconnect deadline');
+
+  doc.visibilityState = 'hidden';
+  ticker.fn();
+  assert.equal(socket.sent.filter(m => m.t === 'gateway-ping').length, 1);
+  doc.visibilityState = 'visible';
+  listeners.visibilitychange();
+  assert.equal(socket.sent.filter(m => m.t === 'gateway-ping').length, 2,
+    'Resume must check connection immediately instead of waiting for interval');
+  const staleDeadline = [...timers.values()].find(x => x.ms === 8000);
+  assert.ok(staleDeadline);
+  staleDeadline.fn();
+  assert.equal(closed, 1, 'Stale upstream connection is closed for reconnection');
+  net.close();
+  assert.equal(intervals.size, 0, 'Background health interval is cleaned up');
+});
