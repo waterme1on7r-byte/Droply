@@ -71,3 +71,18 @@ test('profile remains simple and centered with legible name and Web status', asy
   assert.doesNotThrow(() => new Script(inline[1]));
   assert.doesNotThrow(() => new Script(settings));
 });
+
+test('browser intro uses friendly language without hiding identity security guidance', async () => {
+  const bridge = await readFile(root + '/docs/app/bridge.js', 'utf8');
+  const css = await readFile(root + '/docs/app/web.css', 'utf8');
+  assert.match(bridge, /Welcome to Droply Web/);
+  assert.match(bridge, /browser has its own device code/);
+  assert.match(bridge, /Keep this site’s data to keep your identity/);
+  assert.match(bridge, /choose where incoming files are saved/);
+  assert.match(bridge, /not protected by your device’s secure keychain/);
+  assert.match(bridge, /Welcome to the Droply Web preview/);
+  assert.doesNotMatch(bridge, /PRIVATE TEST BUILD · |DROPLY WEB · /);
+  assert.match(css, /\.web-note-title/);
+  assert.match(css, /\.web-note-privacy/);
+  assert.doesNotMatch(css, /\.web-note\{[^}]*border-left:/);
+});
