@@ -1,48 +1,78 @@
-/* Compact mobile download choices: three equal buttons on one row.
-   Desktop and tablet layouts continue to use the existing site styles. */
-@media (max-width: 500px) {
-  .hero-actions {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 7px;
-    width: 100%;
-    max-width: 355px;
-  }
-  .hero-actions .btn {
-    width: 100%;
-    min-width: 0;
-    min-height: 54px;
-    padding: 8px 6px;
-    gap: 5px;
-    justify-content: center;
-    border-radius: 11px;
-    font-size: clamp(10px, 2.7vw, 12px);
-  }
-  .hero-actions .btn svg {
-    width: 16px;
-    height: 16px;
-    flex: 0 0 16px;
-  }
-  .hero-actions .btn span {
-    min-width: 0;
-    white-space: nowrap;
-  }
-  .hero-actions .btn small {
-    font-size: clamp(7px, 2vw, 9px);
-    white-space: nowrap;
-  }
+/* Four matching, equal-size hero choices in a single row everywhere. */
+.hero-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  max-width: 560px;
 }
-/* Keep labels readable on the smallest phones without losing the one-row layout. */
-@media (max-width: 360px) {
+.hero-actions .btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  padding: 9px 8px;
+  gap: 7px;
+  justify-content: center;
+  border-radius: 13px;
+  font-size: .83rem;
+  line-height: 1.2;
+  text-align: left;
+  white-space: normal;
+}
+.hero-actions .btn svg {
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+}
+.hero-actions .btn span {
+  min-width: 0;
+  white-space: nowrap;
+}
+.hero-actions .btn small { font-size: .66rem; }
+
+/* When the hero column gets narrower, stack each icon inside its button. */
+@media (max-width: 1100px) {
   .hero-actions .btn {
     flex-direction: column;
-    gap: 4px;
+    align-items: center;
     min-height: 65px;
-    padding: 7px 4px;
-    font-size: 12px;
+    gap: 5px;
+    padding: 8px 4px;
     text-align: center;
+    font-size: .79rem;
   }
-  .hero-actions .btn small {
-    display: none;
+  .hero-actions .btn small { display: none; }
+}
+@media (max-width: 500px) {
+  .hero-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    max-width: 355px;
+    gap: 6px;
+  }
+  .hero-actions .btn {
+    min-height: 68px;
+    padding: 8px 3px;
+    gap: 6px;
+    font-size: clamp(10px, 2.8vw, 12px);
+    border-radius: 11px;
+  }
+  .hero-actions .btn svg {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+@media (max-width: 360px) {
+  .hero-actions { gap: 5px; }
+  .hero-actions .btn {
+    min-height: 67px;
+    padding: 7px 2px;
+    font-size: 10px;
+  }
+  .hero-actions .btn svg {
+    flex-basis: 17px;
+    width: 17px;
+    height: 17px;
   }
 }
