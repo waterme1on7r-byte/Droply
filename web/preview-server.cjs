@@ -46,6 +46,7 @@ function createPreviewServer(options = {}) {
   const attempts = new Map();
   const wss = new WebSocketServer({ noServer: true, maxPayload: 1 << 20, perMessageDeflate: false });
   const secureCookies = env.PREVIEW_LOCAL_HTTP !== '1';
+  let traceSequence = 0;
 
   function reply(res, status, body = '', headers = {}) {
     res.writeHead(status, { ...baseHeaders, ...headers });
@@ -276,6 +277,17 @@ function createPreviewServer(options = {}) {
     wss.handleUpgrade(req, socket, head, client => wss.emit('connection', client));
   });
   wss.on('connection', client => {
+    // Optional low-volume stage timings. Never log device codes, IDs, IPs,
+    // credentials, names, avatars or signaling payloads.
+    const traceId = ++traceSequence;
+    const connectedAt = Date.now();
+    let lastLookupAt = 0, lastResolvedAt = 0;
+    function trace(stage, extra = '') {
+      if (env.SIGNALING_DIAGNOSTICS !== '1') return;
+      console.info('[droply-preview] trace=' + traceId + ' stage=' + stage +
+        ' age_ms=' + (Date.now() - connectedAt) + extra);
+    }
+    trace('client_connected');
     const upstream = new WebSocket(new URL('/device', backend).href, {
       handshakeTimeout: 12000, perMessageDeflate: false, maxPayload: 1 << 20,
       followRedirects: false
@@ -293,6 +305,21 @@ function createPreviewServer(options = {}) {
     };
     client.on('message', (frame, binary) => {
       if (binary || stopped) return stop();
+      if (frame.length < 131072 && env.SIGNALING_DIAGNOSTICS === '1') {
+        try {
+          const outbound = JSON.parse(frame.toString());
+          if (outbound.t === 'lookup') {
+            lastLookupAt = Date.now();
+            trace('lookup_forwarded');
+          } else if (outbound.t === 'watch' && Array.isArray(outbound.codes) && outbound.codes.length) {
+            lastLookupAt = Date.now();
+            trace('pending_watch_forwarded');
+          } else if (outbound.t === 'sig' && outbound.data?.t === 'fr') {
+            trace('friend_request_forwarded', lastResolvedAt
+              ? ' since_resolution_ms=' + (Date.now() - lastResolvedAt) : '');
+          }
+        } catch { /* Ignore malformed frames; the upstream handles validation. */ }
+      }
       // Native WebSocket ping/pong gives the browser an end-to-end liveness
       // check through this gateway and the existing signaling server. No
       // broadcast/polling or changes to the production server are needed.
@@ -321,6 +348,7 @@ function createPreviewServer(options = {}) {
       } else stop();
     });
     upstream.on('open', () => {
+      trace('upstream_connected');
       for (const frame of pending) upstream.send(frame, { binary: false });
       pending = []; queued = 0;
     });
@@ -333,13 +361,25 @@ function createPreviewServer(options = {}) {
     });
     upstream.on('message', (frame, binary) => {
       if (binary || stopped || client.readyState !== WebSocket.OPEN) return stop();
+      if (frame.length < 131072 && env.SIGNALING_DIAGNOSTICS === '1') {
+        try {
+          const inbound = JSON.parse(frame.toString());
+          if (inbound.t === 'authenticated') trace('backend_authenticated');
+          else if (inbound.t === 'resolved') {
+            lastResolvedAt = Date.now();
+            trace('friend_code_resolved', lastLookupAt
+              ? ' after_lookup_ms=' + (Date.now() - lastLookupAt) : '');
+          } else if (inbound.t === 'sig' && inbound.data?.t === 'fr')
+            trace('friend_request_received');
+        } catch { /* Never log message bodies or parse errors. */ }
+      }
       if (client.bufferedAmount > 4 * 1024 * 1024) return stop();
       client.send(frame, { binary: false });
     });
     client.on('error', stop);
     upstream.on('error', stop);
-    client.on('close', stop);
-    upstream.on('close', stop);
+    client.on('close', () => { trace('client_disconnected'); stop(); });
+    upstream.on('close', () => { trace('upstream_disconnected'); stop(); });
   });
   return { server, close: async () => {
     for (const ws of wss.clients) ws.terminate();
