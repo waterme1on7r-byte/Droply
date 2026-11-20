@@ -483,8 +483,10 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
         if ((kind == "friend" && !s.optBoolean("friendNotifications", true)) ||
             (kind == "incoming" && !s.optBoolean("incomingNotifications", true)) ||
             (kind == "completed" && !s.optBoolean("completedNotifications", true))) return
-        activity.ensureNotificationPermission()
         activity.runOnUiThread {
+            // Never request permissions from a WebSocket callback or while the
+            // Activity is backgrounded. Display a notification when permitted.
+            if (activity.droplyForeground) activity.ensureNotificationPermission()
             val manager = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(NotificationChannel("droply-events", "DROPLY", NotificationManager.IMPORTANCE_DEFAULT))
             val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(activity, "droply-events") else @Suppress("DEPRECATION") Notification.Builder(activity)
