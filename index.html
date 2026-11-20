@@ -1137,9 +1137,9 @@ function closeFriendRequests(restoreFocus = true) {
 }
 let incomingRequestNeedsAttention = false;
 function showIncomingFriendRequest() {
-  // Only the browser auto-expands incoming requests. The existing desktop UI
-  // continues using its own notifications and system behavior.
-  if (!window.DroplyWeb || !pendIn.length) return;
+  // New requests are visible immediately in Web, desktop and Android.
+  // Backgrounded native apps still use platform notifications.
+  if (!pendIn.length) return;
   if (document.visibilityState === 'hidden' ||
       !$('#setup').classList.contains('hidden') ||
       !$('#settingsPane').classList.contains('hidden')) {
