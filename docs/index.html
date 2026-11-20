@@ -1796,7 +1796,7 @@ html[data-theme="light"] .droply-chat-status.error {
           <h1 id="hero-title"><span class="line">Send files</span><span class="line hero-accent">directly.</span><span class="line">No cloud.</span><span class="line hero-accent">No limits.</span></h1>
           <p class="hero-lead">Send anything straight from your device to someone else's. No cloud detours, no distance worries—just two people, online and ready to share.</p>
           <!-- VERSION: Update this display string when you publish a new version. -->
-          <p class="hero-meta">Free <span>·</span> Version 2.8.15 <span>·</span> macOS 12+ / Windows 10+ / Android 10+</p>
+
           <div class="hero-trust"><span class="trust-mark"><svg class="icon-stroke" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>Your files stay between you and the person you choose.</div>
         </div>
         <div class="hero-art" role="img" aria-label="Actual Droply desktop screenshot with an animated demonstration of selecting a friend and sending a file">
@@ -1841,13 +1841,25 @@ html[data-theme="light"] .droply-chat-status.error {
         </div>
           <div class="hero-actions" aria-label="Choose how to use Droply">
             <!-- STABLE RELEASE URL: Update the tag and filename when publishing a new macOS installer. -->
-            <a id="hero-mac" class="btn btn-lg btn-primary" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.15/Droply-2.8.15-universal.dmg"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#apple-logo"/></svg><span><small>Download for</small>macOS</span></a>
+            <div class="hero-choice">
+              <a id="hero-mac" class="btn btn-lg btn-primary" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.15/Droply-2.8.15-universal.dmg"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#apple-logo"/></svg><span><small>Download for</small>macOS</span></a>
+              <p class="hero-requirements"><span>Free · Version 2.8.15</span><span>macOS 12+</span></p>
+            </div>
             <!-- STABLE RELEASE URL: Update the tag and filename when publishing a new Windows installer. -->
-            <a id="hero-win" class="btn btn-lg btn-outline" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.15/Droply-Setup-2.8.15.exe"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#windows-logo"/></svg><span><small>Download for</small>Windows</span></a>
+            <div class="hero-choice">
+              <a id="hero-win" class="btn btn-lg btn-outline" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.15/Droply-Setup-2.8.15.exe"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#windows-logo"/></svg><span><small>Download for</small>Windows</span></a>
+              <p class="hero-requirements"><span>Free · Version 2.8.15</span><span>Windows 10+</span></p>
+            </div>
             <!-- Android 10+ debug preview APK from the current published release. -->
-            <a id="hero-android" class="btn btn-lg btn-outline" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.15/Droply-Android-2.8.15-debug-preview.apk"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#android-logo"/></svg><span><small>Download for</small>Android</span></a>
+            <div class="hero-choice">
+              <a id="hero-android" class="btn btn-lg btn-outline" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.15/Droply-Android-2.8.15-debug-preview.apk"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#android-logo"/></svg><span><small>Download for</small>Android</span></a>
+              <p class="hero-requirements"><span>Free · Version 2.8.15</span><span>Android 10+</span></p>
+            </div>
             <!-- Web uses the same button treatment and row as native downloads. -->
-            <a id="hero-web" class="btn btn-lg btn-outline" href="./app/" aria-label="Use Droply Web"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-3 3.5-3 14.5 0 18M12 3c3 3.5 3 14.5 0 18"/></svg><span><small>Use</small>Droply Web</span></a>
+            <div class="hero-choice">
+              <a id="hero-web" class="btn btn-lg btn-outline" href="./app/" aria-label="Use Droply Web"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-3 3.5-3 14.5 0 18M12 3c3 3.5 3 14.5 0 18"/></svg><span><small>Use</small>Droply Web</span></a>
+              <p class="hero-requirements"><span>Free · Browser</span><span>No installation</span></p>
+            </div>
           </div>
       </div>
     </section>
