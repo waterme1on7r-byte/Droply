@@ -4,7 +4,7 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 11px;
   width: 100%;
-  max-width: 887px; /* 20% wider than the previous 739px row */
+  max-width: 1064px; /* Another 20% wider, capped by the viewport */
   /* The row is now a full-width grid item, centered below the hero artwork. */
   grid-column: 1 / -1;
   justify-self: center;
@@ -72,7 +72,7 @@ html[data-theme="light"] .hero-actions .hero-requirements {
   .hero-actions {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     width: 100%;
-    max-width: 563px; /* Constrained by viewport, keeping all four in one row */
+    max-width: 676px; /* Mobile still uses 100% of the available viewport */
     gap: 8px;
   }
   .hero-actions .hero-choice { gap: 7px; }
