@@ -110,6 +110,30 @@ test('private preview protects assets and proxies authenticated API and WebSocke
   });
   assert.equal(echo, 'test-hello');
 
+  // The private gateway verifies its *upstream* connection with a native WS
+  // ping/pong before acknowledging the browser's liveness probe. No production
+  // signaling change is required.
+  const pong = await new Promise((resolve, reject) => {
+    const ws = new WebSocket(base.replace(/^http/, 'ws') + '/device', {
+      headers: { Cookie: cookie, Origin: base }
+    });
+    const deadline = setTimeout(() => { ws.terminate(); reject(Error('Gateway health probe timed out')); }, 3500);
+    ws.on('open', () => ws.send('probe-ready'));
+    ws.on('message', raw => {
+      const value = raw.toString();
+      if (value === 'probe-ready') return ws.send(JSON.stringify({ t: 'gateway-ping', id: 42 }));
+      try {
+        const result = JSON.parse(value);
+        clearTimeout(deadline);
+        ws.close();
+        resolve(result);
+      } catch (error) { clearTimeout(deadline); ws.terminate(); reject(error); }
+    });
+    ws.on('error', error => { clearTimeout(deadline); reject(error); });
+  });
+  assert.equal(pong.t, 'gateway-pong');
+  assert.equal(pong.id, 42);
+
   // Safari may send neither Origin nor Referer, especially when the page
   // explicitly sets Referrer-Policy: no-referrer.
   const safariLogin = await fetch(preview + 'login', { method: 'POST',
