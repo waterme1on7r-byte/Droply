@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0c1018">
   <!-- CSP restricts remote scripts and data exfiltration; hashes must be regenerated when CSS/JS changes. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-E7nI5Hw5fMUUAzKTSWTxmqe5xG/vweXmZB9L7CRwXN0='; style-src 'self' 'sha256-NCAmV2hvWYc1XG6APRn9XKztWXhaq3tdFlnTlX7RT+E=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-RH+4r4t5Ku3D8hcP1BeOax8w2SQCGJgMgtWsQVsupH8='; style-src 'self' 'sha256-cA7bQNDtX5noiX76MHwoRQwMMI9bgXf/sq6gYzEYl38=' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://zyppzqwqacvdnfiajbpp.supabase.co; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Droply sends files directly between people you trust. No cloud uploads, no server-imposed file size limits, and end-to-end encrypted transfers.">
   <meta property="og:type" content="website">
@@ -1265,6 +1265,17 @@
     }
     @keyframes droply-theme-out { from { opacity:1; } to { opacity:0; } }
     @keyframes droply-theme-in { from { opacity:0; } to { opacity:1; } }
+    /* Older mobile browsers without View Transitions: fade the whole page out
+       and back in, preserving the same 850ms pacing as the desktop crossfade. */
+    html.theme-fade-fallback body {
+      transition: opacity 425ms ease-in-out !important;
+    }
+    html.theme-fade-fallback.theme-fade-out body {
+      opacity: 0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html.theme-fade-fallback body { transition: none !important; }
+    }
     html.theme-transitioning .mini-float,
     html.theme-transitioning .orbit-dot {
       animation-play-state: paused;
@@ -2065,7 +2076,6 @@ html[data-theme="light"] .droply-chat-status.error {
       const themeToggle = document.getElementById('theme-toggle');
       const themeKey = 'droply-website-theme';
       const themeColor = document.querySelector('meta[name="theme-color"]');
-      const isIOSWebKit = CSS.supports('-webkit-touch-callout', 'none');
       let selectedTheme = 'dark';
       try {
         if (window.localStorage.getItem(themeKey) === 'light') selectedTheme = 'light';
@@ -2098,26 +2108,34 @@ html[data-theme="light"] .droply-chat-status.error {
           applyWebsiteTheme(nextTheme);
           try { window.localStorage.setItem(themeKey, nextTheme); } catch (_) { /* Optional storage. */ }
         };
+        const root = document.documentElement;
         try {
-          // Let iOS sample the live header immediately instead of a page snapshot.
-          if (isIOSWebKit) {
-            applyAndStore();
+          if (themeMotion.matches) {
+            applyAndStore(); // Respect reduced-motion preferences on all devices.
             return;
           }
           await themeImagesReady;
-          if (themeMotion.matches || typeof document.startViewTransition !== 'function') {
-            applyAndStore(); // Older browsers and reduced-motion: no delayed image.
-            return;
+          root.classList.add('theme-transitioning');
+          if (typeof document.startViewTransition === 'function') {
+            // Use the same synchronized old/new page crossfade on desktop,
+            // iPhone, iPad and Android whenever the browser supports it.
+            const transition = document.startViewTransition(applyAndStore);
+            await transition.finished;
+          } else {
+            // Older mobile Safari and other browsers: fade all content out,
+            // change the theme at zero opacity, then fade it back in.
+            root.classList.add('theme-fade-fallback');
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            root.classList.add('theme-fade-out');
+            await new Promise(resolve => setTimeout(resolve, 425));
+            applyAndStore();
+            root.classList.remove('theme-fade-out');
+            await new Promise(resolve => setTimeout(resolve, 425));
           }
-          // Safari 18+ supports a whole-page snapshot crossfade. One animation
-          // keeps the background, screenshots, floating cards and text in sync.
-          document.documentElement.classList.add('theme-transitioning');
-          const transition = document.startViewTransition(applyAndStore);
-          await transition.finished;
         } catch (_) {
           if (selectedTheme !== nextTheme) applyAndStore();
         } finally {
-          document.documentElement.classList.remove('theme-transitioning');
+          root.classList.remove('theme-transitioning', 'theme-fade-fallback', 'theme-fade-out');
           changingTheme = false;
         }
       });
