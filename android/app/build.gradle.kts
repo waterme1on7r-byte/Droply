@@ -18,8 +18,8 @@ android {
         applicationId = "com.droply.android"
         minSdk = 29
         targetSdk = 36
-        versionCode = 5
-        versionName = "2.8.13"
+        versionCode = 8
+        versionName = "2.8.14"
     }
 
     buildFeatures { buildConfig = false }
@@ -40,6 +40,7 @@ val prepareDroplyWeb by tasks.registering(Sync::class) {
         include("index.html", "settings.js", "settings.css")
     }
     from("src/main/web")
+    from(repoRoot.resolve("assets")) { into("assets") }
     doLast {
         val page = webAssets.get().file("index.html").asFile
         val html = page.readText()

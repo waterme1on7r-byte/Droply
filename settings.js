@@ -9,6 +9,8 @@ async function updatePreference(key, value) {
   catch (e) { settingsFeedback(e.message || 'Could not save settings.'); renderSettings(activeSettingsSection); }
 }
 let activeSettingsSection = 'Profile';
+let ownPlatform = window.DroplyWeb ? 'web' : 'desktop';
+const ownDeviceLabel = () => ({ win32: 'Windows', darwin: 'macOS', linux: 'Linux', 'android-phone': 'Android phone', 'android-tablet': 'Android tablet', 'android-tv': 'Android TV', web: 'Web' }[ownPlatform] || 'desktop');
 function openSettings(section = 'Profile') {
   $('main').inert = true;
   $('#picker').classList.add('hidden'); $('#settingsPane').classList.remove('hidden');
@@ -44,26 +46,25 @@ function renderSettings(section) {
   if (section === 'Profile') {
     intro(window.DroplyWeb ? 'Your name and photo are visible to friends. Your code belongs to this browser profile and depends on this browser’s site data.' : 'Your name and photo are visible to your friends. Your code belongs to this device.');
     const av = avatar(me.avatar, me.name, true, true); av.onclick = () => openSetup(true);
+    const hero = h('div', 'profile-hero' + (window.DroplyWeb ? ' web-profile-hero' : ''));
+    av.classList.add('profile-hero-avatar');
     if (window.DroplyWeb) {
-      // Keep the original Droply avatar and controls, but give the browser
-      // profile a centered, readable name and an explicit platform label.
-      const hero = h('div', 'profile-hero web-profile-hero');
-      av.classList.add('profile-hero-avatar');
       av.setAttribute('role', 'button'); av.setAttribute('tabindex', '0');
       av.setAttribute('aria-label', 'Edit profile photo');
       av.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openSetup(true); } };
-      const name = h('strong', 'profile-hero-name', me.name);
-      const platform = h('span', 'client-platform-tag profile-web-status', 'Using Web');
-      const edit = h('div', 'profile-edit-actions');
-      settingAction(edit, 'Edit name & photo', () => openSetup(true));
-      hero.append(av, name, platform, edit); body.append(hero);
-    } else {
-      if (window.DroplyAndroid) {
-        const hero = h('div', 'profile-hero'); av.classList.add('profile-hero-avatar');
-        hero.append(av, h('strong', 'profile-hero-name', me.name)); body.append(hero);
-      } else body.append(av, h('p', 'intro', me.name));
-      settingAction(actions(), 'Edit name & photo', () => openSetup(true));
     }
+    const device = h('span', 'profile-device' + (window.DroplyWeb ? ' profile-web-status' : ''), 'Using ' + ownDeviceLabel());
+    const icon = document.createElement('span'); icon.setAttribute('aria-hidden', 'true');
+    icon.innerHTML = ownPlatform.startsWith('android-') && ownPlatform !== 'android-tv'
+      ? '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg>'
+      : '<svg width="21" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="13" rx="1"/><path d="M1 20h22M8 16v4m8-4v4"/></svg>';
+    device.prepend(icon);
+    const edit = window.DroplyWeb ? h('div', 'profile-edit-actions') : null;
+    if (edit) settingAction(edit, 'Edit name & photo', () => openSetup(true));
+    hero.append(av, h('strong', 'profile-hero-name', me.name), device);
+    if (edit) hero.append(edit);
+    body.append(hero);
+    if (!edit) settingAction(actions(), 'Edit name & photo', () => openSetup(true));
     const field = h('div', 'field settings-code'), box = h('div', 'codebox'), code = h('code'), copy = h('button', 'cp ghost');
     field.append(h('small', '', 'Your device code')); copy.innerHTML = ICON.copy; copy.setAttribute('aria-label', 'Copy device code');
     deviceCode(me.id).then(c => { code.textContent = c; copy.onclick = () => copyCode(copy, c); }); box.append(code, copy); field.append(box); body.append(field);
@@ -139,6 +140,7 @@ function renderSettings(section) {
   }
 }
 async function initSettings() {
+  try { ownPlatform = (await api.getWindowChrome?.())?.platform || (window.DroplyWeb ? 'web' : 'desktop'); } catch {}
   const pane = h('section', 'hidden'); pane.id = 'settingsPane'; pane.setAttribute('aria-label', 'Settings');
   pane.innerHTML = '<header class="settings-head"><h2>Settings</h2><button id="settingsClose" class="closeX" aria-label="Close settings"></button></header><div class="settings-layout"><nav class="settings-nav" id="settingsNav" aria-label="Settings sections"></nav><div class="settings-content" id="settingsContent"></div></div><p id="settingsFeedback" role="status" aria-live="polite"></p>';
   document.body.append(pane); $('#settingsClose').innerHTML = ICON.xl; $('#settingsClose').onclick = closeSettings; $('#gearBtn').onclick = () => openSettings();

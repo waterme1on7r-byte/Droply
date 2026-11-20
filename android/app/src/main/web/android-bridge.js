@@ -41,7 +41,7 @@
     return btoa(binary);
   };
   window.api = {
-    getWindowChrome: async () => ({ custom: false, rightControls: false }),
+    getWindowChrome: async () => ({ platform: 'android-' + native.deviceMode(), custom: false, rightControls: false }),
     windowControl: async () => false,
     getAccess: async () => json(native.getAccess()),
     enrollDevice: invitation => asyncCall('enrollDevice', [invitation]),
@@ -106,10 +106,16 @@
         const button = document.createElement('button'); button.type = 'button'; button.className = 'strip-friend' + (online.has(friend.id) ? ' online' : '') + (friend.id === selected ? ' selected' : '');
         button.setAttribute('aria-pressed', String(friend.id === selected));
         button.setAttribute('aria-label', `${friend.name}, ${online.has(friend.id) ? 'online' : 'offline'}`);
-        const image = avatar(friend.av, friend.name), dot = document.createElement('i'); dot.className = 'strip-dot'; image.append(dot);
+        const image = avatar(friend.av, friend.name), dot = document.createElement('i'); dot.className = 'strip-dot';
+        const frame = withDeviceBadge(image, peers.find(peer => peer.id === friend.id)?.platform);
+        if (frame === image) {
+          const wrapper = document.createElement('span'); wrapper.className = 'av-frame strip-avatar'; wrapper.append(image, dot);
+          button.append(wrapper);
+        } else { frame.classList.add('strip-avatar'); frame.append(dot); button.append(frame); }
         const name = document.createElement('span'); name.textContent = friend.name;
         const state = document.createElement('small'); state.textContent = online.has(friend.id) ? 'Online' : 'Offline';
-        button.append(image, name, state); button.onclick = () => selectFriend(friend.id); list.append(button);
+        attachFriendHover(button.firstElementChild, friend.id);
+        button.append(name, state); button.onclick = () => selectFriend(friend.id); list.append(button);
       });
     };
     renderRail();

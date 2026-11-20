@@ -68,6 +68,39 @@ html[data-theme=light] #ask,html[data-theme=light] #pf,html[data-theme=light] #a
 html:not([data-theme=light]){color-scheme:dark}
 #drop .folder-action{background:transparent;color:var(--mute);font-size:14px;font-weight:400;padding:4px 2px;text-decoration:underline;text-underline-offset:3px;border-radius:4px}
 #drop .folder-action:hover{color:var(--text)}
+@font-face{font-family:DroplyPoppins;src:url('assets/Poppins-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+.head h1.wordmark{font-family:DroplyPoppins,Poppins,sans-serif;font-weight:400;letter-spacing:-.035em;color:#fff}
+html[data-theme=light] .head h1.wordmark{color:#255ec6}
+.wordmark>span{display:inline-block;color:#fde46e;animation:droply-cursor 1.1s steps(1,end) infinite}
+@keyframes droply-cursor{0%,49%{opacity:1}50%,100%{opacity:0}}
+html:not([data-theme=light]) .rail>.rbtn.active{background:url('assets/droply-icon.png') center/cover no-repeat;box-shadow:0 6px 18px rgba(60,127,232,.22)}
+html:not([data-theme=light]) .rail>.rbtn.active>svg{visibility:hidden}
+#log .st a{display:block;font-size:12px;font-weight:500;margin-top:4px;cursor:pointer}
+#settingsContent[data-section="Profile"]{text-align:center}
+.profile-hero{display:flex;flex-direction:column;align-items:center;gap:18px;margin:24px auto 26px;max-width:100%}
+.profile-hero .profile-hero-avatar{width:140px;height:140px;border-radius:32px;font-size:56px;box-shadow:0 0 0 5px rgba(59,130,246,.22)}
+.profile-hero-name{font-size:28px;line-height:1.2;font-weight:700;color:var(--text);overflow-wrap:anywhere;max-width:100%}
+.profile-device{display:inline-flex;align-items:center;gap:9px;border-radius:24px;background:var(--card2);color:var(--text);padding:8px 16px;font-size:14px}
+.profile-device>span{display:flex;align-items:center}
+#settingsContent[data-section="Profile"]>.settings-actions{justify-content:center;margin:20px auto}
+#settingsContent[data-section="Profile"]>.settings-actions button{font-size:16px;padding:16px 24px;border:1px solid var(--line);border-radius:16px}
+#settingsContent[data-section="Profile"]>.settings-code{max-width:420px;margin:28px auto 0;text-align:left}
+#settingsContent[data-section="Profile"] .settings-code .codebox{max-width:none}
+@media(prefers-reduced-motion:reduce){.wordmark>span{animation:none;opacity:1}}
+.av-frame{position:relative;display:inline-flex;flex:none;vertical-align:middle;isolation:isolate}
+.device-badge{position:absolute;top:-7px;left:-7px;z-index:3;display:flex;align-items:center;justify-content:center;width:24px;height:24px;padding:3px;border-radius:8px;border:2px solid var(--win);background:var(--card2);color:var(--text);pointer-events:auto;box-sizing:border-box}
+.device-badge svg{display:block;flex:none}
+.peer .device-badge{width:21px;height:21px;top:-5px;left:-5px;border-radius:7px}
+.peer .device-badge svg{width:12px;height:12px}
+.rail .fr .device-badge{border-color:var(--rail,#0d1524)}
+.rail .fr .dot{left:auto;right:-1px}
+.pcard>.av-frame+div{min-width:0;flex:1}
+.friend-hover{position:fixed;z-index:100;display:flex;align-items:center;gap:14px;max-width:calc(100vw - 24px);padding:14px 18px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--text);box-shadow:0 10px 30px rgba(0,0,0,.22);pointer-events:none;text-align:left}
+.friend-hover-device{display:flex;align-items:center;flex:none;color:var(--text)}
+.friend-hover-device svg{width:18px;height:18px}
+.friend-hover-text{min-width:0}
+.friend-hover b{display:block;font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.friend-hover small{display:block;font-size:12px;margin-top:4px;color:var(--mute);overflow-wrap:anywhere}
 button:disabled,input:disabled{opacity:.55;cursor:default}
 html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}
 

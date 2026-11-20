@@ -57,7 +57,7 @@ vm.runInContext(js + `
   get friends() { return friends; }, get pendIn() { return pendIn; }, get pendOut() { return pendOut; }, get gone() { return gone; }, get peers() { return peers; },
   setRaw: l => { raw = l; },
   setWs: ok => { ws = { readyState: ok ? 1 : 3, send: m => __sig.push(JSON.parse(m)) }; },
-  sendFiles };`, ctx);
+  sendFiles, row, transferCards, deviceBadge };`, ctx);
   ctx.__sig = sentSig;
   const t = ctx.__t; t.setMe(); t.setWs(true); t.setPeers([{ id: 'bob', name: 'Bob' }]);
   all.push(t);

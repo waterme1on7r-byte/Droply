@@ -39,7 +39,7 @@ test('online profiles and signaling are scoped to mutual friends; code lookup re
  const connect=async name=>{
   const id=crypto.randomUUID(),token=crypto.randomBytes(32).toString('base64url');
   assert.equal((await fetch(base+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,token})})).status,200);
-  const socket=new WS(wsbase+'/device');await once(socket,'open');const auth=once(socket,'message');socket.send(JSON.stringify({t:'auth',token}));await auth;socket.send(JSON.stringify({t:'hello',name,av:'data:image/png;base64,AAAA'}));
+  const socket=new WS(wsbase+'/device');await once(socket,'open');const auth=once(socket,'message');socket.send(JSON.stringify({t:'auth',token}));await auth;socket.send(JSON.stringify({t:'hello',name,av:'data:image/png;base64,AAAA',platform:name==='Alice'?'win32':'android-tablet'}));
   return {id,socket};
  };
  const a=await connect('Alice'),b=await connect('Bob');
@@ -53,13 +53,17 @@ test('online profiles and signaling are scoped to mutual friends; code lookup re
  const aFriend=next(a.socket,m=>m.t==='peers'),bFriend=next(b.socket,m=>m.t==='peers');
  a.socket.send(JSON.stringify({t:'watch',friends:[b.id],codes:[],notify:[]}));await aFriend;
  b.socket.send(JSON.stringify({t:'watch',friends:[a.id],codes:[],notify:[]}));
- assert.equal((await next(a.socket,m=>m.t==='peers')).peers[0].name,'Bob');assert.equal((await bFriend).peers[0].name,'Alice');
+ const aRoster=await next(a.socket,m=>m.t==='peers'),bRoster=await bFriend;
+ assert.equal(aRoster.peers[0].name,'Bob');assert.equal(bRoster.peers[0].name,'Alice');
+ assert.equal(aRoster.peers[0].platform,'android-tablet');assert.equal(bRoster.peers[0].platform,'win32');
+ const alive=next(a.socket,m=>m.t==='alive');a.socket.send(JSON.stringify({t:'keepalive'}));assert.equal((await alive).t,'alive');
+ assert(server.users.get(a.id).friends.has(b.id),'heartbeat must preserve the friend subscription');
  const delivered=next(b.socket,m=>m.t==='sig'&&m.from===a.id);a.socket.send(JSON.stringify({t:'sig',to:b.id,data:{t:'req',tid:'friend-only'}}));assert.equal((await delivered).data.t,'req');
  // Editing a profile must not clear the server's mutual-friend subscriptions.
  const refreshedA=next(a.socket,m=>m.t==='peers'),refreshedB=next(b.socket,m=>m.t==='peers');
- a.socket.send(JSON.stringify({t:'hello',name:'Alice updated',av:''}));
+ a.socket.send(JSON.stringify({t:'hello',name:'Alice updated',av:'',platform:'<script>invalid</script>'}));
  assert.equal((await refreshedA).peers[0]?.id,b.id);
- assert.equal((await refreshedB).peers[0]?.name,'Alice updated');
+ const refreshed=await refreshedB;assert.equal(refreshed.peers[0]?.name,'Alice updated');assert.equal(refreshed.peers[0]?.platform,'win32');
  const afterEdit=next(b.socket,m=>m.t==='sig'&&m.from===a.id);
  a.socket.send(JSON.stringify({t:'sig',to:b.id,data:{t:'req',tid:'after-profile-edit'}}));assert.equal((await afterEdit).data.tid,'after-profile-edit');
  for(const c of [a.socket,b.socket])c.terminate();

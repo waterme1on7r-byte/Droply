@@ -214,3 +214,15 @@ html.droply-android-tv #sig{font-size:13px}
 
 @media(prefers-reduced-motion:reduce){html.droply-android *,html.droply-android *::before,html.droply-android *::after{animation:none!important;transition:none!important}}
 html.droply-android-phone #addFriend .box{width:min(370px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin:0;padding:36px 18px 18px}
+/* Shared profile reference: centered photo, name, and device label on every device. */
+html.droply-android .profile-hero{flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;width:100%;margin:24px auto}
+html.droply-android .profile-hero .profile-hero-avatar{width:140px;height:140px;border-radius:32px;font-size:56px}
+html.droply-android .profile-hero-name{font-size:28px;line-height:1.2;text-align:center}
+html.droply-android #settingsContent[data-section="Profile"]>.settings-actions{justify-content:center;margin:20px auto}
+html.droply-android #settingsContent[data-section="Profile"]>.settings-code{max-width:420px;margin:24px auto 0;text-align:left}
+html.droply-android-phone .strip-friend .strip-avatar{position:relative;display:inline-flex;width:48px;height:48px;margin:0 auto}
+html.droply-android-phone .strip-friend .strip-avatar .av{margin:0}
+html.droply-android-phone .strip-friend .strip-avatar .device-badge{width:22px;height:22px;top:-7px;left:-7px}
+html.droply-android-phone .strip-friend .strip-avatar .device-badge svg{width:12px;height:12px}
+html.droply-android-phone .strip-friend .strip-avatar{overflow:visible}
+html.droply-android-phone .strip-friends{padding:10px 8px}

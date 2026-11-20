@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -70,6 +71,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
     private var authTask: java.util.concurrent.ScheduledFuture<*>? = null
     @Volatile private var pausedAt = 0L
     private val pausedFriendRequests = linkedMapOf<String, String>()
+    private var heartbeatTask: java.util.concurrent.ScheduledFuture<*>? = null
     private var transferActive = false
     private var prepareCount = 0
     private val prepared = mutableMapOf<String, PreparedReceive>()
@@ -139,7 +141,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
             .put("sounds", saved.optBoolean("sounds", false))
             .put("launchAtStartup", false).put("tray", false).put("startupSupported", false)
             .put("downloadDir", if (tree == null) "Downloads/Droply" else "Selected folder")
-            .put("version", "Android 2.8.13")
+            .put("version", "Android 2.8.14")
     }
 
     fun saveSettings(raw: String): JSONObject {
@@ -177,6 +179,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
 
     fun connectServer(): JSONObject {
         ensureConnected()
+        if (authenticated) refreshPresence()
         return JSONObject().put("state", accessState).put("text", accessText)
     }
 
@@ -215,6 +218,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
             // signaling server immediately replays watched friend codes.
             val previous = synchronized(lock) {
                 reconnectTask?.cancel(false); reconnectTask = null
+                heartbeatTask?.cancel(false); heartbeatTask = null
                 val ws = socket; socket = null; authenticated = false; connecting = false
                 retryCount = 0
                 ws
@@ -226,6 +230,20 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
             synchronized(lock) { reconnectTask?.cancel(false); reconnectTask = null }
             ensureConnected()
         }
+    }
+
+    // Restore presence after WebView listeners resume, without interrupting transfers.
+    fun refreshPresence() {
+        if (stopped) return
+        if (!authenticated) { ensureConnected(); return }
+        val saved = friends()
+        val ids = JSONArray(); val people = saved.optJSONArray("friends") ?: JSONArray()
+        for (i in 0 until people.length()) ids.put(people.optJSONObject(i)?.optString("id") ?: continue)
+        val codes = JSONArray(); val outgoing = saved.optJSONArray("out") ?: JSONArray()
+        for (i in 0 until outgoing.length()) codes.put(outgoing.optJSONObject(i)?.optString("code") ?: continue)
+        setAccess("connected", "Connected securely")
+        sendSignal(JSONObject().put("t", "watch").put("friends", ids).put("codes", codes)
+            .put("notify", saved.optJSONArray("gone") ?: JSONArray()).toString())
     }
 
     fun sendSignal(raw: String) {
@@ -241,7 +259,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
         }
         if (!allowed || raw.toByteArray(Charsets.UTF_8).size > 1 shl 20) return
         val outgoing = if (type == "hello") {
-            val p = profile(); JSONObject().put("t", "hello").put("id", p.optString("id")).put("name", p.optString("name")).put("av", p.optString("avatar"))
+            val p = profile(); JSONObject().put("t", "hello").put("id", p.optString("id")).put("name", p.optString("name")).put("av", p.optString("avatar")).put("platform", "android-$deviceMode")
         } else message
         synchronized(lock) { socket?.send(outgoing.toString()) }
     }
@@ -286,6 +304,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
         val listener = object : WebSocketListener() {
             private var thisSocket: WebSocket? = null
             override fun onOpen(webSocket: WebSocket, response: Response) {
+                synchronized(lock) { if (socket !== webSocket || stopped) { webSocket.cancel(); return } }
                 thisSocket = webSocket
                 synchronized(lock) {
                     if (stopped || socket !== webSocket) { webSocket.cancel(); return }
@@ -293,11 +312,11 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
                 }
                 webSocket.send(JSONObject().put("t", "auth").put("token", token).toString())
                 authTask?.cancel(false)
-                authTask = network.schedule({ if (!authenticated) webSocket.close(4401, "Authentication timeout") }, 15, TimeUnit.SECONDS)
+                authTask = network.schedule({ if (socket === webSocket && !authenticated) webSocket.cancel() }, 15, TimeUnit.SECONDS)
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                if (socket !== webSocket) return
+                if (socket !== webSocket || stopped) return
                 val msg = parseObject(text) ?: return
                 when (msg.optString("t")) {
                     "authenticated" -> {
@@ -307,8 +326,13 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
                             return
                         }
                         authenticated = true; retryCount = 0; authTask?.cancel(false)
-                        val p = profile(); webSocket.send(JSONObject().put("t", "hello").put("id", p.optString("id")).put("name", p.optString("name")).put("av", p.optString("avatar")).toString())
+                        val p = profile(); webSocket.send(JSONObject().put("t", "hello").put("id", p.optString("id")).put("name", p.optString("name")).put("av", p.optString("avatar")).put("platform", "android-$deviceMode").toString())
                         setAccess("connected", "Connected securely")
+                        refreshPresence()
+                        heartbeatTask?.cancel(false)
+                        heartbeatTask = network.scheduleAtFixedRate({
+                            if (!stopped && authenticated && socket === webSocket) webSocket.send("{\"t\":\"keepalive\"}")
+                        }, 60, 60, TimeUnit.SECONDS)
                     }
                     "access-denied" -> { authenticated = false; setAccess("enrollment-required", "This device could not connect. Open Settings → Device access to recover it."); webSocket.close(4401, "Access denied") }
                     "peers", "sig", "resolved" -> {
@@ -340,10 +364,13 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) = disconnected(webSocket, code)
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) = disconnected(webSocket, response?.code ?: 0)
             private fun disconnected(webSocket: WebSocket, code: Int) {
-                authTask?.cancel(false)
                 val wasCurrent = synchronized(lock) {
                     if (socket !== webSocket) false
-                    else { socket = null; connecting = false; authenticated = false; true }
+                    else {
+                        authTask?.cancel(false)
+                        heartbeatTask?.cancel(false); heartbeatTask = null
+                        socket = null; connecting = false; authenticated = false; true
+                    }
                 }
                 // A cancelled stale socket must not disrupt a newer connection.
                 if (wasCurrent && !stopped && accessState != "enrollment-required" && code != 4401)
@@ -419,7 +446,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
 
     fun close() {
         stopped = true
-        authTask?.cancel(true); reconnectTask?.cancel(true)
+        authTask?.cancel(true); reconnectTask?.cancel(true); heartbeatTask?.cancel(true)
         synchronized(lock) { authenticated = false; socket?.close(1000, "App closed"); socket = null }
         network.shutdownNow(); io.shutdownNow(); http.dispatcher.cancelAll()
         synchronized(writerLock) { openFiles.values.forEach { try { it.output.close() } catch (_: Exception) {} }; openFiles.clear(); prepared.clear() }
@@ -476,7 +503,7 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
     fun checkUpdates() = openExternal("https://github.com/waterme1on7r-byte/Droply/releases")
 
     fun copyDiagnostics() {
-        val details = "DROPLY Android 2.8.13\nOS: Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\nDevice mode: $deviceMode\nTheme: ${settings().optString("theme")}\nConnection: $accessState"
+        val details = "DROPLY Android 2.8.14\nOS: Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\nDevice mode: $deviceMode\nTheme: ${settings().optString("theme")}\nConnection: $accessState"
         copy(details)
     }
 
@@ -494,7 +521,9 @@ class DroplyBackend(val activity: MainActivity, private val webView: WebView) {
             val manager = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(NotificationChannel("droply-events", "DROPLY", NotificationManager.IMPORTANCE_DEFAULT))
             val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(activity, "droply-events") else @Suppress("DEPRECATION") Notification.Builder(activity)
-            val notification = builder.setSmallIcon(R.drawable.ic_droply).setContentTitle("DROPLY").setContentText(body.take(160)).setAutoCancel(true).build()
+            val open = Intent(activity, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            val tap = PendingIntent.getActivity(activity, 0, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val notification = builder.setSmallIcon(R.drawable.ic_droply).setContentTitle("DROPLY").setContentText(body.take(160)).setContentIntent(tap).setAutoCancel(true).build()
             val id = (System.nanoTime() and 0x7fffffff).toInt()
             try { manager.notify(id, notification) } catch (_: SecurityException) { }
         }

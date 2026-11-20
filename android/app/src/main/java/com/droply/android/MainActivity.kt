@@ -87,6 +87,12 @@ class MainActivity : Activity() {
         webView.loadUrl("file:///android_asset/www/index.html")
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent != null) setIntent(intent)
+        if (::backend.isInitialized) backend.refreshPresence()
+    }
+
     fun enqueuePicker(job: PickerJob) {
         runOnUiThread {
             pickerQueue.addLast(job)
@@ -163,6 +169,7 @@ class MainActivity : Activity() {
         droplyForeground = true
         if (::backend.isInitialized) {
             backend.onAppResumed()
+            backend.refreshPresence()
             // Needed for native friend alerts when the WebView is suspended.
             ensureNotificationPermission()
         }

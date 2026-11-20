@@ -3,6 +3,7 @@ package com.droply.android
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.os.Build
@@ -28,6 +29,9 @@ class TransferService : Service() {
         } else {
             @Suppress("DEPRECATION") Notification.Builder(this)
         }.setSmallIcon(com.droply.android.R.drawable.ic_droply)
+            .setContentIntent(PendingIntent.getActivity(this, 0,
+                Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             .setContentTitle("DROPLY transfer in progress")
             .setContentText("Keep DROPLY open to finish sending or receiving files.")
             .setOngoing(true)

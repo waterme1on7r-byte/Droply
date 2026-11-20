@@ -28,12 +28,23 @@ test('only authenticated socket exposes signaling, and main process fixes hello 
  f.listeners['send-signal'](true,{t:'hello',id:'spoofed'});assert.equal(socket.sent.length,0);
  socket.emit('open');assert.equal(socket.sent[0].t,'auth');
  socket.emit('message',JSON.stringify({t:'authenticated',id:f.profile.id}));assert.equal(socket.sent[1].id,f.profile.id);
- f.listeners['send-signal'](true,{t:'hello',id:'spoofed',name:'spoofed'});assert.equal(socket.sent.at(-1).id,f.profile.id);assert.equal(socket.sent.at(-1).name,f.profile.name);
+ f.listeners['send-signal'](true,{t:'hello',id:'spoofed',name:'spoofed',platform:'spoofed'});assert.equal(socket.sent.at(-1).id,f.profile.id);assert.equal(socket.sent.at(-1).name,f.profile.name);assert.equal(socket.sent.at(-1).platform,process.platform);
  f.listeners['send-signal'](true,{t:'watch',friends:[f.profile.id],codes:[],notify:[]});assert.equal(socket.sent.at(-1).t,'watch');
  f.listeners['send-signal'](true,{t:'lookup',code:'DRP-1234-5678-9ABC'});assert.equal(socket.sent.at(-1).t,'lookup');
  const n=socket.sent.length;f.listeners['send-signal'](false,{t:'sig',to:'victim',data:{}});assert.equal(socket.sent.length,n);
  socket.emit('message',JSON.stringify({t:'resolved',id:'12345678-1234-1234-1234-123456789012'}));assert.equal(f.events.at(-1).message.t,'resolved');
  socket.emit('close',4401);assert.equal(f.events.at(-1).state,'enrollment-required');f.access.stop();
+});
+test('connected desktop sends periodic activity and stops it on disconnect',async t=>{
+ t.mock.timers.enable({apis:['setInterval']});
+ const f=fixture();await f.call('enroll-device','I'.repeat(43));const socket=f.sockets[0];
+ t.after(()=>f.access.stop());
+ socket.emit('open');t.mock.timers.tick(60000);assert(!socket.sent.some(m=>m.t==='keepalive'));
+ socket.emit('message',JSON.stringify({t:'authenticated',id:f.profile.id}));
+ t.mock.timers.tick(60000);assert.equal(socket.sent.at(-1).t,'keepalive');
+ t.mock.timers.tick(60000);assert.equal(socket.sent.filter(m=>m.t==='keepalive').length,2);
+ socket.emit('close',4401);const count=socket.sent.length;
+ t.mock.timers.tick(120000);assert.equal(socket.sent.length,count);
 });
 
 test('explicit access denial stops reconnects even if a proxy changes the close code',async()=>{

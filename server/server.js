@@ -14,7 +14,7 @@ function createServer(options={}){
  const send=(ws,m)=>{if(ws.readyState===1){if(ws.bufferedAmount>4*1024*1024)return ws.terminate();ws.send(typeof m==='string'?m:JSON.stringify(m));}};
  const deny=(ws,message)=>{send(ws,{t:'access-denied',message});ws.close(4401,message);};
  const disconnect=id=>{for(const ws of sessions.get(id)||[])deny(ws,'Device access revoked or replaced');};
- const broadcast=()=>{const online=[...users.values()],byCode=new Map(online.map(u=>[codeFor(u.id),u]));for(const recipient of online){let peers=online.filter(u=>u.id!==recipient.id&&recipient.friends.has(u.id)&&u.friends.has(recipient.id)).map(u=>({id:u.id,name:u.name,av:u.av}));let frame=JSON.stringify({t:'peers',peers});if(Buffer.byteLength(frame)>=(1<<20)-1024){peers=peers.map(({id,name})=>({id,name}));frame=JSON.stringify({t:'peers',peers});}send(recipient.ws,frame);for(const code of recipient.watchCodes){const target=byCode.get(code);if(target)send(recipient.ws,{t:'resolved',id:target.id,code});}for(const id of recipient.notifyIds)if(users.has(id))send(recipient.ws,{t:'resolved',id});}};
+ const broadcast=()=>{const online=[...users.values()],byCode=new Map(online.map(u=>[codeFor(u.id),u]));for(const recipient of online){let peers=online.filter(u=>u.id!==recipient.id&&recipient.friends.has(u.id)&&u.friends.has(recipient.id)).map(u=>({id:u.id,name:u.name,av:u.av,platform:u.platform}));let frame=JSON.stringify({t:'peers',peers});if(Buffer.byteLength(frame)>=(1<<20)-1024){peers=peers.map(({id,name,platform})=>({id,name,platform}));frame=JSON.stringify({t:'peers',peers});}send(recipient.ws,frame);for(const code of recipient.watchCodes){const target=byCode.get(code);if(target)send(recipient.ws,{t:'resolved',id:target.id,code});}for(const id of recipient.notifyIds)if(users.has(id))send(recipient.ws,{t:'resolved',id});}};
  const json=(res,status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(value));};
  async function body(req){let data='';for await(const part of req){data+=part;if(Buffer.byteLength(data)>4096)throw Error('Body too large');}return JSON.parse(data||'{}');}
  const srv=http.createServer(async(req,res)=>{
@@ -84,7 +84,11 @@ function createServer(options={}){
     if(me&&me.id!==id)return ws.close(4400,'Identity cannot change');
     clearTimeout(timeout);const av=typeof m.av==='string'&&m.av.length<60000&&/^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(m.av)?m.av:'';
     if(ws.readyState!==1)return;
-    const old=users.get(id),sameSession=old?.ws===ws;me={id,name:Array.from(m.name.trim()).slice(0,24).join(''),av,ws,friends:sameSession?old.friends:new Set(),watchCodes:sameSession?old.watchCodes:new Set(),notifyIds:sameSession?old.notifyIds:new Set()};users.set(id,me);if(old&&old.ws!==ws)old.ws.close(4000,'Connected on another session');broadcast();
+    const old=users.get(id),sameSession=old?.ws===ws;
+    const platform=['win32','darwin','linux','android-phone','android-tablet','android-tv','web'].includes(m.platform)?m.platform:(sameSession?old.platform:'');
+    me={id,name:Array.from(m.name.trim()).slice(0,24).join(''),av,platform,ws,friends:sameSession?old.friends:new Set(),watchCodes:sameSession?old.watchCodes:new Set(),notifyIds:sameSession?old.notifyIds:new Set()};users.set(id,me);if(old&&old.ws!==ws)old.ws.close(4000,'Connected on another session');broadcast();
+   }else if(m.t==='keepalive'&&me){
+    send(ws,{t:'alive'});
    }else if(m.t==='watch'&&me&&Array.isArray(m.friends)&&Array.isArray(m.codes)&&Array.isArray(m.notify)){
     if(m.friends.length>200||m.codes.length>200||m.notify.length>200)return ws.close(4400,'Invalid friend list');
     me.friends=new Set(m.friends.filter(id=>typeof id==='string'&&/^[A-Za-z0-9-]{16,64}$/.test(id)&&id!==me.id));

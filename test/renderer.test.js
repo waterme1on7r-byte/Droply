@@ -83,6 +83,39 @@ test('receiver only confirms after the file is really on disk', () => {
   assert(!ch.sent.includes('ok'), 'not yet: write may still be pending');
   r.handlers.saved({ tid: 'ok1', name: 'a.bin', path: '/x/a.bin' });
   assert(ch.sent.includes('ok')); assert.strictEqual(r.state('ok1'), 'row done');
+  assert.strictEqual(t.transferCards.size, 1, 'saving must update the existing transfer, not create another card');
+  assert.strictEqual(t.transferCards.get('ok1').path, '/x/a.bin');
+});
+test('terminal transfer cards clear after 30 seconds while active transfers stay', () => {
+  const r = loadRenderer(), { t } = r, scheduled = [];
+  r.ctx.setTimeout = (fn, delay) => { const timer = { fn, delay, unref() {} }; scheduled.push(timer); return timer; };
+  for (const state of ['done', 'error', 'cancelled']) t.row(state, { state, label: state });
+  t.row('active', { state: 'sending', label: 'still transferring' });
+  assert.strictEqual(t.transferCards.size, 4);
+  assert.strictEqual(scheduled.filter(timer => timer.delay === 30000).length, 3);
+  for (const timer of scheduled) timer.fn();
+  assert.strictEqual(t.transferCards.size, 1);
+  assert(t.transferCards.has('active'));
+});
+test('device badges label known platforms and hide unknown device information', () => {
+  const { t } = loadRenderer();
+  assert.strictEqual(t.deviceBadge('win32').title, 'Using Windows');
+  assert.strictEqual(t.deviceBadge('darwin').title, 'Using macOS');
+  assert.strictEqual(t.deviceBadge('android-tablet').title, 'Using Android tablet');
+  assert.strictEqual(t.deviceBadge('android-tv').title, 'Using Android TV');
+  for (const platform of [undefined, '', 'constructor', 'invented', '<script>']) assert.strictEqual(t.deviceBadge(platform), null);
+});
+test('new transfer cards are brought into view once, without scrolling on every progress update', () => {
+  const r = loadRenderer(), scheduled = [], calls = [];
+  r.ctx.window.requestAnimationFrame = callback => scheduled.push(callback);
+  r.t.row('visible-receiver', { state: 'sending', label: 'received.bin' });
+  const card = r.row('visible-receiver'); card.isConnected = true; card.scrollIntoView = options => calls.push(options);
+  scheduled[0]();
+  assert.strictEqual(calls.length, 1); assert.strictEqual(calls[0].block, 'nearest');
+  r.t.row('visible-receiver', { state: 'sending', pct: 50 });
+  r.t.row('visible-receiver', { state: 'done', msg: 'Received ✓', path: '/received.bin' });
+  assert.strictEqual(scheduled.length, 1);
+  assert.strictEqual(r.t.transferCards.size, 1);
 });
 test('disk error after "done" reaches the user instead of a fake success', () => {
   const r = loadRenderer(), { t } = r;

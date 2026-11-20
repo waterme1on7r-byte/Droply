@@ -267,7 +267,7 @@ function start() {
     // Electron otherwise throttles background renderer execution.
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false }
   });
-  ipcMain.handle('get-window-chrome', e => fromUI(e) ? { custom: process.platform === 'win32', rightControls: process.platform !== 'darwin', maximized: win.isMaximized() } : null);
+  ipcMain.handle('get-window-chrome', e => fromUI(e) ? { platform: process.platform, custom: process.platform === 'win32', rightControls: process.platform !== 'darwin', maximized: win.isMaximized() } : null);
   ipcMain.handle('window-control', (e, action) => {
     if (!fromUI(e) || !['minimize', 'toggle-maximize', 'close'].includes(action)) return false;
     if (action === 'minimize') win.minimize();
