@@ -47,8 +47,8 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
   assert.doesNotMatch(css, /\.hero-actions\s*\{[^}]*flex-direction:\s*column/);
   assert.match(css, /min-height: 77px/);
   assert.doesNotMatch(css, /translateX\(-8px\)/);
-  assert.match(css, /max-width: 887px/);
-  assert.match(css, /max-width: 563px/);
+  assert.match(css, /max-width: 1064px/);
+  assert.match(css, /max-width: 676px/);
   assert.match(css, /\.hero-actions \.hero-choice/);
   assert.match(css, /\.hero-actions \.hero-requirements/);
   assert.match(css, /grid-template-columns:\s*repeat\(4/);
