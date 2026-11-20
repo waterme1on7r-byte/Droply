@@ -170,3 +170,20 @@ test('home screen metadata uses the native Droply icon without changing desktop'
   assert.deepEqual(manifest.icons, [{ src: 'droply-icon.png', sizes: 'any', type: 'image/png', purpose: 'any' }]);
   assert.doesNotMatch(desktop, /apple-touch-icon|manifest\.webmanifest/);
 });
+
+test('mobile browser inputs do not trigger automatic Safari focus zoom', async () => {
+  const html = await readFile(root + '/docs/app/index.html', 'utf8');
+  const desktop = await readFile(root + '/index.html', 'utf8');
+  const css = await readFile(root + '/docs/app/web.css', 'utf8');
+  assert.match(html, /name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/);
+  assert.doesNotMatch(desktop, /user-scalable=no/);
+  const mobile = css.slice(css.indexOf('/* Only the browser app on touch devices: iOS Safari'));
+  assert.ok(mobile.startsWith('/* Only the browser app on touch devices: iOS Safari'));
+  assert.match(mobile, /@media \(pointer: coarse\), \(hover: none\)/);
+  assert.match(mobile, /html\.droply-web body \{\s*touch-action: pan-x pan-y/);
+  assert.match(mobile, /html\.droply-web input:not\(\[type="checkbox"\]\)/);
+  assert.match(mobile, /html\.droply-web textarea/);
+  assert.match(mobile, /html\.droply-web select/);
+  assert.match(mobile, /font-size: 16px !important/);
+  assert.match(mobile, /html\.droply-web\.droply-ios input/);
+});
