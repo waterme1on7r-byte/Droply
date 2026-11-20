@@ -14,7 +14,6 @@ function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,
   const current=socket;
   if(stopped||!authenticated||!current||current.readyState!==1||waitingForPong)return;
   waitingForPong=true;
-  try{current.ping();}catch{waitingForPong=false;current.terminate();return;}
   pongDeadline=setTimeout(()=>{
    if(socket===current&&waitingForPong){
     // Old WebSocket connections can look open after sleep or a network change.
@@ -23,6 +22,10 @@ function createAccess({app,ipcMain,safeStorage,fromUI,toUI,getProfile,serverURL,
    }
   },5000);
   pongDeadline.unref?.();
+  try{current.ping();}catch{
+   clearTimeout(pongDeadline);pongDeadline=null;waitingForPong=false;
+   current.terminate();
+  }
  }
  function startHeartbeat(current){
   clearHeartbeat();
