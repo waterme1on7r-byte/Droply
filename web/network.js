@@ -15,12 +15,13 @@
   let socket = null, retryTimer = null, pending = null, attempt = 0, active = false, authenticated = false;
   // The signaling server ignores watches/lookups until it processes "hello".
   // Queue the latest friend subscription until the hello frame is on the wire.
-  let helloSent = false, helloRevision = 0, queuedWatch = null;
+  let helloSent = false, helloRevision = 0, queuedWatch = null, lastWatch = null;
   const queuedLookups = new Set();
   function resetHandshake() {
     helloSent = false;
     helloRevision++;
     queuedWatch = null;
+    lastWatch = null;
     queuedLookups.clear();
   }
   function writeFrame(ws, message) {
@@ -191,6 +192,7 @@
     if (!payload) return;
     const encoded = JSON.stringify(payload);
     if (encoded.length >= (payload.t === 'sig' ? (1 << 20) : 65536)) return;
+    if (payload.t === 'watch') lastWatch = payload;
     if (!helloSent) {
       if (payload.t === 'watch') queuedWatch = payload;
       else if (payload.t === 'lookup' && queuedLookups.size < 200) queuedLookups.add(payload.code);
@@ -207,7 +209,7 @@
     } else if (authenticated && helloSent && socket.readyState === WebSocket.OPEN) {
       // A sleeping browser can miss presence changes. Refresh the existing
       // push subscription when it becomes visible, not on a rapid timer.
-      emit('server-event', { t: 'refresh-friends' });
+      if (lastWatch) writeFrame(socket, lastWatch);
     }
   }
   if (typeof document !== 'undefined') {
