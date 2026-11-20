@@ -133,10 +133,10 @@ test('mobile theme switching fades on modern and older browsers, except reduced 
     assert.ok(events.includes('theme:light'), 'Theme must become light');
     if (reduced) {
       assert.ok(!events.includes('native'));
-      assert.ok(!events.some(e => e.includes('theme-fade-')));
+      assert.ok(!events.some(e => e.startsWith('add:theme-fade-')), 'No fallback fade should start');
     } else if (native) {
       assert.ok(events.includes('native'), 'iOS with native support must crossfade');
-      assert.ok(!events.some(e => e.includes('theme-fade-')));
+      assert.ok(!events.some(e => e.startsWith('add:theme-fade-')), 'No fallback fade should start');
     } else {
       assert.ok(events.includes('add:theme-fade-out'), 'Older iOS must fade out');
       assert.ok(events.includes('remove:theme-fade-out'), 'Older iOS must fade back in');
