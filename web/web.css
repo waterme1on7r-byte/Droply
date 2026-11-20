@@ -748,3 +748,30 @@ html.droply-web.droply-iphone .ios-upload-actions button:focus-visible {
   }
   html.droply-web.droply-iphone .ios-upload-actions button svg { width: 18px; height: 18px; }
 }
+
+/* Only the browser app on touch devices: iOS Safari focuses and zooms text
+   controls below 16px. Keep all editor controls at the native non-zoom size.
+   pan-x/pan-y preserves page scrolling while preventing browser pinch zoom.
+   Desktop and Electron styles are intentionally unchanged. */
+@media (pointer: coarse), (hover: none) {
+  html.droply-web {
+    -webkit-text-size-adjust: 100%;
+    touch-action: pan-x pan-y;
+  }
+  html.droply-web body {
+    touch-action: pan-x pan-y;
+  }
+  html.droply-web input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  html.droply-web textarea,
+  html.droply-web select,
+  html.droply-web [contenteditable="true"] {
+    font-size: 16px !important;
+  }
+}
+/* iPadOS can report fine pointer input with a keyboard or trackpad. */
+html.droply-web.droply-ios input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+html.droply-web.droply-ios textarea,
+html.droply-web.droply-ios select,
+html.droply-web.droply-ios [contenteditable="true"] {
+  font-size: 16px !important;
+}
