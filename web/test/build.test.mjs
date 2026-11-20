@@ -149,3 +149,24 @@ test('iPhone Web alone gets the approved mobile Add Friend and Select File panel
   assert.doesNotMatch(desktop, /ios-upload-actions/);
   assert.doesNotThrow(() => new Script(bridge));
 });
+
+test('home screen metadata uses the native Droply icon without changing desktop', async () => {
+  const html = await readFile(root + '/docs/app/index.html', 'utf8');
+  const desktop = await readFile(root + '/index.html', 'utf8');
+  const icon = await readFile(root + '/docs/app/droply-icon.png');
+  const originalIcon = await readFile(root + '/assets/droply-icon.png');
+  const manifest = JSON.parse(await readFile(root + '/docs/app/manifest.webmanifest', 'utf8'));
+
+  assert.match(html, /<link rel="apple-touch-icon" href="droply-icon\.png">/);
+  assert.match(html, /<link rel="icon" type="image\/png" href="droply-icon\.png">/);
+  assert.match(html, /<link rel="manifest" href="manifest\.webmanifest">/);
+  assert.match(html, /<meta name="apple-mobile-web-app-title" content="Droply">/);
+  assert.deepEqual(icon, originalIcon, 'Use the official Droply icon without altering it');
+  assert.equal(manifest.name, 'Droply');
+  assert.equal(manifest.short_name, 'Droply');
+  assert.equal(manifest.start_url, './');
+  assert.equal(manifest.scope, './');
+  assert.equal(manifest.display, 'standalone');
+  assert.deepEqual(manifest.icons, [{ src: 'droply-icon.png', sizes: 'any', type: 'image/png', purpose: 'any' }]);
+  assert.doesNotMatch(desktop, /apple-touch-icon|manifest\.webmanifest/);
+});
