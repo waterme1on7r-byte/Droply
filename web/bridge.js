@@ -125,6 +125,42 @@
   };
   document.addEventListener('DOMContentLoaded', () => {
     const main = document.querySelector('main');
+    // iOS Web only: use the approved two-button mobile transfer panel.
+    // Reuse existing friend and file inputs instead of altering the renderer.
+    if (iosDevice) {
+      const drop = document.querySelector('#drop');
+      if (drop) {
+        const actions = document.createElement('div');
+        actions.className = 'ios-upload-actions';
+        actions.setAttribute('role', 'group');
+        actions.setAttribute('aria-label', 'Transfer actions');
+        actions.innerHTML =
+          '<button type="button" class="ios-add-friend">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<circle cx="9" cy="7" r="3.4"/><path d="M2.5 20v-2c0-3.2 2.6-5.2 6.5-5.2s6.5 2 6.5 5.2v2M19 9v8m-4-4h8"/>' +
+            '</svg><span>Add Friend</span></button>' +
+          '<span class="ios-action-divider" aria-hidden="true"></span>' +
+          '<button type="button" class="ios-select-file">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<path d="M6 2.5h8l4.5 4.5V21H6zM14 2.5V7h4.5"/>' +
+            '</svg><span>Select File</span></button>';
+        drop.querySelector('.ico')?.after(actions);
+        actions.querySelector('.ios-add-friend').addEventListener('click', event => {
+          event.stopPropagation();
+          document.querySelector('#addFriendBtn')?.click();
+        });
+        actions.querySelector('.ios-select-file').addEventListener('click', event => {
+          event.stopPropagation();
+          if (drop.classList.contains('off')) {
+            // Avoid silently selecting a file that cannot yet be sent.
+            const noFriends = document.querySelector('#peerSub')?.textContent === 'No friends yet';
+            document.querySelector(noFriends ? '#addFriendBtn' : '#peerBox')?.click();
+            return;
+          }
+          document.querySelector('#fi')?.click();
+        });
+      }
+    }
     const head = main?.querySelector('.head');
     if (head) {
       const banner = document.createElement('details');
