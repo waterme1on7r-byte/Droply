@@ -84,7 +84,7 @@
       introduction.textContent = 'This browser has its own device code. Keep this site’s data to keep your identity, and choose where incoming files are saved.';
       const privacy = document.createElement('p');
       privacy.className = 'web-note-privacy';
-      privacy.textContent = 'A quick privacy note: your identity credentials are stored in this browser, not protected by your device’s secure keychain.';
+      privacy.textContent = 'A quick privacy note: Your identity credentials are stored in this browser, not protected by your device’s secure keychain.';
       banner.append(heading, introduction, privacy);
       head.after(banner);
     }
