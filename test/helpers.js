@@ -13,7 +13,7 @@ function loadMain({ profileRaw, friendsRaw, downloads } = {}) {
   const electron = {
     app: { requestSingleInstanceLock: () => true, quit() {}, setAppUserModelId() {}, getPath: n => n === 'downloads' ? dl : ud, on() {}, whenReady: () => Promise.resolve(), isPackaged: false },
     BrowserWindow: BW, ipcMain: { on: (c, f) => (h.on[c] = f), handle: (c, f) => (h.handle[c] = f) },
-    Notification: class { static isSupported() { return false; } }, shell: {}, dialog: { showErrorBox() {} },
+    Notification: class { static isSupported() { return false; } }, shell: {}, powerMonitor: { on() {} }, dialog: { showErrorBox() {} },
     session: { defaultSession: { setPermissionRequestHandler() {}, setPermissionCheckHandler() {} } },
     clipboard: { writeText: t => { h.copied = t; } }
   };
@@ -38,7 +38,8 @@ function loadRenderer() {
   js = js.slice(0, js.lastIndexOf('(async () => {'));            // skip the bootstrap IIFE; tests drive the state
   const created = [], sentSig = [], aborts = [], handlers = {}, saves = [], stored = [], copied = [];
   const ctx = {
-    console, setTimeout, clearTimeout, setInterval, clearInterval, Date, Math, JSON, Promise, Array, Object, Set, Number, String, Uint8Array, DataView, TextEncoder, encodeURIComponent,
+    console, setTimeout, clearTimeout, setInterval, clearInterval, requestAnimationFrame: () => 1,
+    Date, Math, JSON, Promise, Array, Object, Set, Number, String, Uint8Array, DataView, TextEncoder, encodeURIComponent,
     window: { CONFIG: { SERVER_URL: 'ws://x', KEY: 'k', ICE: [] }, addEventListener() {} },
     document: { querySelector: () => mkEl(), getElementById: id => created.find(e => e.id === id) || null, createElement: () => { const e = mkEl(); created.push(e); return e; }, addEventListener() {} },
     crypto: { randomUUID: () => 'tid-' + Math.random().toString(36).slice(2), subtle: require('node:crypto').webcrypto.subtle }, Notification: function () { throw new Error('denied'); },
