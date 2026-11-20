@@ -1,17 +1,18 @@
 html.droply-web body{height:100dvh}
 html.droply-web #titlebar{-webkit-app-region:unset}
-html.droply-web main{overflow:hidden}
+html.droply-web main{overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
 html.droply-web .web-note{display:flex;flex-direction:column;gap:4px;font-size:12px;line-height:1.5;color:var(--mute);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 15px;flex:none}
 html.droply-web .web-note-title{color:var(--text);font-size:13px;font-weight:650;line-height:1.4}
 html.droply-web .web-note p{margin:0}
 html.droply-web .web-note-privacy{font-size:11px;line-height:1.5}
 html.droply-web #sig{opacity:.45}
-@media (max-width:760px){
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
   html.droply-web body{padding-top:50px;flex-direction:column;overflow:hidden}
   html.droply-web #titlebar{height:50px;font-size:12px}
-  html.droply-web .rail{order:2;width:100%;min-height:65px;max-height:65px;padding:7px 10px;gap:8px;border-right:0;border-top:1px solid var(--line);flex-direction:row;justify-content:space-around}
+  html.droply-web .rail{order:2;width:100%;height:calc(65px + env(safe-area-inset-bottom,0px));min-height:calc(65px + env(safe-area-inset-bottom,0px));max-height:calc(65px + env(safe-area-inset-bottom,0px));padding:7px max(8px,env(safe-area-inset-right,0px)) calc(7px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));gap:8px;border-right:0;border-top:1px solid var(--line);background:var(--rail,#0d1524);flex-direction:row;justify-content:center;overflow:hidden}
   html.droply-web .rail .rsep{display:none}
-  html.droply-web #frList{flex:1;min-width:0;min-height:0;flex-direction:row;overflow-x:auto;overflow-y:hidden;gap:10px;padding:4px}
+  html.droply-web #frList{flex:0 1 auto;width:max-content;max-width:100%;min-width:0;min-height:0;flex-direction:row;overflow-x:auto;overflow-y:hidden;gap:8px;padding:4px 0;scrollbar-width:none}
+  html.droply-web #frList:empty{display:none}
   html.droply-web .rail .rbtn{width:43px;height:43px;border-radius:12px}
   html.droply-web .rail #railAv,html.droply-web .rail .fav,html.droply-web .rail .fr{width:39px;height:39px;border-radius:11px}
   html.droply-web main{order:1;min-height:0;flex:1;padding:14px 16px 10px;gap:13px;overflow-y:auto}
@@ -35,10 +36,10 @@ html.droply-web #sig{opacity:.45}
   html.droply-web #log{max-height:unset;overflow:visible}
   html.droply-web .row{padding:13px}
   html.droply-web #sig{display:none}
-  html.droply-web .overlay{inset:50px 0 65px}
+  html.droply-web .overlay{inset:50px 0 calc(65px + env(safe-area-inset-bottom,0px))}
   html.droply-web #setup .box,html.droply-web #ask .box{max-width:calc(100vw - 32px)}
   html.droply-web #friendRequests .request-box{max-width:calc(100vw - 24px)}
-  html.droply-web #settingsPane{inset:50px 0 65px}
+  html.droply-web #settingsPane{inset:50px 0 calc(65px + env(safe-area-inset-bottom,0px))}
   html.droply-web #picker{max-width:calc(100vw - 35px)}
 }
 @media(max-width:390px){
