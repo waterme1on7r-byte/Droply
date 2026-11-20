@@ -368,6 +368,9 @@ function deviceBadge(platform) {
   return badge;
 }
 const SUPPORTED_PLATFORMS = new Set(['win32', 'darwin', 'linux', 'android-phone', 'android-tablet', 'android-tv', 'web']);
+function platformLabel(platform) {
+  return ({ win32: 'Windows', darwin: 'macOS', linux: 'Linux', 'android-phone': 'Android phone', 'android-tablet': 'Android tablet', 'android-tv': 'Android TV', web: 'Web' })[platform] || '';
+}
 function peerPlatform(id) {
   const live = peers.find(p => p.id === id);
   return live?.platform || announcedPeerPlatforms.get(id) || (webPeerIds.has(id) ? 'web' : undefined);
@@ -494,7 +497,7 @@ function renderRail() {
   const l = $('#frList'); l.innerHTML = '';
   const on = new Set(peers.map(p => p.id));
   [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
-    const el = h('div', 'fr' + (on.has(f.id) ? ' on' : '') + (f.id === sel ? ' sel' : '')); const platform = on.has(f.id) ? peerPlatform(f.id) : undefined; const deviceName = platform === 'darwin' ? 'macOS' : platform === 'win32' ? 'Windows' : platform?.replace('android-', 'Android '); el.title = f.name + (on.has(f.id) ? (deviceName ? ' · Online · Using ' + deviceName : ' · online') : ' · offline');
+    const el = h('div', 'fr' + (on.has(f.id) ? ' on' : '') + (f.id === sel ? ' sel' : '')); const platform = on.has(f.id) ? peerPlatform(f.id) : undefined; const deviceName = platformLabel(platform); el.title = f.name + (on.has(f.id) ? (deviceName ? ' · Online · Using ' + deviceName : ' · online') : ' · offline');
     const a = avatar(f.av, f.name); a.classList.add('fav');
     el.removeAttribute?.('title'); attachFriendHover(a, f.id);
     const x = h('button', 'frx'); x.innerHTML = ICON.x; x.title = 'Remove friend'; x.setAttribute('aria-label', 'Remove ' + f.name);
@@ -514,7 +517,7 @@ function updateDrop() {
   $('#dropTitle').textContent = p ? 'Drop files to send' : f ? f.name + ' is offline' : friends.length ? 'Pick a person first' : 'Add a friend to start';
   $('#peerName').textContent = shown ? shown.name : 'Pick a person';
   const device = p ? peerPlatform(p.id) : undefined;
-  const deviceName = device === 'darwin' ? 'macOS' : device === 'win32' ? 'Windows' : device?.replace('android-', 'Android ');
+  const deviceName = platformLabel(device);
   $('#peerSub').textContent = p ? (deviceName ? 'Online · Using ' + deviceName : 'Online') : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
   const n = withDeviceBadge(avatar(shown && (shown.av || f?.av), shown ? shown.name : '+'), device); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
   if (shown) attachFriendHover(n, shown.id);
@@ -853,7 +856,7 @@ function copyCode(btn, text) {
 function showProfile(f) {
   const on = peers.some(p => p.id === f.id);
   const x = h('button', 'closeX'); x.innerHTML = ICON.xl; x.title = 'Close'; x.setAttribute('aria-label', 'Close'); x.onclick = closeCard;
-  const st = h('div', 'pstat' + (on ? ' on' : '')); st.innerHTML = '<i></i><span></span>'; const platform = on ? peerPlatform(f.id) : undefined; const deviceName = platform === 'darwin' ? 'macOS' : platform === 'win32' ? 'Windows' : platform?.replace('android-', 'Android '); st.querySelector('span').textContent = on ? (deviceName ? 'Online · Using ' + deviceName : 'Online') : 'Offline';
+  const st = h('div', 'pstat' + (on ? ' on' : '')); st.innerHTML = '<i></i><span></span>'; const platform = on ? peerPlatform(f.id) : undefined; const deviceName = platformLabel(platform); st.querySelector('span').textContent = on ? (deviceName ? 'Online · Using ' + deviceName : 'Online') : 'Offline';
   const field = h('div', 'field'), box = h('div', 'codebox'), cp = h('button', 'cp ghost'); cp.innerHTML = ICON.copy; cp.title = 'Copy code'; cp.setAttribute('aria-label', 'Copy code');
   cp.onclick = () => copyCode(cp, f.code);
   box.append(h('code', null, f.code), cp);
