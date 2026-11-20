@@ -3,7 +3,7 @@ const {createAccess,validateServer}=require('../access');
 function fixture({secure=true,responseId,server='wss://example.test'}={}){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'droply-access-')),handles={},listeners={},events=[],calls=[],sockets=[];
  const profile={id:'12345678-1234-1234-1234-123456789012',name:'Tester',avatar:''},token='T'.repeat(43);
- class Socket extends EventEmitter{constructor(url){super();this.url=url;this.readyState=1;this.bufferedAmount=0;this.sent=[];sockets.push(this);}send(m){this.sent.push(JSON.parse(m));}terminate(){this.emit('close',1006);}close(){this.emit('close',1000);}}
+ class Socket extends EventEmitter{constructor(url){super();this.url=url;this.readyState=1;this.bufferedAmount=0;this.sent=[];this.pings=0;this.autoPong=true;sockets.push(this);}send(m){this.sent.push(JSON.parse(m));}ping(){this.pings++;if(this.autoPong)this.emit('pong');}terminate(){this.emit('close',1006);}close(){this.emit('close',1000);}}
  const access=createAccess({app:{getPath:()=>root,on:()=>{}},ipcMain:{handle:(ch,f)=>handles[ch]=f,on:(ch,f)=>listeners[ch]=f},safeStorage:{isEncryptionAvailable:()=>secure,encryptString:s=>Buffer.from('protected:'+s.split('').reverse().join('')),decryptString:b=>b.toString().slice(10).split('').reverse().join('')},fromUI:e=>e===true,toUI:(ch,data)=>events.push(data),getProfile:()=>profile,serverURL:server,Socket,
  fetcher:async(url,options)=>{calls.push({url:String(url),options});return {ok:true,json:async()=>({id:responseId||profile.id,token})};}});
  return {root,handles,listeners,events,calls,sockets,profile,token,access,call:(ch,...args)=>handles[ch](true,...args)};
@@ -46,4 +46,33 @@ test('first launch registers automatically and keeps the same device identity',a
  const data=JSON.parse(f.calls[0].options.body);assert.equal(data.id,f.profile.id);assert.equal(data.invitation,undefined);assert.equal(data.token.length,43);
  const saved=JSON.parse(fs.readFileSync(path.join(f.root,'device-access.json'),'utf8'));assert.equal(saved.registered,true);assert(!JSON.stringify(saved).includes(data.token));f.access.stop();
  await f.access.connect();assert.equal(f.calls.length,1);f.access.stop();
+});
+
+test('desktop probes WebSocket on focus, clears native pong, and reattaches after wake', async()=>{
+ const f=fixture();await f.access.connect();
+ const first=f.sockets[0];first.emit('open');first.emit('message',JSON.stringify({t:'authenticated',id:f.profile.id}));
+ assert.equal(f.events.at(-1).state,'connected');
+ f.access.checkConnection();
+ assert.equal(first.pings,1,'A focused window probes the existing signaling link without polling the UI');
+ f.access.resume();
+ assert.equal(f.sockets.length,2,'Waking the OS triggers a fresh signaling handshake immediately');
+ assert.equal(f.events.at(-1).state,'connecting');
+ const replacement=f.sockets[1];replacement.emit('open');replacement.emit('message',JSON.stringify({t:'authenticated',id:f.profile.id}));
+ first.emit('close',1006);
+ assert.equal(f.events.at(-1).state,'connected','Old socket close must not mark a new session offline');
+ f.access.stop();
+});
+
+test('desktop heartbeat stays bounded and can detect a silent socket', async()=>{
+ const f=fixture();await f.access.connect();
+ const s=f.sockets[0];s.emit('open');s.emit('message',JSON.stringify({t:'authenticated',id:f.profile.id}));
+ s.autoPong=false;
+ f.access.checkConnection();
+ assert.equal(s.pings,1);
+ f.access.checkConnection();
+ assert.equal(s.pings,1,'Do not generate concurrent heartbeat probes');
+ s.emit('pong');
+ f.access.checkConnection();
+ assert.equal(s.pings,2,'Pong allows an immediate follow-up health check');
+ f.access.stop();
 });
