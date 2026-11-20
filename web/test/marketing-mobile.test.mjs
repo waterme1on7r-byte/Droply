@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -66,4 +68,86 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
   assert.match(html, /id="hero-mac"[^>]*v2\.8\.15\/Droply-2\.8\.15-universal\.dmg/);
   assert.match(html, /id="hero-win"[^>]*v2\.8\.15\/Droply-Setup-2\.8\.15\.exe/);
   assert.match(html, /id="hero-android"[^>]*v2\.8\.15\/Droply-Android-2\.8\.15-debug-preview\.apk/);
+});
+
+
+test('mobile theme switching fades on modern and older browsers, except reduced motion', async () => {
+  const html = await readFile(root + 'docs/index.html', 'utf8');
+  const css = html.match(/<style\b[^>]*>([\s\S]*?)<\/style>/i)?.[1];
+  const script = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(match => !/\bsrc\s*=/.test(match[1]))[0]?.[2];
+  const csp = html.match(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)">/i)?.[1];
+  assert.ok(css && script && csp, 'Expected site CSS, script and CSP');
+  for (const [name, body] of [['style-src', css], ['script-src', script]]) {
+    const expected = createHash('sha256').update(body).digest('base64');
+    assert.ok(csp.match(new RegExp(name + '[^;]*')).at(0).includes("'sha256-" + expected + "'"),
+      name + ' CSP hash must match the published inline content');
+  }
+  assert.match(css, /::view-transition-old\(root\)/);
+  assert.match(css, /html\.theme-fade-fallback\.theme-fade-out body\s*\{\s*opacity:\s*0/);
+  assert.match(css, /transition:\s*opacity 425ms ease-in-out/);
+  assert.doesNotMatch(script, /if\s*\(isIOSWebKit\)/, 'iOS must not bypass the animation');
+
+  const start = script.indexOf("themeToggle.addEventListener('click', async () => {");
+  const end = script.indexOf("// Highlight the visitor's platform", start);
+  assert.ok(start > 0 && end > start, 'Expected executable theme toggle handler');
+  const handlerSource = script.slice(start, end);
+
+  async function runMobileCase({ native, reduced }) {
+    const events = [];
+    const classes = new Set();
+    let handler;
+    const rootElement = {
+      classList: {
+        add: (...names) => { names.forEach(n => classes.add(n)); events.push('add:' + names.join(',')); },
+        remove: (...names) => { names.forEach(n => classes.delete(n)); events.push('remove:' + names.join(',')); }
+      }
+    };
+    const doc = { documentElement: rootElement };
+    if (native) doc.startViewTransition = callback => {
+      events.push('native');
+      callback();
+      return { finished: Promise.resolve() };
+    };
+    const context = {
+      changingTheme: false,
+      selectedTheme: 'dark',
+      themeMotion: { matches: reduced },
+      themeImagesReady: Promise.resolve(),
+      themeKey: 'droply-website-theme',
+      themeToggle: { addEventListener: (type, fn) => {
+        assert.equal(type, 'click');
+        handler = fn;
+      }},
+      applyWebsiteTheme: name => events.push('theme:' + name),
+      document: doc,
+      window: { localStorage: { setItem: () => {} } },
+      // Simulate iOS WebKit to catch a future accidental early return.
+      isIOSWebKit: true,
+      requestAnimationFrame: callback => callback(),
+      setTimeout: callback => callback()
+    };
+    runInNewContext(handlerSource, context);
+    assert.equal(typeof handler, 'function');
+    await handler();
+    assert.ok(events.includes('theme:light'), 'Theme must become light');
+    if (reduced) {
+      assert.ok(!events.includes('native'));
+      assert.ok(!events.some(e => e.includes('theme-fade-')));
+    } else if (native) {
+      assert.ok(events.includes('native'), 'iOS with native support must crossfade');
+      assert.ok(!events.some(e => e.includes('theme-fade-')));
+    } else {
+      assert.ok(events.includes('add:theme-fade-out'), 'Older iOS must fade out');
+      assert.ok(events.includes('remove:theme-fade-out'), 'Older iOS must fade back in');
+      assert.ok(events.indexOf('add:theme-fade-out') < events.indexOf('theme:light'));
+      assert.ok(events.indexOf('remove:theme-fade-out') > events.indexOf('theme:light'));
+    }
+    assert.equal(classes.size, 0, 'Transition classes must be removed');
+    await handler();
+    assert.equal(events.filter(e => e === 'theme:dark').length, 1, 'Second tap returns to dark');
+  }
+  await runMobileCase({ native: true, reduced: false });
+  await runMobileCase({ native: false, reduced: false });
+  await runMobileCase({ native: true, reduced: true });
 });
