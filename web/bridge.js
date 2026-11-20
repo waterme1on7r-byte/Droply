@@ -75,8 +75,17 @@
       const banner = document.createElement('div');
       banner.className = 'web-note';
       banner.setAttribute('role', 'note');
-      const warning = 'Each browser has its own device code. Keep site data intact to keep your identity. Credentials are stored in this browser, not protected by your operating system keychain. You choose where received files go.';
-      banner.textContent = (window.DroplyPrivatePreview ? 'PRIVATE TEST BUILD · ' : 'DROPLY WEB · ') + warning;
+      const heading = document.createElement('strong');
+      heading.className = 'web-note-title';
+      heading.textContent = window.DroplyPrivatePreview
+        ? 'Welcome to the Droply Web preview'
+        : 'Welcome to Droply Web';
+      const introduction = document.createElement('p');
+      introduction.textContent = 'This browser has its own device code. Keep this site’s data to keep your identity, and choose where incoming files are saved.';
+      const privacy = document.createElement('p');
+      privacy.className = 'web-note-privacy';
+      privacy.textContent = 'A quick privacy note: your identity credentials are stored in this browser, not protected by your device’s secure keychain.';
+      banner.append(heading, introduction, privacy);
       head.after(banner);
     }
     const label = document.querySelector('#titlebar');
