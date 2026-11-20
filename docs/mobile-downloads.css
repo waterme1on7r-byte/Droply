@@ -5,6 +5,8 @@
   gap: 7px;
   width: 100%;
   max-width: 515px;
+  /* Keep the CTA row below the trust message, in the open space. */
+  margin-top: 36px;
 }
 .hero-actions .btn {
   width: 100%;
