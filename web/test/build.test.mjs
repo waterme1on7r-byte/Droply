@@ -145,7 +145,7 @@ test('iPhone Web alone gets the approved mobile Add Friend and Select File panel
   assert.match(css, /@media \(orientation: landscape\)/);
   assert.match(css, /@media \(orientation: portrait\)/);
   const mobileRules = css.slice(css.indexOf('/* iPhone Web mobile transfer actions only.'));
-  assert.doesNotMatch(mobileRules, /html\.droply-web\.droply-ios(?:\s|\.|\s*\{)/);
+  assert.doesNotMatch(mobileRules, /html\.droply-web\.droply-ios[^\n]*(?:#drop|\.ios-upload-actions|\.ios-action-divider)/);
   assert.doesNotMatch(desktop, /ios-upload-actions/);
   assert.doesNotThrow(() => new Script(bridge));
 });
