@@ -30,6 +30,11 @@
 }
 .hero-actions .btn small { font-size: .62rem; }
 
+/* Fine-tune desktop alignment with the hero copy; keep phones untouched. */
+@media (min-width: 901px) {
+  .hero-actions { transform: translateX(-8px); }
+}
+
 /* When the hero column gets narrower, stack each icon inside its button. */
 @media (max-width: 1100px) {
   .hero-actions .btn {
