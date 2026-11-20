@@ -17,18 +17,23 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
   const actions = html.match(/<div class="hero-actions"[^>]*>([\s\S]*?)<\/div>/);
   assert.ok(actions, 'Expected four choices in one button group');
   const heroStart = html.indexOf('<div class="hero-copy">');
-  const heroEnd = html.indexOf('<div class="hero-art"', heroStart);
-  const hero = html.slice(heroStart, heroEnd);
-  assert.ok(hero.indexOf('class="hero-meta"') < hero.indexOf('class="hero-trust"'), 'Version details precede the trust line');
-  assert.ok(hero.indexOf('class="hero-trust"') < hero.indexOf('class="hero-actions"'), 'All four buttons must follow the trust line');
-  assert.match(css, /margin-top: 36px/);
+  const heroArt = html.indexOf('<div class="hero-art"', heroStart);
+  const heroActions = html.indexOf('<div class="hero-actions"', heroStart);
+  const heroEnd = html.indexOf('</section>', heroStart);
+  assert.ok(heroStart >= 0 && heroArt > heroStart && heroActions > heroArt && heroActions < heroEnd,
+    'All four buttons must be a separate centered row below the hero illustration');
+  assert.ok(html.indexOf('class="hero-meta"', heroStart) < html.indexOf('class="hero-trust"', heroStart),
+    'Version details precede the trust line');
+  assert.match(css, /grid-column: 1 \/ -1/);
+  assert.match(css, /justify-self: center/);
+  assert.match(css, /margin-top: 8px/);
   assert.equal((actions[1].match(/class="btn btn-lg/g) || []).length, 4);
   assert.match(css, /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(css, /@media\s*\(max-width:\s*500px\)/);
   assert.match(css, /@media\s*\(max-width:\s*360px\)/);
   assert.doesNotMatch(css, /\.hero-actions\s*\{[^}]*flex-direction:\s*column/);
   assert.match(css, /min-height: 54px/);
-  assert.match(css, /@media \(min-width: 901px\) \{\s*\.hero-actions \{ transform: translateX\(-8px\); \}/);
+  assert.doesNotMatch(css, /translateX\(-8px\)/);
 
   assert.match(css, /max-width: 515px/);
   assert.match(css, /min-height: 54px/);
