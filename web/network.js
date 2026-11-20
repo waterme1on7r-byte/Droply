@@ -19,8 +19,8 @@
   const queuedLookups = new Set();
   let heartbeatTimer = null, heartbeatDeadline = null, waitingHeartbeat = 0, heartbeatId = 0;
   function clearHeartbeat() {
-    clearInterval(heartbeatTimer);
-    clearTimeout(heartbeatDeadline);
+    if (heartbeatTimer !== null) clearInterval(heartbeatTimer);
+    if (heartbeatDeadline !== null) clearTimeout(heartbeatDeadline);
     heartbeatTimer = null;
     heartbeatDeadline = null;
     waitingHeartbeat = 0;
