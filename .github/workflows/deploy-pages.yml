@@ -12,6 +12,7 @@ on:
       - 'settings.js'
       - 'settings.css'
       - 'config.js'
+      - 'scripts/site-csp.cjs'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -44,6 +45,11 @@ jobs:
         run: |
           npm run web:build
           node --test web/test/*.test.mjs
+      - name: Sync and verify marketing website CSP before publishing
+        run: |
+          # Without a matching hash, the browser blocks ALL inline website CSS.
+          node scripts/site-csp.cjs --fix
+          node scripts/site-csp.cjs --check
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
