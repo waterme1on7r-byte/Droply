@@ -280,11 +280,12 @@ function createPreviewServer(options = {}) {
       handshakeTimeout: 12000, perMessageDeflate: false, maxPayload: 1 << 20,
       followRedirects: false
     });
-    let pending = [], queued = 0, stopped = false;
+    let pending = [], queued = 0, stopped = false, lastPingAt = 0, waitingPing = null;
     const stop = () => {
       if (stopped) return;
       stopped = true;
       pending = [];
+      waitingPing = null;
       try { client.close(); } catch {}
       try { upstream.close(); } catch {}
       setTimeout(() => { if (client.readyState !== 3) client.terminate();
@@ -292,6 +293,24 @@ function createPreviewServer(options = {}) {
     };
     client.on('message', (frame, binary) => {
       if (binary || stopped) return stop();
+      // Native WebSocket ping/pong gives the browser an end-to-end liveness
+      // check through this gateway and the existing signaling server. No
+      // broadcast/polling or changes to the production server are needed.
+      if (frame.length <= 80) {
+        let probe;
+        try { probe = JSON.parse(frame.toString()); } catch {}
+        if (probe?.t === 'gateway-ping') {
+          if (!Number.isSafeInteger(probe.id) || probe.id < 0 ||
+            probe.id > 0x7fffffff || upstream.readyState !== WebSocket.OPEN) return stop();
+          const now = Date.now();
+          if (now - lastPingAt < 4000 || waitingPing) return;
+          lastPingAt = now;
+          const nonce = crypto.randomBytes(12).toString('hex');
+          waitingPing = { id: probe.id, nonce };
+          try { upstream.ping(nonce); } catch { stop(); }
+          return;
+        }
+      }
       if (upstream.readyState === WebSocket.OPEN) {
         if (upstream.bufferedAmount > 4 * 1024 * 1024) return stop();
         upstream.send(frame, { binary: false });
@@ -304,6 +323,13 @@ function createPreviewServer(options = {}) {
     upstream.on('open', () => {
       for (const frame of pending) upstream.send(frame, { binary: false });
       pending = []; queued = 0;
+    });
+    upstream.on('pong', frame => {
+      if (stopped || !waitingPing || frame.toString() !== waitingPing.nonce) return;
+      const id = waitingPing.id;
+      waitingPing = null;
+      if (client.readyState === WebSocket.OPEN)
+        client.send(JSON.stringify({ t: 'gateway-pong', id }));
     });
     upstream.on('message', (frame, binary) => {
       if (binary || stopped || client.readyState !== WebSocket.OPEN) return stop();
