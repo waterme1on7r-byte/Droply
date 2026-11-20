@@ -2,9 +2,9 @@
 .hero-actions {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 7px;
+  gap: 8px;
   width: 100%;
-  max-width: 515px;
+  max-width: 560px;
   /* The row is now a full-width grid item, centered below the hero artwork. */
   grid-column: 1 / -1;
   justify-self: center;
@@ -13,37 +13,37 @@
 .hero-actions .btn {
   width: 100%;
   min-width: 0;
-  min-height: 54px;
-  padding: 8px 7px;
-  gap: 6px;
+  min-height: 58px;
+  padding: 9px 8px;
+  gap: 7px;
   justify-content: center;
-  border-radius: 11px;
-  font-size: .81rem;
+  border-radius: 13px;
+  font-size: .83rem;
   line-height: 1.2;
   text-align: left;
   white-space: normal;
 }
 .hero-actions .btn svg {
-  flex: 0 0 18px;
-  width: 18px;
-  height: 18px;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
 }
 .hero-actions .btn span {
   min-width: 0;
   white-space: nowrap;
 }
-.hero-actions .btn small { font-size: .64rem; }
+.hero-actions .btn small { font-size: .66rem; }
 
 /* When the hero column gets narrower, stack each icon inside its button. */
 @media (max-width: 1100px) {
   .hero-actions .btn {
     flex-direction: column;
     align-items: center;
-    min-height: 58px;
-    gap: 4px;
-    padding: 7px 4px;
+    min-height: 65px;
+    gap: 5px;
+    padding: 8px 4px;
     text-align: center;
-    font-size: .77rem;
+    font-size: .79rem;
   }
   .hero-actions .btn small { display: none; }
 }
@@ -52,31 +52,31 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
     width: 100%;
     max-width: 355px;
-    gap: 5px;
+    gap: 6px;
   }
   .hero-actions .btn {
-    min-height: 58px;
-    padding: 7px 3px;
-    gap: 4px;
-    font-size: clamp(10px, 2.7vw, 11.5px);
-    border-radius: 10px;
+    min-height: 68px;
+    padding: 8px 3px;
+    gap: 6px;
+    font-size: clamp(10px, 2.8vw, 12px);
+    border-radius: 11px;
   }
   .hero-actions .btn svg {
-    flex: 0 0 16px;
-    width: 16px;
-    height: 16px;
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
   }
 }
 @media (max-width: 360px) {
   .hero-actions { gap: 4px; }
   .hero-actions .btn {
-    min-height: 55px;
-    padding: 6px 2px;
-    font-size: 9.8px;
+    min-height: 67px;
+    padding: 7px 2px;
+    font-size: 10px;
   }
   .hero-actions .btn svg {
-    flex-basis: 16px;
-    width: 16px;
-    height: 16px;
+    flex-basis: 17px;
+    width: 17px;
+    height: 17px;
   }
 }
