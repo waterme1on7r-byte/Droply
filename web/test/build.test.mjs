@@ -22,7 +22,14 @@ test('browser build shares the desktop renderer without changing it', async () =
 });
 test('bundle includes only the public signaling configuration', async () => {
   const config = await readFile(root + '/docs/app/config.js', 'utf8');
-  assert.equal(config, await readFile(root + '/config.js', 'utf8'));
+  const original = await readFile(root + '/config.js', 'utf8');
+  const gateway = process.env.DROPLY_PUBLIC_GATEWAY_URL || '';
+  if (gateway) {
+    assert.equal(config, original + '\nwindow.CONFIG.SERVER_URL = ' + JSON.stringify(new URL(gateway).origin) + ';\n');
+    const built = await readFile(root + '/docs/app/index.html', 'utf8');
+    assert.ok(built.includes('connect-src \'self\' ' + new URL(gateway).origin));
+    assert.doesNotMatch(config, /DroplyPrivatePreview|WEB_PREVIEW_PASSWORD/);
+  } else assert.equal(config, original);
   assert.doesNotMatch(config, /ADMIN_TOKEN|DATABASE_URL|secret/i);
 });
 
