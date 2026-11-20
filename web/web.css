@@ -406,3 +406,73 @@ html.droply-web .web-note p { margin-top: 7px; }
   html.droply-web .pcard .av { display: flex; }
   html.droply-web #status { max-width: 45%; font-size: 9px; }
 }
+
+/* On iPhone and iPad only, keep navigation pinned to the bottom in landscape.
+   Android retains the existing landscape left rail and desktop-like workspace.
+   This comes after all landscape/portrait rules to win their equal specificity. */
+@media (orientation: landscape) {
+  html.droply-web.droply-ios {
+    --ios-landscape-nav: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+  html.droply-web.droply-ios body {
+    flex-direction: column;
+    padding: var(--landscape-title, 42px) 0 var(--ios-landscape-nav);
+  }
+  html.droply-web.droply-ios .rail {
+    position: fixed; z-index: 30; inset: auto 0 0;
+    order: 2; flex: none; width: 100%;
+    height: var(--ios-landscape-nav); min-height: var(--ios-landscape-nav);
+    max-height: var(--ios-landscape-nav);
+    display: flex; flex-direction: row; align-items: flex-start;
+    justify-content: center; gap: clamp(12px, 4vw, 26px);
+    padding: 7px max(12px, env(safe-area-inset-right, 0px))
+      calc(7px + env(safe-area-inset-bottom, 0px))
+      max(12px, env(safe-area-inset-left, 0px));
+    border-right: 0; border-top: 1px solid var(--line);
+    overflow: hidden; background: var(--rail, #0d1524);
+  }
+  html.droply-web.droply-ios .rail > .rbtn.active,
+  html.droply-web.droply-ios .rail > .rsep,
+  html.droply-web.droply-ios .rail #frList { display: none !important; }
+  html.droply-web.droply-ios .rail #railAv {
+    order: 0; width: 44px; height: 44px; min-width: 44px;
+    border-radius: 12px;
+  }
+  html.droply-web.droply-ios .rail #peopleBtn { order: 1; }
+  html.droply-web.droply-ios .rail #gearBtn { order: 2; }
+  html.droply-web.droply-ios .rail #addFriendBtn { order: 3; }
+  html.droply-web.droply-ios .rail #peopleBtn,
+  html.droply-web.droply-ios .rail #gearBtn,
+  html.droply-web.droply-ios .rail #addFriendBtn {
+    width: 44px; height: 44px; min-width: 44px; padding: 0;
+  }
+  html.droply-web.droply-ios main {
+    order: 1; width: 100%; flex: 1 1 auto; min-height: 0;
+    overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  html.droply-web.droply-ios #settingsPane {
+    inset: var(--landscape-title, 42px) 0 var(--ios-landscape-nav);
+  }
+  html.droply-web.droply-ios #setup,
+  html.droply-web.droply-ios #ask,
+  html.droply-web.droply-ios #pf,
+  html.droply-web.droply-ios #appDialog {
+    inset: var(--landscape-title, 42px) 0 var(--ios-landscape-nav);
+  }
+  html.droply-web.droply-ios #setup .box,
+  html.droply-web.droply-ios #ask .box,
+  html.droply-web.droply-ios #pf .box,
+  html.droply-web.droply-ios #appDialog .box {
+    max-height: calc(100dvh - var(--landscape-title, 42px) - var(--ios-landscape-nav) - 20px);
+  }
+  html.droply-web.droply-ios #addFriend .box {
+    left: max(12px, env(safe-area-inset-left, 0px));
+    max-height: calc(100dvh - var(--ios-landscape-nav) - 24px);
+  }
+  html.droply-web.droply-ios #friendRequests .request-box {
+    left: max(12px, env(safe-area-inset-left, 0px));
+    bottom: calc(var(--ios-landscape-nav) + 8px);
+    max-height: calc(100dvh - var(--landscape-title, 42px) - var(--ios-landscape-nav) - 16px);
+  }
+  html.droply-web.droply-ios #br { bottom: calc(var(--ios-landscape-nav) + 8px); }
+}
