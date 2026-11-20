@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Notification, shell, session, dialog, clipboard, Tray, Menu, nativeImage, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, shell, session, dialog, clipboard, Tray, Menu, nativeImage, safeStorage, powerMonitor } = require('electron');
 const path = require('path'), fs = require('fs'), crypto = require('crypto');
 
 // Second instance: quit right away and don't run any of the setup below
@@ -265,7 +265,10 @@ function start() {
   win.on('unmaximize', () => toUI('window-state', { maximized: false }));
   const accessConfig = { window: {} };
   require('vm').runInNewContext(fs.readFileSync(path.join(__dirname, 'config.js'), 'utf8'), accessConfig, { timeout: 1000 });
-  require('./access').createAccess({ app, ipcMain, safeStorage, fromUI, toUI, getProfile: () => profile, serverURL: accessConfig.window.CONFIG.SERVER_URL });
+  const nativeAccess = require('./access').createAccess({ app, ipcMain, safeStorage, fromUI, toUI, getProfile: () => profile, serverURL: accessConfig.window.CONFIG.SERVER_URL });
+  // An OS sleep or network change may leave a WebSocket appearing connected.
+  // Refresh signaling immediately on wake, and test it when the window returns.
+  powerMonitor.on('resume', () => nativeAccess.resume());
   desktop.appearance();
   function ensureTray() {
     if (tray || !desktop.settings.tray) return;
@@ -303,7 +306,7 @@ function start() {
   win.webContents.once('did-finish-load', () => updates.start());
   win.loadFile(path.join(__dirname, 'index.html')).catch(err => { log('loadFile failed', err); show(); });
   // Windows'ta klavye odağı pencereye geçmeyebiliyor (özellikle installer'dan otomatik açılınca)
-  win.on('focus', () => win.webContents.focus());
+  win.on('focus', () => { win.webContents.focus(); nativeAccess.checkConnection(); });
 }
 if (gotLock) app.whenReady().then(start).catch(err => {
   log('startup failed', err);
