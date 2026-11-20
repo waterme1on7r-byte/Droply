@@ -39,7 +39,8 @@ test('private preview protects assets and proxies authenticated API and WebSocke
     root, allowLocalUpstream: true,
     env: { WEB_PREVIEW_PASSWORD: password,
       SIGNALING_UPSTREAM_URL: 'ws://127.0.0.1:' + upstreamHttp.address().port,
-      PREVIEW_LOCAL_HTTP: '1' }
+      PREVIEW_LOCAL_HTTP: '1',
+      WEB_PUBLIC_ALLOWED_ORIGINS: 'https://waterme1on7r-byte.github.io' }
   });
   await listen(proxy.server);
   t.after(() => proxy.close());
@@ -98,6 +99,54 @@ test('private preview protects assets and proxies authenticated API and WebSocke
   });
   assert.equal(register.status, 200);
   assert.deepEqual(await register.json(), { id: 'tester' });
+  // Public Pages can authenticate its own device via the same gateway, but
+  // cannot read private preview app files or use other origins.
+  const pagesOrigin = 'https://waterme1on7r-byte.github.io';
+  const preflight = await fetch(base + '/auth/register', {
+    method: 'OPTIONS',
+    headers: { Origin: pagesOrigin, 'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Headers': 'Content-Type' }
+  });
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get('access-control-allow-origin'), pagesOrigin);
+  assert.equal(preflight.headers.get('access-control-allow-headers'), 'Content-Type');
+  assert.equal(preflight.headers.get('access-control-allow-credentials'), null);
+  const publicRegistration = await fetch(base + '/auth/register', {
+    method: 'POST', headers: { Origin: pagesOrigin, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: 'pages-device' })
+  });
+  assert.equal(publicRegistration.status, 200);
+  assert.equal(publicRegistration.headers.get('access-control-allow-origin'), pagesOrigin);
+  assert.deepEqual(await publicRegistration.json(), { id: 'pages-device' });
+  const stillPrivate = await fetch(preview, { headers: { Origin: pagesOrigin } });
+  assert.match(await stillPrivate.text(), /Test access password/);
+  const maliciousPreflight = await fetch(base + '/auth/register', {
+    method: 'OPTIONS', headers: { Origin: 'https://attacker.example' }
+  });
+  assert.equal(maliciousPreflight.status, 403);
+  const publicSocketEcho = await new Promise((resolve, reject) => {
+    const ws = new WebSocket(base.replace(/^http/, 'ws') + '/device', {
+      headers: { Origin: pagesOrigin }
+    });
+    const deadline = setTimeout(() => { ws.terminate(); reject(Error('Public gateway websocket timed out')); }, 3000);
+    ws.on('open', () => ws.send('pages-hello'));
+    ws.on('message', data => {
+      clearTimeout(deadline);
+      resolve(data.toString());
+      ws.close();
+    });
+    ws.on('error', e => { clearTimeout(deadline); reject(e); });
+  });
+  assert.equal(publicSocketEcho, 'pages-hello');
+  const invalidPublicWs = await new Promise(resolve => {
+    const ws = new WebSocket(base.replace(/^http/, 'ws') + '/device', {
+      headers: { Origin: 'https://attacker.example' }
+    });
+    ws.on('unexpected-response', (_, res) => { resolve(res.statusCode); ws.terminate(); });
+    ws.on('error', () => resolve(403));
+    ws.on('open', () => { resolve(200); ws.close(); });
+  });
+  assert.equal(invalidPublicWs, 403);
   const originDenied = await fetch(base + '/auth/register', {
     method: 'POST', headers: { Origin: 'https://attacker.example', Cookie: cookie, 'Content-Type': 'application/json' },
     body: JSON.stringify({ id: 'test' })
@@ -180,4 +229,12 @@ test('private preview refuses weak credentials and insecure remote signaling', (
   assert.throws(() => createPreviewServer({
     env: { WEB_PREVIEW_PASSWORD: password, SIGNALING_UPSTREAM_URL: 'ws://evil.example' }
   }), /SIGNALING_UPSTREAM_URL/);
+  assert.throws(() => createPreviewServer({
+    env: { WEB_PREVIEW_PASSWORD: password, SIGNALING_UPSTREAM_URL: 'wss://good.example',
+      WEB_PUBLIC_ALLOWED_ORIGINS: 'https://waterme1on7r-byte.github.io/' }
+  }), /WEB_PUBLIC_ALLOWED_ORIGINS/);
+  assert.throws(() => createPreviewServer({
+    env: { WEB_PREVIEW_PASSWORD: password, SIGNALING_UPSTREAM_URL: 'wss://good.example',
+      WEB_PUBLIC_ALLOWED_ORIGINS: 'http://waterme1on7r-byte.github.io' }
+  }), /WEB_PUBLIC_ALLOWED_ORIGINS/);
 });
