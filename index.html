@@ -413,7 +413,12 @@ function renderReqs() {
   } else {
     if (!pendOut.length) box.appendChild(h('div', 'empty', 'No sent friend requests.'));
     pendOut.forEach(o => {
-      const el = h('div', 'req out'), who = h('div', 'who'), label = h('b', null, o.name || o.code), detail = h('span', null, 'Waiting for a reply');
+      const el = h('div', 'req out'), who = h('div', 'who'), label = h('b', null, o.name || o.code);
+      const attempted = [...sentFr.values()].some(entry => entry.code === o.code && entry.last > 0);
+      const status = attempted ? 'Signaling sent · awaiting a response (not yet confirmed)'
+        : ws?.readyState === 1 ? 'Looking for this device online'
+          : 'Saved · waiting to connect to Droply';
+      const detail = h('span', null, status);
       who.append(label, detail);
       const no = h('button', 'ghost', 'Cancel');
       no.onclick = () => { pendOut = pendOut.filter(x => x !== o); persist(); renderReqs(); };
@@ -588,6 +593,7 @@ function sendPendingFriendRequest(id, code) {
   if (Date.now() - pending.last < 2000) return;
   pending.last = Date.now();
   sig(id, { t: 'fr', name: me.name, av: me.avatar });
+  renderReqs(); // Make the distinction between lookup and signal visible.
   if (pending.timer || pending.attempts >= 2) return;
   const delay = pending.attempts++ === 0 ? 3500 : 8000;
   pending.timer = setTimeout(() => {
