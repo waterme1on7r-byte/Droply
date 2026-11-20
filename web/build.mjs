@@ -30,7 +30,7 @@ function replaceOnce(from, to) {
   html = html.replace(from, to);
 }
 replaceOnce('<meta charset="UTF-8">', '<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<meta name="description" content="Droply Web — private peer-to-peer file transfers in your browser">');
-replaceOnce('<title>Droply</title>', '<title>Droply Web · File transfers</title>');
+replaceOnce('<title>Droply</title>', '<title>Droply Web · File transfers</title>\n<link rel="apple-touch-icon" href="droply-icon.png">\n<link rel="icon" type="image/png" href="droply-icon.png">\n<link rel="manifest" href="manifest.webmanifest">\n<meta name="apple-mobile-web-app-title" content="Droply">\n<meta name="theme-color" content="#0e1523">');
 replaceOnce('media="print" onload="this.media=\'all\'"', 'media="all"');
 replaceOnce('<link rel="stylesheet" href="settings.css">', '<link rel="stylesheet" href="settings.css">\n<link rel="stylesheet" href="web.css">');
 replaceOnce('<script src="config.js"></script>', [
@@ -60,4 +60,18 @@ for (const name of ['settings.js', 'settings.css'])
   await copyFile(join(root, name), join(output, name));
 for (const name of ['storage.js', 'network.js', 'receive.js', 'bridge.js', 'web.css'])
   await copyFile(join(root, 'web', name), join(output, name));
+/* Reuse the native app's own icon; only the generated browser app gets it. */
+await copyFile(join(root, 'assets', 'droply-icon.png'), join(output, 'droply-icon.png'));
+await writeFile(join(output, 'manifest.webmanifest'), JSON.stringify({
+  name: 'Droply',
+  short_name: 'Droply',
+  description: 'Private peer-to-peer file transfers',
+  id: './',
+  start_url: './',
+  scope: './',
+  display: 'standalone',
+  background_color: '#0e1523',
+  theme_color: '#0e1523',
+  icons: [{ src: 'droply-icon.png', sizes: 'any', type: 'image/png', purpose: 'any' }]
+}, null, 2) + '\n');
 console.log('Built the browser app at docs/app/index.html');
