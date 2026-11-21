@@ -167,7 +167,16 @@ test('home screen metadata uses the native Droply icon without changing desktop'
   assert.equal(manifest.start_url, './');
   assert.equal(manifest.scope, './');
   assert.equal(manifest.display, 'standalone');
-  assert.deepEqual(manifest.icons, [{ src: 'droply-icon.png', sizes: 'any', type: 'image/png', purpose: 'any' }]);
+  assert.deepEqual(manifest.icons, [
+    { src: 'droply-icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: 'droply-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
+  ]);
+  for (const size of [192, 512]) {
+    const image = await readFile(root + '/docs/app/droply-icon-' + size + '.png');
+    assert.deepEqual([...image.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+    assert.equal(image.readUInt32BE(16), size, 'Home Screen icon width');
+    assert.equal(image.readUInt32BE(20), size, 'Home Screen icon height');
+  }
   assert.doesNotMatch(desktop, /apple-touch-icon|manifest\.webmanifest/);
 });
 
