@@ -5,6 +5,7 @@ import { Script } from 'node:vm';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { imagePixels } from '../pwa-icons.mjs';
 
 const root = resolve(fileURLToPath(new URL('../../', import.meta.url)));
 test('browser build shares the desktop renderer without changing it', async () => {
@@ -157,7 +158,7 @@ test('home screen metadata uses the native Droply icon without changing desktop'
   const originalIcon = await readFile(root + '/assets/droply-icon.png');
   const manifest = JSON.parse(await readFile(root + '/docs/app/manifest.webmanifest', 'utf8'));
 
-  assert.match(html, /<link rel="apple-touch-icon" href="droply-icon\.png">/);
+  assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="droply-icon-home-180\.png">/);
   assert.match(html, /<link rel="icon" type="image\/png" href="droply-icon\.png">/);
   assert.match(html, /<link rel="manifest" href="manifest\.webmanifest">/);
   assert.match(html, /<meta name="apple-mobile-web-app-title" content="Droply">/);
@@ -168,14 +169,30 @@ test('home screen metadata uses the native Droply icon without changing desktop'
   assert.equal(manifest.scope, './');
   assert.equal(manifest.display, 'standalone');
   assert.deepEqual(manifest.icons, [
-    { src: 'droply-icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-    { src: 'droply-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
+    { src: 'droply-icon-home-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: 'droply-icon-home-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
   ]);
-  for (const size of [192, 512]) {
-    const image = await readFile(root + '/docs/app/droply-icon-' + size + '.png');
-    assert.deepEqual([...image.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
-    assert.equal(image.readUInt32BE(16), size, 'Home Screen icon width');
-    assert.equal(image.readUInt32BE(20), size, 'Home Screen icon height');
+  // The native source has transparent rounded corners. Safari draws white
+  // behind them; generated Home Screen icons must contain opaque blue corners.
+  const native = imagePixels(originalIcon);
+  const pixel = (raster, x, y) =>
+    [...raster.image.subarray((y * raster.width + x) * 4, (y * raster.width + x) * 4 + 4)];
+  assert.equal(pixel(native, 0, 0)[3], 0, 'Original logo retains its existing transparency');
+  for (const size of [180, 192, 512]) {
+    const raw = await readFile(root + '/docs/app/droply-icon-home-' + size + '.png');
+    assert.deepEqual([...raw.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+    assert.equal(raw.readUInt32BE(16), size, 'Home Screen icon width');
+    assert.equal(raw.readUInt32BE(20), size, 'Home Screen icon height');
+    const image = imagePixels(raw);
+    for (let i = 3; i < image.image.length; i += 4)
+      assert.equal(image.image[i], 255, 'Home Screen icon must be opaque');
+    for (const [x, y] of [[0, 0], [size - 1, 0], [0, size - 1], [size - 1, size - 1]]) {
+      const rgba = pixel(image, x, y);
+      assert.ok(rgba[0] < 130 && rgba[1] < 190 && rgba[2] > 150,
+        'Icon corner must show Droply blue, not a white halo: ' + rgba);
+    }
+    assert.deepEqual(pixel(image, size >> 1, size >> 1).slice(0, 3), [255, 255, 255],
+      'Keep the original white Droply symbol centered');
   }
   assert.doesNotMatch(desktop, /apple-touch-icon|manifest\.webmanifest/);
 });
