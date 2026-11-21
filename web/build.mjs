@@ -31,7 +31,7 @@ function replaceOnce(from, to) {
   html = html.replace(from, to);
 }
 replaceOnce('<meta charset="UTF-8">', '<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">\n<meta name="description" content="Droply Web — private peer-to-peer file transfers in your browser">');
-replaceOnce('<title>Droply</title>', '<title>Droply Web · File transfers</title>\n<link rel="apple-touch-icon" href="droply-icon.png">\n<link rel="icon" type="image/png" href="droply-icon.png">\n<link rel="manifest" href="manifest.webmanifest">\n<meta name="apple-mobile-web-app-title" content="Droply">\n<meta name="theme-color" content="#0e1523">');
+replaceOnce('<title>Droply</title>', '<title>Droply Web · File transfers</title>\n<link rel="apple-touch-icon" sizes="180x180" href="droply-icon-home-180.png">\n<link rel="icon" type="image/png" href="droply-icon.png">\n<link rel="manifest" href="manifest.webmanifest">\n<meta name="apple-mobile-web-app-title" content="Droply">\n<meta name="theme-color" content="#0e1523">');
 replaceOnce('<meta name="apple-mobile-web-app-title" content="Droply">',
   '<meta name="apple-mobile-web-app-title" content="Droply">\n<meta name="apple-mobile-web-app-capable" content="yes">');
 replaceOnce('media="print" onload="this.media=\'all\'"', 'media="all"');
@@ -84,8 +84,8 @@ await writeFile(join(output, 'manifest.webmanifest'), JSON.stringify({
   background_color: '#0e1523',
   theme_color: '#0e1523',
   icons: [
-    { src: 'droply-icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-    { src: 'droply-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
+    { src: 'droply-icon-home-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: 'droply-icon-home-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
   ]
 }, null, 2) + '\n');
 console.log('Built the browser app at docs/app/index.html');
