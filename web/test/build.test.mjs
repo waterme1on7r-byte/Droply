@@ -228,3 +228,20 @@ test('dark-theme Transfers sidebar icon is bundled at the exact CSS background U
   assert.match(builtHtml, /class="rbtn active" title="Transfers"/);
   assert.match(builtHtml, /<svg width="32" height="32" viewBox="0 0 32 32">/);
 });
+
+test('Web Transfers logo opens the Droply homepage without changing native renderers', async () => {
+  const desktop = await readFile(root + '/index.html', 'utf8');
+  const built = await readFile(root + '/docs/app/index.html', 'utf8');
+  const css = await readFile(root + '/docs/app/web.css', 'utf8');
+  assert.match(built, /<a class="rbtn active" href="\.\.\/" title="Droply home page" aria-label="Go to Droply home page">/);
+  assert.match(built, /<\/svg><\/a>\s*<div class="rsep">/);
+  assert.doesNotMatch(built, /<div class="rbtn active" title="Transfers">/);
+  assert.match(desktop, /<div class="rbtn active" title="Transfers">/);
+  assert.doesNotMatch(desktop, /href="\.\.\/" title="Droply home page"/);
+  assert.equal(
+    new URL('../', 'https://waterme1on7r-byte.github.io/Droply/app/').href,
+    'https://waterme1on7r-byte.github.io/Droply/'
+  );
+  assert.match(css, /html\.droply-web \.rail > a\.rbtn\.active\{\s*cursor:pointer/);
+  assert.match(css, /html\.droply-web \.rail > a\.rbtn\.active:focus-visible/);
+});
