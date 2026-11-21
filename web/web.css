@@ -912,3 +912,23 @@ html.droply-web .web-install-tip strong{color:var(--text)}
   html.droply-web .web-install-copy span{display:block}
   html.droply-web .web-install-action{min-height:30px}
 }
+
+/* Align the restored Transfers logo with the Y profile avatar.
+   Move only this first rail item slightly upward; the avatar, friend list,
+   and other controls retain their existing positions and dimensions. */
+html.droply-web .rail > .rbtn.active{
+  width:50px;height:50px;border-radius:14px;top:-5px;
+}
+/* On the desktop-style landscape rail, match its 42px profile avatar. */
+@media (orientation: landscape) and (pointer: coarse) and (max-width: 1600px),
+       (orientation: landscape) and (max-width: 1100px) and (max-height: 800px){
+  html.droply-web .rail > .rbtn.active{
+    width:42px;height:42px;border-radius:12px;top:-3px;
+  }
+}
+/* On short landscape phones, match the 36px avatar instead. */
+@media (orientation: landscape) and (max-height: 430px) and (max-width: 1100px){
+  html.droply-web .rail > .rbtn.active{
+    width:36px;height:36px;border-radius:11px;top:-2px;
+  }
+}
