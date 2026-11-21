@@ -2,6 +2,11 @@
   'use strict';
   const native = window.DroplyAndroid;
   if (!native) return;
+  // Android WebView: prevent multi-touch pinch zoom, while permitting
+  // ordinary one-finger scrolling and input interaction.
+  document.addEventListener('touchmove', event => {
+    if (event.touches.length > 1) event.preventDefault();
+  }, { passive: false });
 
   let nextId = 0;
   const pending = new Map(), listeners = new Map();
