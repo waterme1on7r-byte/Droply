@@ -238,3 +238,9 @@ html.droply-android #addFriend .box{
 @media(orientation:landscape) and (max-height:540px){
   html.droply-android #addFriend .box{max-height:calc(100dvh - 12px - env(safe-area-inset-bottom,0px));gap:8px}
 }
+
+/* Android phone/tablet: scrolling stays enabled, pinch scaling does not. */
+html.droply-android,html.droply-android body{
+  touch-action:pan-x pan-y;
+  -webkit-text-size-adjust:100%;
+}
