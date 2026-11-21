@@ -49,6 +49,7 @@ Droply does not require a user account, email address, phone number, or administ
 
 Get the current installers from [GitHub Releases](https://github.com/waterme1on7r-byte/Droply/releases/latest).
 
+- **Android:** the existing v2.8.15 debug APK remains the normal download. An optional [Android QR-sharing preview](https://github.com/waterme1on7r-byte/Droply/releases/tag/android-qr-sharing-preview-2.8.15) includes **Show my QR code → Share my QR code** through Android's system share chooser. The separately named QR Preview app is installed side by side with its **own device code** so the current debug APK and its identity are not replaced. Android 10+; this is not a production-signed update.
 - **Windows:** installer (`.exe`). Uninstalling preserves the app profile, settings, friends, and encrypted device credential so a reinstall can continue with the same identity.
 - **macOS:** universal `.dmg` and `.zip`; macOS 12 Monterey or later is required. Builds are unsigned until Developer ID signing is configured, so macOS automatic installation is not available for unsigned builds.
 
