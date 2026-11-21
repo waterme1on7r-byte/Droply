@@ -36,6 +36,14 @@ replaceOnce('<meta name="apple-mobile-web-app-title" content="Droply">',
   '<meta name="apple-mobile-web-app-title" content="Droply">\n<meta name="apple-mobile-web-app-capable" content="yes">');
 replaceOnce('media="print" onload="this.media=\'all\'"', 'media="all"');
 replaceOnce('<link rel="stylesheet" href="settings.css">', '<link rel="stylesheet" href="settings.css">\n<link rel="stylesheet" href="web.css">');
+// In the browser edition, the logo at the top of the rail is a real link
+// back to the Droply landing page. Desktop/Android renderers keep their
+// original Transfers indicator and never navigate out of the application.
+replaceOnce(
+  '  <div class="rbtn active" title="Transfers"><svg width="32" height="32" viewBox="0 0 32 32"><path d="M16 6c3.7 4.9 6.4 8.1 6.4 11.5a6.4 6.4 0 0 1-12.8 0C9.6 14.1 12.3 10.9 16 6z" fill="#fff"/></svg></div>',
+  '  <a class="rbtn active" href="../" title="Droply home page" aria-label="Go to Droply home page"><svg width="32" height="32" viewBox="0 0 32 32"><path d="M16 6c3.7 4.9 6.4 8.1 6.4 11.5a6.4 6.4 0 0 1-12.8 0C9.6 14.1 12.3 10.9 16 6z" fill="#fff"/></svg></a>'
+);
+
 replaceOnce('<script src="config.js"></script>', [
   '<script src="config.js"></script>',
   '<script src="storage.js"></script>',
