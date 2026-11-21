@@ -932,3 +932,13 @@ html.droply-web .rail > .rbtn.active{
     width:36px;height:36px;border-radius:11px;top:-2px;
   }
 }
+
+/* The browser's Transfers-logo tile is a link to the landing page.
+   Keep the restored icon, dimensions, and vertical offset unchanged. */
+html.droply-web .rail > a.rbtn.active{
+  cursor:pointer;text-decoration:none;
+  -webkit-tap-highlight-color:transparent;
+}
+html.droply-web .rail > a.rbtn.active:focus-visible{
+  outline:2px solid var(--accent);outline-offset:3px;
+}
