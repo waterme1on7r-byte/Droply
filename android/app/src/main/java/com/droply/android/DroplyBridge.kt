@@ -19,6 +19,7 @@ class DroplyBridge(private val backend: DroplyBackend) {
     @JavascriptInterface fun sendSignal(value: String) = backend.sendSignal(value)
     @JavascriptInterface fun notify(kind: String, body: String) = backend.notify(kind, body)
     @JavascriptInterface fun copy(text: String) = backend.copy(text)
+    @JavascriptInterface fun shareQrImage(dataUrl: String, code: String): Boolean = backend.activity.shareQrImage(dataUrl, code)
     @JavascriptInterface fun saveOpen(tid: String, name: String, size: Long): Boolean = backend.saveOpen(tid, name, size)
     @JavascriptInterface fun saveChunk(tid: String, base64: String) = backend.saveChunk(tid, base64)
     @JavascriptInterface fun saveClose(tid: String) = backend.saveClose(tid)
