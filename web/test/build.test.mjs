@@ -158,7 +158,7 @@ test('home screen metadata uses the native Droply icon without changing desktop'
   const originalIcon = await readFile(root + '/assets/droply-icon.png');
   const manifest = JSON.parse(await readFile(root + '/docs/app/manifest.webmanifest', 'utf8'));
 
-  assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="droply-icon-home-180\\.png">/);
+  assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="droply-icon-home-180\.png">/);
   assert.match(html, /<link rel="icon" type="image\/png" href="droply-icon\.png">/);
   assert.match(html, /<link rel="manifest" href="manifest\.webmanifest">/);
   assert.match(html, /<meta name="apple-mobile-web-app-title" content="Droply">/);
