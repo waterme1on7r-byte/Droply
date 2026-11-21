@@ -1,0 +1,141 @@
+name: Android QR-sharing preview APK
+
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'assets/friend-qr.js'
+      - 'assets/vendor/**'
+      - 'index.html'
+      - 'settings.css'
+      - '.github/workflows/android-qr-preview.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'android/qr-sharing-preview-version.txt'
+      - '.github/workflows/android-qr-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-preview:
+    name: Verify and package separate Android QR preview
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out verified source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Set up Java 17
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android command line tools
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+      - name: Install Android 36 SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Verify existing QR encode/decode, friend approval, and Android share bridge
+        run: node --test web/test/friend-qr.test.mjs
+      - name: Assemble separate QR-sharing APK
+        working-directory: android
+        run: bash ./gradlew :app:assembleDebug -PdroplyQrSharingPreview=true --no-daemon
+      - name: Smoke-check signed APK and packaged QR sharing
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk=android/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | grep -F "package: name='com.droply.android.qrpreview'"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | grep -F "sdkVersion:'29'"
+          python3 - "$apk" <<'PY'
+          import sys,zipfile
+          with zipfile.ZipFile(sys.argv[1]) as apk:
+              required = [
+                  'assets/www/index.html',
+                  'assets/www/assets/friend-qr.js',
+                  'assets/www/assets/vendor/qrcode.js',
+                  'assets/www/assets/vendor/jsQR.js',
+                  'assets/www/assets/vendor/qrcode-LICENSE',
+                  'assets/www/assets/vendor/jsQR-LICENSE',
+                  'assets/www/settings.css',
+                  'assets/www/android-bridge.js',
+              ]
+              missing = sorted(set(required) - set(apk.namelist()))
+              assert not missing, 'QR files missing from APK: ' + repr(missing)
+              html = apk.read('assets/www/index.html')
+              share = apk.read('assets/www/assets/friend-qr.js')
+              assert b'id="shareFriendQr"' in html
+              assert b'id="showFriendQr"' in html
+              assert b'id="scanFriendQr"' in html
+              assert b'DroplyAndroid.shareQrImage(dataUrl, code)' in share
+              assert b'press Add to send a request' in share
+              print('APK includes local QR generator, scanner, share action and native bridge.')
+          PY
+          mkdir -p qr-preview-artifact
+          cp "$apk" qr-preview-artifact/Droply-Android-2.8.15-QR-sharing-preview-debug.apk
+          cd qr-preview-artifact
+          sha256sum *.apk > SHA256SUMS.txt
+      - name: Upload test APK and checksum
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: Droply-Android-QR-Sharing-Preview
+          retention-days: 30
+          if-no-files-found: error
+          path: qr-preview-artifact/
+
+  publish-preview:
+    name: Publish optional QR-sharing Android prerelease
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build-preview
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified APK and checksum
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: Droply-Android-QR-Sharing-Preview
+          path: release-assets
+      - name: Publish optional side-by-side debug preview without replacing stable Android
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cd release-assets
+          sha256sum -c SHA256SUMS.txt
+          cd ..
+          tag=android-qr-sharing-preview-2.8.15
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Preview release already exists; refusing to replace an APK with a different signing key."
+            exit 0
+          fi
+          cat > release-notes.md <<'NOTES'
+          ## Droply Android QR-sharing preview (debug build)
+
+          This **optional, unsigned-for-production debug preview** adds:
+          - Show a public Droply friend QR code.
+          - Share the QR PNG through Android's native app share chooser.
+          - Scan a saved QR image and manually confirm Add before sending a friend request.
+          - Existing friend approval and file transfer flows are unchanged.
+
+          **Safe installation:** This preview uses package `com.droply.android.qrpreview`, alongside the existing
+          `com.droply.android` app. It does not upgrade or uninstall the existing Android APK.
+          Each installation has its own independent device code and credentials. **Do not uninstall
+          the original app or clear its data** to try this preview.
+
+          Android 10+ (API 29). The Android debug build is **not a production-signed release**;
+          user acceptance testing is still required before promoting it to the normal app.
+          Camera scanning in Android WebView may be unavailable; saved QR images can be scanned.
+          NOTES
+          gh release create "$tag" release-assets/*.apk release-assets/SHA256SUMS.txt \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "Droply Android QR Sharing Preview · 2.8.15" \
+            --notes-file release-notes.md
