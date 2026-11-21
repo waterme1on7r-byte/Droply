@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
 import { Script, runInNewContext } from 'node:vm';
 
 const appScript = new URL('../install.js', import.meta.url);
@@ -101,6 +100,8 @@ test('Android supports native browser installation prompt or a manual browser-me
   await env.buttonEvents.get('click')();
   assert.equal(prompts, 1);
   assert.match(env.help.textContent, /installation confirmation/);
+  await env.buttonEvents.get('click')();
+  assert.equal(env.help.classList.hidden, true);
   await env.buttonEvents.get('click')();
   assert.match(env.help.textContent, /browser menu/);
 });
