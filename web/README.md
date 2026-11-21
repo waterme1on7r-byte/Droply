@@ -2,6 +2,12 @@
 
 The browser edition of Droply is generated from the **same HTML, CSS, and JavaScript renderer** as the desktop app. It connects to the existing signaling server and uses the same friend requests and WebRTC data-channel file transfers. The marketing website in docs/index.html is not changed.
 
+## Mobile Home Screen access
+
+On iPhone, iPad, and Android browsers, the app shows a small **Add to Home Screen** control below its header. On supported Android browsers the control uses the browser's native install prompt; if that prompt is unavailable it explains how to use the browser's **Install app** or **Add to Home Screen** menu command. On iPhone/iPad, Safari requires the user to tap **Share → Add to Home Screen → Add** (and choose **Open as Web App** if prompted). The button is hidden while running as an installed standalone app and never appears in the desktop renderer.
+
+The existing generated `manifest.webmanifest` and Droply app icon are reused. Installing does not guarantee offline transfers or identity synchronization: a Home Screen app may have separate browser storage and a separate device code. Keep that app's site data to retain its identity.
+
 ## Run locally
 
 Install Node.js 22+, then run from the repository root:
