@@ -168,11 +168,11 @@
         }
         const bytes = pngBytes(dataUrl);
         const blob = new Blob([bytes], { type: 'image/png' });
-        const image = new File([blob], 'Droply-Friend-QR.png', { type: 'image/png' });
+        const image = typeof File === 'function' ? new File([blob], 'Droply-Friend-QR.png', { type: 'image/png' }) : null;
         // File sharing is preferred to plain text: the recipient should get
         // the actual QR image they can scan, not just the DRP code.
         let canShareImage = false;
-        if (typeof navigator.share === 'function') {
+        if (image && typeof navigator.share === 'function') {
           try {
             canShareImage = typeof navigator.canShare !== 'function' ||
               navigator.canShare({ files: [image] });
