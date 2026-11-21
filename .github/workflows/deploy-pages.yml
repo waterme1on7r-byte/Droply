@@ -26,12 +26,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    name: Deploy website to GitHub Pages
+  build:
+    name: Build and validate public website
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out site
         uses: actions/checkout@v4
@@ -58,6 +55,17 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs
+  # Build and deploy use separate jobs so Pages artifact metadata is
+  # discoverable before actions/deploy-pages queries it. A rerun of the
+  # deploy-only job also avoids re-uploading duplicate github-pages artifacts.
+  deploy:
+    name: Deploy website to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
