@@ -64,7 +64,7 @@ for (const name of ['storage.js', 'network.js', 'receive.js', 'bridge.js', 'web.
 await mkdir(join(output, 'assets', 'vendor'), { recursive: true });
 for (const name of ['friend-qr.js'])
   await copyFile(join(root, 'assets', name), join(output, 'assets', name));
-for (const name of ['qrcode.js', 'jsQR.js'])
+for (const name of ['qrcode.js', 'jsQR.js', 'qrcode-LICENSE', 'jsQR-LICENSE'])
   await copyFile(join(root, 'assets', 'vendor', name), join(output, 'assets', 'vendor', name));
 /* Reuse the native app's own icon; only the generated browser app gets it. */
 await copyFile(join(root, 'assets', 'droply-icon.png'), join(output, 'droply-icon.png'));
