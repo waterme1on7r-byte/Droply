@@ -14,9 +14,19 @@ const ownDeviceLabel = () => ({ win32: 'Windows', darwin: 'macOS', linux: 'Linux
 function openSettings(section = 'Profile') {
   $('main').inert = true;
   $('#picker').classList.add('hidden'); $('#settingsPane').classList.remove('hidden');
+  $('#gearBtn').setAttribute('aria-expanded', 'true');
   renderSettings(section); $('#settingsClose').focus();
 }
-function closeSettings() { $('main').inert = false; $('#settingsPane').classList.add('hidden'); $('#gearBtn').focus(); }
+function closeSettings() {
+  $('main').inert = false;
+  $('#settingsPane').classList.add('hidden');
+  $('#gearBtn').setAttribute('aria-expanded', 'false');
+  $('#gearBtn').focus();
+}
+function toggleSettings() {
+  if ($('#settingsPane').classList.contains('hidden')) openSettings();
+  else closeSettings();
+}
 function settingToggle(parent, key, title, hint, disabled = false) {
   const row = h('label', 'setting-row'), text = h('span', '', title), input = document.createElement('input');
   if (hint) text.append(h('small', '', hint)); input.type = 'checkbox'; input.checked = !!settingsState[key]; input.disabled = disabled;
@@ -143,7 +153,11 @@ async function initSettings() {
   try { ownPlatform = (await api.getWindowChrome?.())?.platform || (window.DroplyWeb ? 'web' : 'desktop'); } catch {}
   const pane = h('section', 'hidden'); pane.id = 'settingsPane'; pane.setAttribute('aria-label', 'Settings');
   pane.innerHTML = '<header class="settings-head"><h2>Settings</h2><button id="settingsClose" class="closeX" aria-label="Close settings"></button></header><div class="settings-layout"><nav class="settings-nav" id="settingsNav" aria-label="Settings sections"></nav><div class="settings-content" id="settingsContent"></div></div><p id="settingsFeedback" role="status" aria-live="polite"></p>';
-  document.body.append(pane); $('#settingsClose').innerHTML = ICON.xl; $('#settingsClose').onclick = closeSettings; $('#gearBtn').onclick = () => openSettings();
+  document.body.append(pane);
+  $('#settingsClose').innerHTML = ICON.xl; $('#settingsClose').onclick = closeSettings;
+  $('#gearBtn').setAttribute('aria-controls', 'settingsPane');
+  $('#gearBtn').setAttribute('aria-expanded', 'false');
+  $('#gearBtn').onclick = toggleSettings;
   if (api.getAccess) accessState = await api.getAccess();
   settingsState = await api.getSettings(); preferences = settingsState; applyTheme(settingsState.theme); historyItems = await api.getHistory();
   api.on('history-changed', list => { historyItems = list; if (activeSettingsSection === 'Transfer history' && !pane.classList.contains('hidden')) renderSettings(activeSettingsSection); });
