@@ -2,6 +2,11 @@ package com.droply.android
 
 import android.app.Activity
 import android.content.Intent
+import android.content.ClipData
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.core.content.FileProvider
+import java.io.File
 import android.net.Uri
 import android.os.Bundle
 import android.os.Build
@@ -85,6 +90,45 @@ class MainActivity : Activity() {
         }
         setContentView(webView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         webView.loadUrl("file:///android_asset/www/index.html")
+    }
+
+    // The QR contains only the shareable DRP friend code, never a private key.
+    // Validate image format and dimensions before exposing a temporary cache
+    // file through a narrowly scoped FileProvider to the user's chosen app.
+    fun shareQrImage(dataUrl: String, code: String): Boolean {
+        if (!Regex("^DRP-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$").matches(code)) return false
+        val prefix = "data:image/png;base64,"
+        if (!dataUrl.startsWith(prefix) || dataUrl.length > 1_500_000) return false
+        return try {
+            val bytes = Base64.decode(dataUrl.substring(prefix.length), Base64.DEFAULT)
+            val pngMagic = byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)
+            if (bytes.size < 64 || bytes.size > 1_000_000 ||
+                !bytes.take(8).toByteArray().contentEquals(pngMagic)) return false
+            val dimensions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, dimensions)
+            if (dimensions.outWidth !in 100..2048 || dimensions.outHeight !in 100..2048) return false
+            val folder = File(cacheDir, "shared_qr").apply { mkdirs() }
+            val image = File(folder, "droply-friend-qr.png")
+            image.writeBytes(bytes)
+            val uri = FileProvider.getUriForFile(this, "$packageName.friendqr", image)
+            runOnUiThread {
+                try {
+                    val send = Intent(Intent.ACTION_SEND).apply {
+                        type = "image/png"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        putExtra(Intent.EXTRA_TEXT, "Add me on Droply: $code")
+                        clipData = ClipData.newUri(contentResolver, "Droply friend QR", uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(send, "Share my Droply QR code"))
+                } catch (_: Exception) {
+                    // No available sharing target or the activity is closing.
+                }
+            }
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 
     override fun onNewIntent(intent: Intent?) {
