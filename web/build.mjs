@@ -60,6 +60,12 @@ for (const name of ['settings.js', 'settings.css'])
   await copyFile(join(root, name), join(output, name));
 for (const name of ['storage.js', 'network.js', 'receive.js', 'bridge.js', 'web.css'])
   await copyFile(join(root, 'web', name), join(output, name));
+// Bundled QR libraries and pairing logic are same-origin scripts, never external CDNs.
+await mkdir(join(output, 'assets', 'vendor'), { recursive: true });
+for (const name of ['friend-qr.js'])
+  await copyFile(join(root, 'assets', name), join(output, 'assets', name));
+for (const name of ['qrcode.js', 'jsQR.js', 'qrcode-LICENSE', 'jsQR-LICENSE'])
+  await copyFile(join(root, 'assets', 'vendor', name), join(output, 'assets', 'vendor', name));
 /* Reuse the native app's own icon; only the generated browser app gets it. */
 await copyFile(join(root, 'assets', 'droply-icon.png'), join(output, 'droply-icon.png'));
 await writeFile(join(output, 'manifest.webmanifest'), JSON.stringify({

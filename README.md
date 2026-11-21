@@ -27,8 +27,9 @@ Browser identities use IndexedDB/Web Crypto rather than Electron's OS-protected 
 
 1. Install Droply and choose a name and optional photo.
 2. Share your device code with a friend, or enter theirs in **Add friend**.
-3. Accept the friend request on the receiving device.
-4. Choose a friend, select files or a folder, and send. The receiver approves the transfer and chooses where files are saved.
+3. Alternatively, open **Add friend → Show my QR code** and let a friend scan it with **Scan a QR code** (camera where supported, or a saved image). Scanning fills the code field; the friend must still press **Add**, and the recipient must accept the request.
+4. Accept the friend request on the receiving device.
+5. Choose a friend, select files or a folder, and send. The receiver approves the transfer and chooses where files are saved.
 
 Droply does not require a user account, email address, phone number, or administrator approval for normal setup. Device codes identify devices in Droply; they are not passwords.
 

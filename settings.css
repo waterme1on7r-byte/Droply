@@ -110,3 +110,16 @@ html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}
   padding:4px 9px;font-size:11px;font-weight:600;line-height:1.3;letter-spacing:.01em}
 .peer-identity{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .peer-identity .peer-name{min-width:0;overflow-wrap:anywhere}
+
+
+/* Optional QR friend pairing — same components in Electron, Android and Web. */
+.friend-qr-actions{display:flex;flex-wrap:wrap;gap:8px;width:100%;justify-content:center}
+.friend-qr-actions button{flex:1 1 125px;min-width:0;padding:9px 11px;font-size:12px;border-radius:10px}
+.friend-qr-panel,.friend-qr-scanner{width:100%;min-width:0;border:1px solid var(--line);background:var(--card2);border-radius:14px;padding:12px;display:flex;align-items:center;flex-direction:column;gap:9px}
+.friend-qr-panel p,.friend-qr-scanner p{margin:0;color:var(--mute);font-size:12px;line-height:1.4;text-align:center}
+#friendQrImage{width:min(100%,210px);aspect-ratio:1;background:#fff;border-radius:10px;padding:8px;display:grid;place-items:center;overflow:hidden;color:#172b49;font-size:12px;text-align:center}
+#friendQrImage svg{width:100%;height:100%;display:block}
+#friendQrVideo{width:100%;max-height:200px;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:#0b1426}
+#friendQrVideo:not([src]){min-height:0}
+@media(max-width:430px){.friend-qr-panel,.friend-qr-scanner{padding:10px}.friend-qr-actions button{font-size:12px;padding:9px 8px}#friendQrImage{width:min(100%,175px)}}
+@media(orientation:landscape) and (max-height:500px){#friendQrImage{width:min(100%,125px)}#friendQrVideo{max-height:130px;aspect-ratio:16/9}}
