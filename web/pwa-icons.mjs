@@ -23,7 +23,7 @@ function chunk(type, data) {
   crc.writeUInt32BE(crc32(Buffer.concat([tag, data])));
   return Buffer.concat([size, tag, data, crc]);
 }
-function imagePixels(png) {
+export function imagePixels(png) {
   if (!png.subarray(0, 8).equals(SIGNATURE)) throw Error('Droply icon is not a PNG');
   let width = 0, height = 0, depth = 0, color = 0, interlace = 0, palette, alpha;
   const compressed = [];
