@@ -4,9 +4,12 @@ The browser edition of Droply is generated from the **same HTML, CSS, and JavaSc
 
 ## Mobile Home Screen access
 
-On iPhone, iPad, and Android browsers, the app shows a small **Add to Home Screen** control below its header. On supported Android browsers the control uses the browser's native install prompt; if that prompt is unavailable it explains how to use the browser's **Install app** or **Add to Home Screen** menu command. On iPhone/iPad, Safari requires the user to tap **Share → Add to Home Screen → Add** (and choose **Open as Web App** if prompted). The button is hidden while running as an installed standalone app and never appears in the desktop renderer.
+Droply Web shows a small, dismissible Home Screen action beneath the header only in mobile browsers. The prompt never overlays the transfer controls and disappears in installed/standalone mode.
 
-The existing generated `manifest.webmanifest` and Droply app icon are reused. Installing does not guarantee offline transfers or identity synchronization: a Home Screen app may have separate browser storage and a separate device code. Keep that app's site data to retain its identity.
+- **iPhone and iPad:** The banner itself immediately shows **Share → Add to Home Screen**; tapping the action expands an icon-based, two-step guide (and indicates Safari's ••• → Share shortcut and optional **Open as Web App** switch). Apple does not expose a web API to open this menu or silently install the site.
+- **Android and other supported browsers:** The button calls `navigator.install()` directly when available, otherwise the saved `beforeinstallprompt` event. Both require only the user's tap followed by system confirmation. Where neither is offered, a short in-browser menu guide replaces unsupported fake install buttons.
+
+The build produces genuine 192×192 and 512×512 PNG manifest icons from the **original Droply icon**, alongside the existing Apple touch icon. Installation does not enable offline transfers. Installed app storage may be separate from the browser tab, so an installed copy can have its own device code; keep its app data to retain that identity.
 
 ## Run locally
 
