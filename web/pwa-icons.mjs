@@ -1,5 +1,5 @@
 /* Portable PWA icon export from Droply's original PNG, with zero extra
-   build dependencies. Generates correctly sized 192/512 PNG icons for
+   build dependencies. Generates correctly sized opaque 180/192/512 PNG icons for
    Chromium's installability checks; original branding remains unchanged. */
 import { inflateSync, deflateSync } from 'node:zlib';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -125,8 +125,18 @@ function encodeIcon(source, size) {
   header[8] = 8; header[9] = 6; // 8-bit RGBA
   return Buffer.concat([SIGNATURE,chunk('IHDR',header),chunk('IDAT',deflateSync(bytes)),chunk('IEND',Buffer.alloc(0))]);
 }
+/* The source logo has blue RGB gradient values even beneath its transparent
+   rounded corners. Apple fills transparent Home Screen icon pixels with white,
+   producing the unwanted white corner/edge halo. Make ONLY PWA icons opaque
+   using the existing gradient pixel data, keeping the original logo untouched. */
+export function makeHomeIconOpaque(original) {
+  const image = Buffer.from(original.image);
+  for (let i = 3; i < image.length; i += 4) image[i] = 255;
+  return { width: original.width, height: original.height, image };
+}
 export async function exportPwaIcons(root, output) {
-  const original = imagePixels(await readFile(join(root,'assets','droply-icon.png')));
-  await Promise.all([192,512].map(size =>
-    writeFile(join(output, 'droply-icon-' + size + '.png'), encodeIcon(original,size))));
+  const source = imagePixels(await readFile(join(root,'assets','droply-icon.png')));
+  const icon = makeHomeIconOpaque(source);
+  await Promise.all([180,192,512].map(size =>
+    writeFile(join(output, 'droply-icon-home-' + size + '.png'), encodeIcon(icon,size))));
 }
