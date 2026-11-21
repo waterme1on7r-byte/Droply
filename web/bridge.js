@@ -1,6 +1,17 @@
 (() => {
   'use strict';
   document.documentElement.classList.add('droply-web');
+  // Preserve single-finger scrolling, but suppress pinch and Safari's
+  // double-tap/gesture zoom on mobile browser clients only.
+  const mobileTouchWeb = navigator.maxTouchPoints > 0 ||
+    window.matchMedia?.('(pointer: coarse)').matches;
+  if (mobileTouchWeb) {
+    document.addEventListener('gesturestart', event => event.preventDefault(), { passive: false });
+    document.addEventListener('gesturechange', event => event.preventDefault(), { passive: false });
+    document.addEventListener('touchmove', event => {
+      if (event.touches.length > 1) event.preventDefault();
+    }, { passive: false });
+  }
   // iPadOS can advertise itself as macOS; touch capability distinguishes it
   // from a Mac without affecting Android or desktop browser layouts.
   const iosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
