@@ -13,6 +13,7 @@
     const camera = $('friendQrCamera'), stop = $('friendQrStop');
     const photo = $('friendQrPhoto'), file = $('friendQrFile');
     if (![dialog, show, scan, display, scanner, video, status, camera, stop, photo, file].every(Boolean)) return;
+    video.classList.add('hidden');
     let stream = null, frame = 0, busy = false, lastScan = 0;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -29,6 +30,7 @@
       stream = null;
       video.pause();
       video.srcObject = null;
+      video.classList.add('hidden');
       stop.classList.add('hidden');
       camera.classList.remove('hidden');
     }
@@ -90,6 +92,7 @@
         }
         stream = capture;
         video.srcObject = stream;
+        video.classList.remove('hidden');
         await video.play();
         camera.classList.add('hidden');
         stop.classList.remove('hidden');
