@@ -82,7 +82,12 @@ html.droply-android-phone .sub{font-size:11px}
 html.droply-android-phone .st{font-size:14px}
 html.droply-android-phone .bar{height:6px}
 html.droply-android-phone #sig{padding:0 0 4px;font-size:9px}
-html.droply-android-phone #settingsPane{padding-bottom:env(safe-area-inset-bottom)}
+/* Keep the bottom navigation tappable while Settings is open, including
+   its gear toggle. The settings content scrolls above the navigation bar. */
+html.droply-android-phone #settingsPane{
+  bottom:calc(70px + env(safe-area-inset-bottom));
+  padding-bottom:0;
+}
 html.droply-android-phone .settings-head{padding:16px}
 html.droply-android-phone .settings-layout{flex-direction:column}
 html.droply-android-phone .settings-nav{order:0;width:100%;flex:none;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line)}
@@ -108,6 +113,8 @@ html.droply-android-tablet #titlebar{position:fixed;top:0;left:0;right:0;width:1
 html.droply-android-tablet .rail{width:80px;padding-top:14px}
 html.droply-android-tablet main{padding:24px 28px;gap:20px}
 html.droply-android-tablet #settingsPane{inset:0 0 0 80px;width:auto}
+/* Android TV keeps the left navigation rail accessible while Settings is open. */
+html.droply-android-tv #settingsPane{inset:0 0 0 104px;width:auto}
 html.droply-android-tablet .settings-nav{width:clamp(142px,21vw,220px);flex:0 0 clamp(142px,21vw,220px)}
 html.droply-android-tablet .settings-content{padding:clamp(16px,3vw,32px)}
 html.droply-android-tablet h1{font-size:48px;line-height:1.08;height:auto}
