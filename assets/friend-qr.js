@@ -143,12 +143,31 @@
         message('Choose an image smaller than 12 MB.'); return;
       }
       try {
-        const bitmap = await createImageBitmap(imageFile);
+        let bitmap, release = () => {};
+        if (typeof createImageBitmap === 'function') {
+          bitmap = await createImageBitmap(imageFile);
+          release = () => bitmap.close();
+        } else {
+          // Older WebViews and Safari versions can decode via an image element.
+          const url = URL.createObjectURL(imageFile);
+          release = () => URL.revokeObjectURL(url);
+          try {
+            bitmap = await new Promise((resolve, reject) => {
+              const image = new Image();
+              image.onload = () => resolve(image);
+              image.onerror = () => reject(new Error('Invalid image'));
+              image.src = url;
+            });
+          } catch (error) {
+            release();
+            throw error;
+          }
+        }
         try {
-          const code = decodeFrame(bitmap, bitmap.width, bitmap.height);
+          const code = decodeFrame(bitmap, bitmap.naturalWidth || bitmap.width, bitmap.naturalHeight || bitmap.height);
           if (!code) message('No QR code found in the image. Try a clearer photo.');
           else applyScan(code);
-        } finally { bitmap.close(); }
+        } finally { release(); }
       } catch (_) {
         message('Unable to read the image. Try another photo or enter the code manually.');
       }
