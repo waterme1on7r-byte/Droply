@@ -32,7 +32,7 @@ function replaceOnce(from, to) {
 replaceOnce('<meta charset="UTF-8">', '<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">\n<meta name="description" content="Droply Web — private peer-to-peer file transfers in your browser">');
 replaceOnce('<title>Droply</title>', '<title>Droply Web · File transfers</title>\n<link rel="apple-touch-icon" href="droply-icon.png">\n<link rel="icon" type="image/png" href="droply-icon.png">\n<link rel="manifest" href="manifest.webmanifest">\n<meta name="apple-mobile-web-app-title" content="Droply">\n<meta name="theme-color" content="#0e1523">');
 replaceOnce('<meta name="apple-mobile-web-app-title" content="Droply">',
-  '<meta name="apple-mobile-web-app-title" content="Droply">\\n<meta name="apple-mobile-web-app-capable" content="yes">');
+  '<meta name="apple-mobile-web-app-title" content="Droply">\n<meta name="apple-mobile-web-app-capable" content="yes">');
 replaceOnce('media="print" onload="this.media=\'all\'"', 'media="all"');
 replaceOnce('<link rel="stylesheet" href="settings.css">', '<link rel="stylesheet" href="settings.css">\n<link rel="stylesheet" href="web.css">');
 replaceOnce('<script src="config.js"></script>', [
