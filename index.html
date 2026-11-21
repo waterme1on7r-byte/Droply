@@ -1216,7 +1216,7 @@ function positionAnchoredPopup(popup, button) {
     top = anchor.bottom - box.height;
   }
   left = Math.max(pad, Math.min(left, innerWidth - box.width - pad));
-  const topLimit = window.DroplyAndroid ? pad : 52;
+  const topLimit = (popup.id === 'addFriend' && (window.DroplyAndroid || window.DroplyWeb)) ? pad : (window.DroplyAndroid ? pad : 52);
   top = Math.max(topLimit, Math.min(top, innerHeight - box.height - pad));
   panel.style.left = `${left}px`; panel.style.top = `${top}px`;
 }
