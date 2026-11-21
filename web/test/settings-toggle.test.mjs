@@ -82,5 +82,5 @@ test('mobile settings keep the gear visible and reachable for a second tap', asy
   assert.match(android, /html\.droply-android-tablet #settingsPane\{inset:0 0 0 80px/);
   assert.match(android, /html\.droply-android-tv #settingsPane\{inset:0 0 0 104px/);
   assert.match(web, /html\.droply-web #settingsPane\{inset:50px 0 calc\(65px/);
-  assert.match(web, /html\.droply-web \.rail #gearBtn\{ order: 2/);
+  assert.match(web, /html\.droply-web \.rail #gearBtn\s*\{\s*order:\s*2/);
 });
