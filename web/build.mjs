@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { runInNewContext } from 'node:vm';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { exportPwaIcons } from './pwa-icons.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const output = join(root, 'docs', 'app');
@@ -71,6 +72,7 @@ for (const name of ['qrcode.js', 'jsQR.js', 'qrcode-LICENSE', 'jsQR-LICENSE'])
   await copyFile(join(root, 'assets', 'vendor', name), join(output, 'assets', 'vendor', name));
 /* Reuse the native app's own icon; only the generated browser app gets it. */
 await copyFile(join(root, 'assets', 'droply-icon.png'), join(output, 'droply-icon.png'));
+await exportPwaIcons(root, output);
 await writeFile(join(output, 'manifest.webmanifest'), JSON.stringify({
   name: 'Droply',
   short_name: 'Droply',
@@ -81,6 +83,9 @@ await writeFile(join(output, 'manifest.webmanifest'), JSON.stringify({
   display: 'standalone',
   background_color: '#0e1523',
   theme_color: '#0e1523',
-  icons: [{ src: 'droply-icon.png', sizes: 'any', type: 'image/png', purpose: 'any' }]
+  icons: [
+    { src: 'droply-icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: 'droply-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
+  ]
 }, null, 2) + '\n');
 console.log('Built the browser app at docs/app/index.html');
