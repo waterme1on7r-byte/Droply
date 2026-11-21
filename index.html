@@ -248,7 +248,7 @@ html[data-theme=light] body.rightWindowControls #titlebar::after{right:138px}
     <p>Share your code or enter a friend's code.</p>
     <div class="field"><small>Your device code</small><div class="codebox"><code id="shareCode">…</code><button id="shareCopy" class="cp ghost" title="Copy code" aria-label="Copy your device code"></button></div><small class="hint">Share this code so a friend can add you.</small></div>
     <div class="friend-qr-actions"><button type="button" class="ghost" id="showFriendQr" aria-expanded="false" aria-controls="friendQrPanel">Show my QR code</button><button type="button" class="ghost" id="scanFriendQr" aria-expanded="false" aria-controls="friendScanner">Scan a QR code</button></div>
-    <div id="friendQrPanel" class="friend-qr-panel hidden"><div id="friendQrImage" role="img" aria-label="QR code containing your public Droply friend code"></div><p>Ask a friend to scan this QR code to enter your device code.</p></div>
+    <div id="friendQrPanel" class="friend-qr-panel hidden"><div id="friendQrImage" role="img" aria-label="QR code containing your public Droply friend code"></div><p>Ask a friend to scan this QR.</p></div>
     <div id="friendScanner" class="friend-qr-scanner hidden"><video id="friendQrVideo" autoplay muted playsinline aria-label="QR scanner camera view"></video><p id="friendQrStatus" role="status" aria-live="polite">Choose a photo of a Droply QR code or start your camera.</p><div class="friend-qr-actions"><button id="friendQrCamera" type="button" class="ghost">Use camera</button><button id="friendQrPhoto" type="button" class="ghost">Choose QR photo</button><button id="friendQrStop" type="button" class="ghost hidden">Stop camera</button></div><input type="file" id="friendQrFile" accept="image/*" class="hidden"></div>
     <div class="field"><label for="codeIn">Friend's device code</label><div class="pk-add"><div class="friend-code-input"><span class="friend-code-prefix" aria-hidden="true">DRP-</span><input id="codeIn" type="text" maxlength="18" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="Friend's device code after DRP prefix"></div><button id="addBtn">Add</button></div><div id="addMsg" class="pk-msg" role="status" aria-live="polite"></div></div>
   </div>
@@ -1216,7 +1216,7 @@ function positionAnchoredPopup(popup, button) {
     top = anchor.bottom - box.height;
   }
   left = Math.max(pad, Math.min(left, innerWidth - box.width - pad));
-  const topLimit = window.DroplyAndroid ? pad : 52;
+  const topLimit = (popup.id === 'addFriend' && (window.DroplyAndroid || window.DroplyWeb)) ? pad : (window.DroplyAndroid ? pad : 52);
   top = Math.max(topLimit, Math.min(top, innerHeight - box.height - pad));
   panel.style.left = `${left}px`; panel.style.top = `${top}px`;
 }

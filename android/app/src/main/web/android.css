@@ -226,3 +226,15 @@ html.droply-android-phone .strip-friend .strip-avatar .device-badge{width:22px;h
 html.droply-android-phone .strip-friend .strip-avatar .device-badge svg{width:12px;height:12px}
 html.droply-android-phone .strip-friend .strip-avatar{overflow:visible}
 html.droply-android-phone .strip-friends{padding:10px 8px}
+
+/* QR expands the anchored popup; bound its scroll container to the real
+   Android WebView viewport on phones, tablets and landscape orientations. */
+html.droply-android #addFriend .box{
+  box-sizing:border-box;
+  max-height:calc(100dvh - 20px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  overflow-x:hidden;overflow-y:auto;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+}
+@media(orientation:landscape) and (max-height:540px){
+  html.droply-android #addFriend .box{max-height:calc(100dvh - 12px - env(safe-area-inset-bottom,0px));gap:8px}
+}

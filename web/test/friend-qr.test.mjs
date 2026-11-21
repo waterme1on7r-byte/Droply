@@ -44,3 +44,20 @@ test('QR friend flow does not add friends without explicit Add confirmation', as
   assert.match(html, /src="assets\/friend-qr\.js"/);
   assert.match(build, /'qrcode\.js', 'jsQR\.js'/);
 });
+
+test('QR friend popup stays bounded and repositions across Web, iOS and Android', async () => {
+  const [shared, web, android, qr, html] = await Promise.all([
+    'settings.css', 'web/web.css', 'android/app/src/main/web/android.css',
+    'assets/friend-qr.js', 'index.html'
+  ].map(name => readFile(root + '/' + name, 'utf8')));
+  assert.match(shared, /#addFriend #friendQrImage\{[^}]*clamp\(/);
+  assert.match(shared, /#addFriend \.friend-qr-panel/);
+  assert.match(shared, /@media\(orientation:landscape\) and \(max-height:500px\)/);
+  assert.match(web, /html\.droply-web #addFriend \.box\{[^}]*max-height:calc\(100dvh/);
+  assert.match(android, /html\.droply-android #addFriend \.box\{[^}]*max-height:calc\(100dvh/);
+  assert.match(qr, /layoutObserver\.observe\(display/);
+  assert.match(qr, /layoutObserver\.observe\(scanner/);
+  assert.match(qr, /window\.dispatchEvent\(new Event\('resize'\)\)/);
+  assert.match(html, /popup\.id === 'addFriend'/);
+  assert.match(html, /Ask a friend to scan this QR\./);
+});

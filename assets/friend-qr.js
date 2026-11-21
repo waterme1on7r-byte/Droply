@@ -173,6 +173,20 @@
       }
     });
     // Always release the camera when a popup closes or the tab is backgrounded.
+    // The QR section changes popup height after initial positioning.
+    // Re-run the existing anchored layout on open/close; it also handles
+    // orientation changes. Limit notifications to one animation frame.
+    let layoutFrame = 0;
+    function requestLayout() {
+      if (layoutFrame) return;
+      layoutFrame = requestAnimationFrame(() => {
+        layoutFrame = 0;
+        if (!dialog.classList.contains('hidden')) window.dispatchEvent(new Event('resize'));
+      });
+    }
+    const layoutObserver = new MutationObserver(requestLayout);
+    layoutObserver.observe(display, { attributes: true, attributeFilter: ['class'] });
+    layoutObserver.observe(scanner, { attributes: true, attributeFilter: ['class'] });
     const observer = new MutationObserver(() => {
       if (dialog.classList.contains('hidden')) {
         hideScanner();
