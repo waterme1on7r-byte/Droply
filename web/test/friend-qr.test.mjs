@@ -102,3 +102,25 @@ test('Android native QR sharing uses a scoped read-only content URI and chooser'
   assert.match(paths, /<cache-path name="friend_qr" path="shared_qr\/" \/>/);
   assert.match(gradle, /androidx\.core:core:/);
 });
+
+test('Android QR preview is opt-in and cannot silently overwrite the installed Android identity', async () => {
+  const [gradle, manifest, native, workflow] = await Promise.all([
+    'android/app/build.gradle.kts',
+    'android/app/src/main/AndroidManifest.xml',
+    'android/app/src/main/java/com/droply/android/MainActivity.kt',
+    '.github/workflows/android-qr-preview.yml'
+  ].map(path => readFile(root + '/' + path, 'utf8')));
+  assert.match(gradle, /findProperty\("droplyQrSharingPreview"\) == "true"/);
+  assert.match(gradle, /applicationId = if \(qrSharingPreview\) "com\.droply\.android\.qrpreview" else "com\.droply\.android"/);
+  assert.match(gradle, /versionCode = if \(qrSharingPreview\) 10 else 9/);
+  assert.match(gradle, /"Droply QR Preview" else "Droply"/);
+  assert.match(manifest, /android:label="\$\{droplyAppLabel\}"/);
+  assert.match(native, /FileProvider\.getUriForFile\(this, "\$packageName\.friendqr", image\)/);
+  assert.match(gradle, /"assets\/vendor\/qrcode\.js"/);
+  assert.match(gradle, /"assets\/vendor\/jsQR\.js"/);
+  assert.match(gradle, /"assets\/friend-qr\.js"/);
+  assert.match(workflow, /droplyQrSharingPreview=true/);
+  assert.match(workflow, /com\.droply\.android\.qrpreview/);
+  assert.match(workflow, /apksigner/);
+  assert.match(workflow, /--prerelease/);
+});
