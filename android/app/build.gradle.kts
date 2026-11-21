@@ -3,6 +3,11 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// A side-by-side QR preview is safer than replacing a previously
+// distributed debug APK: CI debug signing keys can differ, and uninstalling
+// the existing APK would delete its locally protected device identity.
+val qrSharingPreview = project.findProperty("droplyQrSharingPreview") == "true"
+
 android {
     namespace = "com.droply.android"
     compileSdk = 36
@@ -15,11 +20,13 @@ android {
     kotlinOptions { jvmTarget = "17" }
 
     defaultConfig {
-        applicationId = "com.droply.android"
+        applicationId = if (qrSharingPreview) "com.droply.android.qrpreview" else "com.droply.android"
         minSdk = 29
         targetSdk = 36
-        versionCode = 9
-        versionName = "2.8.15"
+        versionCode = if (qrSharingPreview) 10 else 9
+        versionName = if (qrSharingPreview) "2.8.15-qr-preview" else "2.8.15"
+        manifestPlaceholders["droplyAppLabel"] =
+            if (qrSharingPreview) "Droply QR Preview" else "Droply"
     }
 
     buildFeatures { buildConfig = false }
@@ -52,6 +59,25 @@ val prepareDroplyWeb by tasks.registering(Sync::class) {
         """.trimIndent()
         check(html.contains("</head>")) { "Droply index.html has no head element" }
         page.writeText(html.replace("</head>", "$mobile\n</head>"))
+        // Fail the APK build if QR UI or bundled libraries are missing.
+        // This checks the exact files Gradle packages, not the web build.
+        check(html.contains("id=\"shareFriendQr\"")) { "Missing Share my QR code UI" }
+        check(html.contains("src=\"assets/friend-qr.js\"")) { "Missing friend QR script" }
+        val assets = webAssets.get().asFile
+        val required = listOf(
+            "assets/friend-qr.js",
+            "assets/vendor/qrcode.js",
+            "assets/vendor/jsQR.js",
+            "assets/vendor/qrcode-LICENSE",
+            "assets/vendor/jsQR-LICENSE"
+        )
+        required.forEach { file ->
+            check(assets.resolve(file).isFile) { "Missing APK QR asset: $file" }
+        }
+        check(assets.resolve("assets/friend-qr.js").readText()
+            .contains("DroplyAndroid.shareQrImage(dataUrl, code)")) {
+            "Native QR image-sharing bridge is not wired up"
+        }
     }
 }
 
