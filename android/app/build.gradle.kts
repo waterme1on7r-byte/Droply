@@ -30,6 +30,7 @@ android {
 dependencies {
     implementation("com.squareup.okhttp3:okhttp:5.3.0")
     implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation("androidx.core:core:1.13.1")
 }
 
 val repoRoot = rootProject.projectDir.parentFile

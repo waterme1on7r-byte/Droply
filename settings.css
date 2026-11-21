@@ -150,3 +150,16 @@ html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}
   #addFriend #friendQrImage{width:clamp(108px, 30dvh, 145px)}
   #addFriend #friendQrVideo{max-height:130px}
 }
+
+/* System sharing lives inside the opened QR panel, with no extra modal. */
+#addFriend .friend-qr-share{
+  width:min(100%,240px);min-height:42px;padding:9px 13px;
+  border-radius:11px;font-size:12.5px;font-weight:650;
+  flex:none;white-space:normal;line-height:1.3;
+}
+#addFriend .friend-qr-share:disabled{opacity:.65;cursor:progress}
+#addFriend .friend-qr-share-status{width:100%;max-width:32ch;margin:0;font-size:11px;line-height:1.35;text-align:center;overflow-wrap:anywhere}
+#addFriend .friend-qr-share-status:empty{display:none}
+@media (max-width:430px), (max-height:540px){
+  #addFriend .friend-qr-share{min-height:38px;padding:8px 11px}
+}

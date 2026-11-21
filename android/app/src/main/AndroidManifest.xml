@@ -30,6 +30,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Grant a chosen sharing app read-only access to a temporary QR PNG. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.friendqr"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/friend_qr_paths" />
+        </provider>
+
         <service
             android:name=".TransferService"
             android:exported="false"
