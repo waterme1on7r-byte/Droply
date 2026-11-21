@@ -61,3 +61,44 @@ test('QR friend popup stays bounded and repositions across Web, iOS and Android'
   assert.match(html, /popup\.id === 'addFriend'/);
   assert.match(html, /Ask a friend to scan this QR\./);
 });
+
+test('Share QR offers an actual PNG file to installed apps and keeps manual fallback', async () => {
+  const qr = await readFile(root + '/assets/friend-qr.js', 'utf8');
+  const html = await readFile(root + '/index.html', 'utf8');
+  const css = await readFile(root + '/settings.css', 'utf8');
+  assert.match(html, /id="shareFriendQr"/);
+  assert.match(html, /id="friendQrShareStatus"/);
+  assert.match(qr, /share\.addEventListener\('click', async/);
+  assert.match(qr, /qr\.isDark\(row, col\)/);
+  assert.match(qr, /return output\.toDataURL\('image\/png'\)/);
+  assert.match(qr, /window\.DroplyAndroid\.shareQrImage\(dataUrl, code\)/);
+  assert.match(qr, /navigator\.canShare\(\{ files: \[image\] \}\)/);
+  assert.match(qr, /await navigator\.share\(\{/);
+  assert.match(qr, /files: \[image\]/);
+  assert.match(qr, /link\.download = 'Droply-Friend-QR\.png'/);
+  // Never allow share content to contain a secret, server admin token, or a remote QR service.
+  assert.doesNotMatch(qr, /ADMIN_TOKEN|privateKey|fetch\(/);
+  assert.match(css, /#addFriend \.friend-qr-share-status:empty\{display:none\}/);
+});
+
+test('Android native QR sharing uses a scoped read-only content URI and chooser', async () => {
+  const [activity, bridge, manifest, paths, gradle] = await Promise.all([
+    'android/app/src/main/java/com/droply/android/MainActivity.kt',
+    'android/app/src/main/java/com/droply/android/DroplyBridge.kt',
+    'android/app/src/main/AndroidManifest.xml',
+    'android/app/src/main/res/xml/friend_qr_paths.xml',
+    'android/app/build.gradle.kts'
+  ].map(path => readFile(root + '/' + path, 'utf8')));
+  assert.match(bridge, /@JavascriptInterface fun shareQrImage/);
+  assert.match(activity, /Regex\("\^DRP-/);
+  assert.match(activity, /BitmapFactory\.Options/);
+  assert.match(activity, /FileProvider\.getUriForFile/);
+  assert.match(activity, /Intent\(Intent\.ACTION_SEND\)/);
+  assert.match(activity, /putExtra\(Intent\.EXTRA_STREAM, uri\)/);
+  assert.match(activity, /FLAG_GRANT_READ_URI_PERMISSION/);
+  assert.match(activity, /Intent\.createChooser/);
+  assert.match(manifest, /android:name="androidx\.core\.content\.FileProvider"/);
+  assert.match(manifest, /android:exported="false"/);
+  assert.match(paths, /<cache-path name="friend_qr" path="shared_qr\/" \/>/);
+  assert.match(gradle, /androidx\.core:core:/);
+});
