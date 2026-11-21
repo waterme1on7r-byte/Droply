@@ -79,3 +79,15 @@ test('Touch platforms block pinch zoom but keep one-finger scrolling', async () 
   assert.match(web, /gesturechange/);
   assert.match(css, /touch-action:pan-x pan-y/);
 });
+
+test('Transfers logo sits slightly higher and exactly matches profile avatar size across landscape layouts', async () => {
+  const css = await readFile(webCss, 'utf8');
+  const webOnly = css.slice(css.indexOf('/* Align the restored Transfers logo with the Y profile avatar.'));
+  assert.ok(webOnly.startsWith('/* Align the restored Transfers logo with the Y profile avatar.'));
+  assert.match(webOnly, /html\.droply-web \.rail > \.rbtn\.active\{\s*width:50px;height:50px;border-radius:14px;top:-5px;/);
+  assert.match(webOnly, /\(orientation: landscape\) and \(pointer: coarse\) and \(max-width: 1600px\)/);
+  assert.match(webOnly, /width:42px;height:42px;border-radius:12px;top:-3px/);
+  assert.match(webOnly, /\(orientation: landscape\) and \(max-height: 430px\) and \(max-width: 1100px\)/);
+  assert.match(webOnly, /width:36px;height:36px;border-radius:11px;top:-2px/);
+  assert.doesNotMatch(webOnly, /#railAv\s*\{|#addFriendBtn\s*\{|#gearBtn\s*\{/);
+});
