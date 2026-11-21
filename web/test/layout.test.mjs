@@ -58,3 +58,24 @@ test('iPhone landscape uses the visible Safari viewport with a compact two-colum
   assert.match(css, /html\.droply-web\.droply-iphone #settingsPane \{[^}]*var\(--iphone-landscape-nav\)/);
   assert.match(css, /max-height: calc\(100dvh - var\(--iphone-landscape-nav\) - 12px\)/);
 });
+
+test('Add Friend does not automatically focus code entry on touch browsers or Android', async () => {
+  const html = await readFile(new URL('../../index.html', import.meta.url), 'utf8');
+  assert.match(html, /const mobileFriendDialog = !!window\.DroplyAndroid/);
+  assert.match(html, /!!window\.DroplyWeb && \(navigator\.maxTouchPoints > 0/);
+  assert.match(html, /if \(!mobileFriendDialog\) \$\('#codeIn'\)\.focus\(\)/);
+  assert.doesNotMatch(html, /\$\('#addFriend'\)\.classList\.remove\('hidden'\); \$\('#codeIn'\)\.focus\(\)/);
+});
+
+test('Touch platforms block pinch zoom but keep one-finger scrolling', async () => {
+  const web = await readFile(new URL('../bridge.js', import.meta.url), 'utf8');
+  const android = await readFile(new URL('../../android/app/src/main/web/android-bridge.js', import.meta.url), 'utf8');
+  const css = await readFile(webCss, 'utf8');
+  for (const source of [web, android]) {
+    assert.match(source, /event\.touches\.length > 1\) event\.preventDefault\(\)/);
+    assert.match(source, /passive: false/);
+  }
+  assert.match(web, /gesturestart/);
+  assert.match(web, /gesturechange/);
+  assert.match(css, /touch-action:pan-x pan-y/);
+});

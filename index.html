@@ -1271,7 +1271,14 @@ $('#sentReqTab').onclick = () => { activeReqTab = 'sent'; renderReqs(); };
 function openAddFriend() {
   if (!window.DroplyAndroid && !$('#addFriend').classList.contains('hidden')) { closeAddFriend(); return; }
   $('#picker').classList.add('hidden'); closeFriendRequests(false); $('#addMsg').textContent = ''; $('#codeIn').value = '';
-  $('#addFriend').classList.remove('hidden'); $('#codeIn').focus();
+  $('#addFriend').classList.remove('hidden');
+  // On touch devices, focusing opens the software keyboard and can trigger
+  // browser viewport zoom. Keep focus on the Add Friend button until the
+  // person explicitly taps the code field. Desktop retains keyboard focus.
+  const mobileFriendDialog = !!window.DroplyAndroid ||
+    (!!window.DroplyWeb && (navigator.maxTouchPoints > 0 ||
+      window.matchMedia?.('(pointer: coarse)').matches));
+  if (!mobileFriendDialog) $('#codeIn').focus();
   if (!window.DroplyAndroid) {
     $('#addFriend').setAttribute('aria-modal', 'false');
     positionAddFriend();

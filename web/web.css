@@ -795,3 +795,8 @@ html.droply-web #addFriend .box{
     transform:none;
   }
 }
+
+/* Force touch browsing to stay at app scale without disabling scrolling. */
+@media(pointer:coarse),(hover:none){
+  html.droply-web,html.droply-web body{touch-action:pan-x pan-y}
+}
