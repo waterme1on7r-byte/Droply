@@ -71,6 +71,10 @@ for (const name of ['friend-qr.js'])
 for (const name of ['qrcode.js', 'jsQR.js', 'qrcode-LICENSE', 'jsQR-LICENSE'])
   await copyFile(join(root, 'assets', 'vendor', name), join(output, 'assets', 'vendor', name));
 /* Reuse the native app's own icon; only the generated browser app gets it. */
+// The shared dark-theme sidebar uses assets/droply-icon.png as the active
+// Transfers icon. Bundle that same asset at the URL settings.css requests,
+// rather than hiding its SVG fallback over a missing background image.
+await copyFile(join(root, 'assets', 'droply-icon.png'), join(output, 'assets', 'droply-icon.png'));
 await copyFile(join(root, 'assets', 'droply-icon.png'), join(output, 'droply-icon.png'));
 await exportPwaIcons(root, output);
 await writeFile(join(output, 'manifest.webmanifest'), JSON.stringify({
