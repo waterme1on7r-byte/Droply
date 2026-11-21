@@ -213,3 +213,18 @@ test('mobile browser inputs do not trigger automatic Safari focus zoom', async (
   assert.match(mobile, /font-size: 16px !important/);
   assert.match(mobile, /html\.droply-web\.droply-ios input/);
 });
+
+test('dark-theme Transfers sidebar icon is bundled at the exact CSS background URL', async () => {
+  const sharedCss = await readFile(root + '/settings.css', 'utf8');
+  const webCss = await readFile(root + '/docs/app/settings.css', 'utf8');
+  const desktopHtml = await readFile(root + '/index.html', 'utf8');
+  const builtHtml = await readFile(root + '/docs/app/index.html', 'utf8');
+  const sourceLogo = await readFile(root + '/assets/droply-icon.png');
+  const webLogo = await readFile(root + '/docs/app/assets/droply-icon.png');
+  assert.match(sharedCss, /\.rail>\.rbtn\.active\{background:url\('assets\/droply-icon\.png'\)/);
+  assert.equal(webCss, sharedCss, 'Web must use the same dark-theme sidebar CSS');
+  assert.deepEqual(webLogo, sourceLogo, 'Sidebar image must actually exist at the CSS URL');
+  assert.match(desktopHtml, /class="rbtn active" title="Transfers"/);
+  assert.match(builtHtml, /class="rbtn active" title="Transfers"/);
+  assert.match(builtHtml, /<svg width="32" height="32" viewBox="0 0 32 32">/);
+});
