@@ -800,3 +800,46 @@ html.droply-web #addFriend .box{
 @media(pointer:coarse),(hover:none){
   html.droply-web,html.droply-web body{touch-action:pan-x pan-y}
 }
+
+/* Mobile Web only: a compact Home Screen action, never a desktop control.
+   Inserted directly below the header; it scrolls with the main content and
+   does not cover the iPhone/iPad bottom bar or Android's landscape rail. */
+html.droply-web .web-install-banner{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  gap:8px 12px;padding:9px 12px;min-width:0;flex:none;
+  border:1px solid var(--line);border-radius:12px;
+  background:var(--card);color:var(--text);
+}
+html.droply-web .web-install-copy{display:flex;flex:1 1 110px;min-width:0;flex-direction:column;gap:2px}
+html.droply-web .web-install-copy strong{font-size:12px;line-height:1.3;font-weight:650}
+html.droply-web .web-install-copy span{color:var(--mute);font-size:11px;line-height:1.35}
+html.droply-web .web-install-action{
+  flex:0 1 auto;min-height:38px;max-width:100%;
+  padding:8px 12px;border:1px solid var(--accent);border-radius:10px;
+  color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  font-size:12px;font-weight:650;line-height:1.25;white-space:normal;text-align:center;
+}
+html.droply-web .web-install-action:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+html.droply-web .web-install-help{
+  flex:1 0 100%;min-width:0;padding-top:8px;
+  border-top:1px solid var(--line);color:var(--text);
+  font-size:12px;line-height:1.45;overflow-wrap:anywhere;
+}
+html.droply-web .web-install-help.hidden{display:none!important}
+html.droply-web .web-install-help small{
+  display:block;margin-top:6px;color:var(--mute);font-size:11px;line-height:1.35;
+}
+@media(max-width:420px){
+  html.droply-web .web-install-banner{padding:8px 10px;gap:6px}
+  html.droply-web .web-install-copy strong{font-size:11.5px}
+  html.droply-web .web-install-copy span{display:none}
+  html.droply-web .web-install-action{min-height:36px;padding:7px 10px;font-size:11.5px}
+}
+@media(orientation:landscape) and (max-height:540px){
+  html.droply-web .web-install-banner{padding:5px 10px;gap:6px}
+  html.droply-web .web-install-copy span{display:none}
+  html.droply-web .web-install-action{min-height:33px;padding:6px 10px}
+}
+@media(prefers-reduced-motion:reduce){
+  html.droply-web .web-install-banner,html.droply-web .web-install-action{scroll-behavior:auto;transition:none}
+}
