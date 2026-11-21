@@ -225,7 +225,7 @@ test('dark-theme Transfers sidebar icon is bundled at the exact CSS background U
   assert.equal(webCss, sharedCss, 'Web must use the same dark-theme sidebar CSS');
   assert.deepEqual(webLogo, sourceLogo, 'Sidebar image must actually exist at the CSS URL');
   assert.match(desktopHtml, /class="rbtn active" title="Transfers"/);
-  assert.match(builtHtml, /class="rbtn active" title="Transfers"/);
+  assert.match(builtHtml, /<a class="rbtn active" href="\.\.\/" title="Droply home page"/);
   assert.match(builtHtml, /<svg width="32" height="32" viewBox="0 0 32 32">/);
 });
 
