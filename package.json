@@ -1,6 +1,6 @@
 {
   "name": "droply",
-  "version": "2.8.18",
+  "version": "2.8.19",
   "description": "Droply",
   "main": "main.js",
   "author": "Droply",
@@ -62,13 +62,15 @@
         {
           "target": "dmg",
           "arch": [
-            "universal"
+            "x64",
+            "arm64"
           ]
         },
         {
           "target": "zip",
           "arch": [
-            "universal"
+            "x64",
+            "arm64"
           ]
         }
       ],

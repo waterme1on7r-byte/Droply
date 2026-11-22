@@ -47,6 +47,9 @@ jobs:
           if [ -z "${CSC_LINK:-}" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
           if [ -z "${APPLE_ID:-}" ]; then unset APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; fi
           npx electron-builder --publish never
+      - name: Verify macOS app bundles contain their startup files
+        if: runner.os == 'macOS'
+        run: node scripts/verify-mac-packages.js dist
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: Droply-${{ matrix.os }}
@@ -149,7 +152,7 @@ jobs:
           ## What's included
 
           - Windows installer and in-app update metadata
-          - Universal macOS installer and in-app update metadata (macOS 12 or later)
+          - Intel and Apple silicon macOS installers and in-app update metadata (macOS 12 or later)
           - Android release APK for Android 10 and later
 
           The Android APK appears as **Droply (New)**, installs alongside the older Android app, and has a separate device identity. Keep both apps installed until you have added your friends to the new installation. This preserves the existing app and its device data.
