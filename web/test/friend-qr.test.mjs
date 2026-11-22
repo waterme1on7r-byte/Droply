@@ -62,21 +62,23 @@ test('QR friend popup stays bounded and repositions across Web, iOS and Android'
   assert.match(html, /Ask a friend to scan this QR\./);
 });
 
-test('Share QR offers an actual PNG file to installed apps and keeps manual fallback', async () => {
+test('Copy QR writes a PNG image and Save QR downloads the generated image', async () => {
   const qr = await readFile(root + '/assets/friend-qr.js', 'utf8');
   const html = await readFile(root + '/index.html', 'utf8');
   const css = await readFile(root + '/settings.css', 'utf8');
-  assert.match(html, /id="shareFriendQr"/);
+  assert.match(html, /id="copyFriendQr"/);
+  assert.match(html, /id="saveFriendQr"/);
   assert.match(html, /id="friendQrShareStatus"/);
-  assert.match(qr, /share\.addEventListener\('click', async/);
+  assert.match(qr, /copy\.addEventListener\('click', async/);
+  assert.match(qr, /save\.addEventListener\('click'/);
   assert.match(qr, /qr\.isDark\(row, col\)/);
   assert.match(qr, /return output\.toDataURL\('image\/png'\)/);
-  assert.match(qr, /window\.DroplyAndroid\.shareQrImage\(dataUrl, code\)/);
-  assert.match(qr, /navigator\.canShare\(\{ files: \[image\] \}\)/);
-  assert.match(qr, /await navigator\.share\(\{/);
-  assert.match(qr, /files: \[image\]/);
+  assert.match(qr, /window\.DroplyAndroid\.copyQrImage\(qr\.dataUrl, qr\.code\)/);
+  assert.match(qr, /window\.DroplyAndroid\.saveQrImage\(qr\.dataUrl, qr\.code\)/);
+  assert.match(qr, /window\.api\.copyImage\(qr\.dataUrl\)/);
+  assert.match(qr, /new ClipboardItem\(\{ 'image\/png': blob \}\)/);
   assert.match(qr, /link\.download = 'Droply-Friend-QR\.png'/);
-  // Never allow share content to contain a secret, server admin token, or a remote QR service.
+  // Never allow QR actions to contain a secret, server admin token, or a remote QR service.
   assert.doesNotMatch(qr, /ADMIN_TOKEN|privateKey|fetch\(/);
   assert.match(css, /#addFriend \.friend-qr-share-status:empty\{display:none\}/);
 });

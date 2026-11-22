@@ -248,7 +248,7 @@ html[data-theme=light] body.rightWindowControls #titlebar::after{right:138px}
     <p>Share your code or enter a friend's code.</p>
     <div class="field"><small>Your device code</small><div class="codebox"><code id="shareCode">…</code><button id="shareCopy" class="cp ghost" title="Copy code" aria-label="Copy your device code"></button></div><small class="hint">Share this code so a friend can add you.</small></div>
     <div class="friend-qr-actions"><button type="button" class="ghost" id="showFriendQr" aria-expanded="false" aria-controls="friendQrPanel">Show my QR code</button><button type="button" class="ghost" id="scanFriendQr" aria-expanded="false" aria-controls="friendScanner">Scan a QR code</button></div>
-    <div id="friendQrPanel" class="friend-qr-panel hidden"><div id="friendQrImage" role="img" aria-label="QR code containing your public Droply friend code"></div><p>Ask a friend to scan this QR.</p><button type="button" class="ghost friend-qr-share" id="shareFriendQr" aria-label="Share your QR code through another app">Share my QR code</button><p id="friendQrShareStatus" class="friend-qr-share-status" role="status" aria-live="polite"></p></div>
+    <div id="friendQrPanel" class="friend-qr-panel hidden"><div id="friendQrImage" role="img" aria-label="QR code containing your public Droply friend code"></div><p>Ask a friend to scan this QR.</p><div class="friend-qr-image-actions" role="group" aria-label="QR image actions"><button type="button" class="ghost" id="copyFriendQr" aria-label="Copy QR image to clipboard">Copy QR</button><button type="button" class="ghost" id="saveFriendQr" aria-label="Save QR image">Save QR</button></div><p id="friendQrShareStatus" class="friend-qr-share-status" role="status" aria-live="polite"></p></div>
     <div id="friendScanner" class="friend-qr-scanner hidden"><video id="friendQrVideo" autoplay muted playsinline aria-label="QR scanner camera view"></video><p id="friendQrStatus" role="status" aria-live="polite">Choose a photo of a Droply QR code or start your camera.</p><div class="friend-qr-actions"><button id="friendQrCamera" type="button" class="ghost">Use camera</button><button id="friendQrPhoto" type="button" class="ghost">Choose QR photo</button><button id="friendQrStop" type="button" class="ghost hidden">Stop camera</button></div><input type="file" id="friendQrFile" accept="image/*" class="hidden"></div>
     <div class="field"><label for="codeIn">Friend's device code</label><div class="pk-add"><div class="friend-code-input"><span class="friend-code-prefix" aria-hidden="true">DRP-</span><input id="codeIn" type="text" maxlength="18" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="Friend's device code after DRP prefix"></div><button id="addBtn">Add</button></div><div id="addMsg" class="pk-msg" role="status" aria-live="polite"></div></div>
   </div>
@@ -505,7 +505,7 @@ function updateDrop() {
   const deviceName = platformLabel(device);
   $('#peerSub').textContent = p ? (deviceName ? 'Online · Using ' + deviceName : 'Online') : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
   const n = avatar(shown && (shown.av || f?.av), shown ? shown.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
-  if (shown) attachFriendHover(n, shown.id);
+  if (shown && (window.DroplyAndroid || window.DroplyWeb)) attachFriendHover(n, shown.id);
 }
 function setStatus(on, text) {
   window.DroplyConnectionOnline = !!on;
@@ -848,7 +848,38 @@ function showProfile(f) {
   cp.onclick = () => copyCode(cp, f.code);
   box.append(h('code', null, f.code), cp);
   field.append(h('small', null, 'Unique code'), box, h('small', 'hint', 'Share this code so someone else can add ' + f.name + '.'));
-  openCard(x, avatar(f.av, f.name, true), h('h2', null, f.name), st, field);
+  const actions = h('div', 'friend-profile-qr-actions');
+  const showQr = h('button', 'primary', 'Show QR'), copyQr = h('button', 'ghost', 'Copy QR'), saveQr = h('button', 'ghost', 'Save QR');
+  showQr.type = copyQr.type = saveQr.type = 'button';
+  showQr.setAttribute('aria-expanded', 'false');
+  const qrPanel = h('div', 'friend-profile-qr-panel'); qrPanel.hidden = true;
+  const qrImage = h('div', 'friend-profile-qr-image'); qrImage.setAttribute('role', 'img'); qrImage.setAttribute('aria-label', 'QR code for ' + f.name);
+  const qrStatus = h('p', 'friend-profile-qr-status'); qrStatus.setAttribute('role', 'status'); qrStatus.setAttribute('aria-live', 'polite');
+  qrPanel.append(qrImage, qrStatus);
+  showQr.onclick = () => {
+    const opening = qrPanel.hidden;
+    if (opening) {
+      try { qrImage.innerHTML = window.DroplyFriendQR.svg(f.code); qrStatus.textContent = ''; }
+      catch (_) { qrStatus.textContent = 'Could not create this friend’s QR code.'; }
+    }
+    qrPanel.hidden = !opening;
+    showQr.setAttribute('aria-expanded', String(opening));
+    showQr.textContent = opening ? 'Hide QR' : 'Show QR';
+  };
+  copyQr.onclick = async () => {
+    copyQr.disabled = true; qrStatus.textContent = '';
+    try { qrStatus.textContent = await window.DroplyFriendQR.copy(f.code) ? 'QR image copied. Paste it into a message or document.' : 'Image clipboard is unavailable here. Use Save QR instead.'; }
+    catch (_) { qrStatus.textContent = 'Could not copy the QR image. Use Save QR instead.'; }
+    finally { copyQr.disabled = false; }
+  };
+  saveQr.onclick = () => {
+    saveQr.disabled = true; qrStatus.textContent = '';
+    try { qrStatus.textContent = window.DroplyFriendQR.save(f.code) ? (document.documentElement.classList.contains('droply-android') ? 'QR image saved to Downloads.' : 'QR image saved as Droply-Friend-QR.png.') : 'Could not save the QR image.'; }
+    catch (_) { qrStatus.textContent = 'Could not save the QR image. Try again.'; }
+    finally { saveQr.disabled = false; }
+  };
+  actions.append(showQr, copyQr, saveQr);
+  openCard(x, avatar(f.av, f.name, true), h('h2', null, f.name), st, field, actions, qrPanel);
 }
 function confirmRemove(f) {
   const btns = h('div', 'btns'), no = h('button', 'ghost', 'Cancel'), yes = h('button', 'danger', 'Remove');

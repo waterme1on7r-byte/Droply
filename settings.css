@@ -109,10 +109,24 @@ html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}
 .peer-identity{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .peer-identity .peer-name{min-width:0;overflow-wrap:anywhere}
 
+/* QR actions on accepted-friend profile cards. Keep the three controls in one row. */
+.friend-profile-qr-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:100%;min-width:0}
+.friend-profile-qr-actions button{min-width:0;min-height:42px;padding:8px 5px;border:1px solid var(--line);border-radius:10px;font-size:11px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.friend-profile-qr-actions button.primary{background:linear-gradient(135deg,#278df4,#145cf2);color:#fff;border-color:transparent}
+.friend-profile-qr-actions button:disabled{opacity:.6;cursor:progress}
+.friend-profile-qr-panel{width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--card2)}
+.friend-profile-qr-panel[hidden]{display:none!important}
+.friend-profile-qr-image{width:min(100%,180px);aspect-ratio:1;box-sizing:border-box;padding:8px;border-radius:10px;background:#fff;display:grid;place-items:center;overflow:hidden}
+.friend-profile-qr-image svg{display:block;width:100%;height:100%}
+.friend-profile-qr-status{width:100%;margin:0;color:var(--mute);font-size:11px;line-height:1.4;overflow-wrap:anywhere;text-align:center}
+.friend-profile-qr-status:empty{display:none}
+@media(max-width:380px){.friend-profile-qr-actions{gap:5px}.friend-profile-qr-actions button{font-size:10px;padding-inline:3px}}
 
 /* Optional QR friend pairing — same components in Electron, Android and Web. */
 .friend-qr-actions{display:flex;flex-wrap:wrap;gap:8px;width:100%;justify-content:center}
 .friend-qr-actions button{flex:1 1 125px;min-width:0;padding:9px 11px;font-size:12px;border-radius:10px}
+.friend-qr-image-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;max-width:360px}
+.friend-qr-image-actions button{min-width:0;min-height:42px;padding:9px 12px;border-radius:11px}
 .friend-qr-panel,.friend-qr-scanner{width:100%;min-width:0;border:1px solid var(--line);background:var(--card2);border-radius:14px;padding:16px;display:flex;align-items:center;flex-direction:column;gap:13px}
 .friend-qr-panel p,.friend-qr-scanner p{margin:0;color:var(--mute);font-size:12px;line-height:1.4;text-align:center}
 #friendQrImage{width:min(100%,210px);aspect-ratio:1;background:#fff;border-radius:10px;padding:8px;display:grid;place-items:center;overflow:hidden;color:#172b49;font-size:12px;text-align:center}
@@ -126,6 +140,9 @@ html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}
    The popup itself is the scroll container; no child panel traps the gesture. */
 #addFriend .box{min-width:0;box-sizing:border-box;overscroll-behavior:contain;scrollbar-gutter:stable}
 #addFriend .field,#addFriend .friend-qr-actions,#addFriend .friend-qr-panel,#addFriend .friend-qr-scanner{flex-shrink:0;min-width:0}
+#addFriend .friend-qr-image-actions{flex-shrink:0;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#addFriend .friend-qr-image-actions button{min-height:42px;padding:9px 11px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--text);font-size:13px}
+#addFriend .friend-qr-image-actions button:disabled{opacity:.65;cursor:progress}
 #addFriend .friend-qr-actions{gap:7px}
 #addFriend .friend-qr-actions button{flex:1 1 125px;min-height:36px;white-space:normal;line-height:1.25}
 #addFriend .friend-qr-panel,#addFriend .friend-qr-scanner{padding:14px;gap:12px}
@@ -149,15 +166,13 @@ html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}
   #addFriend #friendQrVideo{max-height:130px}
 }
 
-/* System sharing lives inside the opened QR panel, with no extra modal. */
-#addFriend .friend-qr-share{
-  width:min(100%,240px);min-height:42px;padding:9px 13px;
-  border-radius:11px;font-size:12.5px;font-weight:650;
-  flex:none;white-space:normal;line-height:1.3;
-}
-#addFriend .friend-qr-share:disabled{opacity:.65;cursor:progress}
+/* Copy and save controls share the available row width across platforms. */
+#addFriend .friend-qr-image-actions{max-width:360px;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#addFriend .friend-qr-image-actions button{width:100%;min-height:42px;padding:9px 11px;border-radius:11px;font-size:12.5px;font-weight:650;white-space:nowrap}
+#addFriend .friend-qr-image-actions button:disabled{opacity:.65;cursor:progress}
 #addFriend .friend-qr-share-status{width:100%;max-width:32ch;margin:0;font-size:11px;line-height:1.35;text-align:center;overflow-wrap:anywhere}
 #addFriend .friend-qr-share-status:empty{display:none}
 @media (max-width:430px), (max-height:540px){
-  #addFriend .friend-qr-share{min-height:38px;padding:8px 11px}
+  #addFriend .friend-qr-image-actions{gap:7px}
+  #addFriend .friend-qr-image-actions button{min-height:38px;padding:8px 9px}
 }

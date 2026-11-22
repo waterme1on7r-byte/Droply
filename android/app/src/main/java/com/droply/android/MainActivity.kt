@@ -3,6 +3,8 @@ package com.droply.android
 import android.app.Activity
 import android.content.Intent
 import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.ContentValues
 import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.core.content.FileProvider
@@ -10,6 +12,8 @@ import java.io.File
 import android.net.Uri
 import android.os.Bundle
 import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.Manifest
 import android.content.pm.PackageManager
 import android.view.KeyEvent
@@ -90,6 +94,65 @@ class MainActivity : Activity() {
         }
         setContentView(webView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         webView.loadUrl("file:///android_asset/www/index.html")
+    }
+
+    private fun validatedQrPng(dataUrl: String, code: String): ByteArray? {
+        if (!Regex("^DRP-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$").matches(code)) return null
+        val prefix = "data:image/png;base64,"
+        if (!dataUrl.startsWith(prefix) || dataUrl.length > 1_500_000) return null
+        return try {
+            val bytes = Base64.decode(dataUrl.substring(prefix.length), Base64.DEFAULT)
+            val pngMagic = byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)
+            if (bytes.size < 64 || bytes.size > 1_000_000 || !bytes.take(8).toByteArray().contentEquals(pngMagic)) return null
+            val dimensions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, dimensions)
+            if (dimensions.outWidth !in 100..2048 || dimensions.outHeight !in 100..2048) return null
+            bytes
+        } catch (_: Exception) { null }
+    }
+
+    private fun cachedQrUri(bytes: ByteArray): Uri {
+        val folder = File(cacheDir, "shared_qr").apply { mkdirs() }
+        val image = File(folder, "droply-friend-qr.png")
+        image.writeBytes(bytes)
+        return FileProvider.getUriForFile(this, "$packageName.friendqr", image)
+    }
+
+    // Copy the QR image as a URI so other Android apps can paste it.
+    fun copyQrImage(dataUrl: String, code: String): Boolean {
+        val bytes = validatedQrPng(dataUrl, code) ?: return false
+        return try {
+            val uri = cachedQrUri(bytes)
+            runOnUiThread {
+                try {
+                    getSystemService(ClipboardManager::class.java)
+                        .setPrimaryClip(ClipData.newUri(contentResolver, "Droply friend QR", uri))
+                } catch (_: Exception) { }
+            }
+            true
+        } catch (_: Exception) { false }
+    }
+
+    // Save the QR in Android's public Downloads folder without storage permission.
+    fun saveQrImage(dataUrl: String, code: String): Boolean {
+        val bytes = validatedQrPng(dataUrl, code) ?: return false
+        var uri: Uri? = null
+        return try {
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, "Droply-Friend-QR.png")
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            }
+            val savedUri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return false
+            uri = savedUri
+            val output = contentResolver.openOutputStream(savedUri)
+                ?: throw IllegalStateException("Could not open QR image")
+            output.use { it.write(bytes) }
+            true
+        } catch (_: Exception) {
+            uri?.let { contentResolver.delete(it, null, null) }
+            false
+        }
     }
 
     // The QR contains only the shareable DRP friend code, never a private key.

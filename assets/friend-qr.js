@@ -5,6 +5,60 @@
   'use strict';
   const CODE = /^DRP-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
   const $ = id => document.getElementById(id);
+  function qrSvg(code) {
+    if (!CODE.test(String(code || '').trim().toUpperCase()) || typeof window.qrcode !== 'function') throw new Error('Invalid friend code');
+    const qr = window.qrcode(0, 'M');
+    qr.addData(String(code).trim().toUpperCase());
+    qr.make();
+    return qr.createSvgTag({ cellSize: 5, margin: 5, scalable: true });
+  }
+  function qrPng(code) {
+    if (!CODE.test(String(code || '').trim().toUpperCase()) || typeof window.qrcode !== 'function') throw new Error('Invalid friend code');
+    const qr = window.qrcode(0, 'M');
+    qr.addData(String(code).trim().toUpperCase());
+    qr.make();
+    const quiet = 4, cell = 12, modules = qr.getModuleCount(), pixels = (modules + quiet * 2) * cell;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = pixels;
+    const pen = canvas.getContext('2d');
+    if (!pen) throw new Error('Canvas unavailable');
+    pen.fillStyle = '#fff'; pen.fillRect(0, 0, pixels, pixels); pen.fillStyle = '#000';
+    for (let row = 0; row < modules; row++) for (let col = 0; col < modules; col++) {
+      if (qr.isDark(row, col)) pen.fillRect((col + quiet) * cell, (row + quiet) * cell, cell, cell);
+    }
+    return canvas.toDataURL('image/png');
+  }
+  function pngBytes(dataUrl) {
+    const prefix = 'data:image/png;base64,';
+    if (!dataUrl.startsWith(prefix)) throw new Error('QR image encoding failed');
+    const raw = atob(dataUrl.slice(prefix.length)), bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    return bytes;
+  }
+  function saveQrPng(blob, filename = 'Droply-Friend-QR.png') {
+    const url = URL.createObjectURL(blob), link = document.createElement('a');
+    link.href = url; link.download = filename; link.hidden = true;
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+  }
+  async function copyQr(code) {
+    const dataUrl = qrPng(code);
+    if (window.DroplyAndroid && typeof window.DroplyAndroid.copyQrImage === 'function') return !!window.DroplyAndroid.copyQrImage(dataUrl, code);
+    if (window.api && typeof window.api.copyImage === 'function') return !!(await window.api.copyImage(dataUrl));
+    if (navigator.clipboard?.write && typeof ClipboardItem === 'function') {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': new Blob([pngBytes(dataUrl)], { type: 'image/png' }) })]);
+      return true;
+    }
+    return false;
+  }
+  function saveQr(code) {
+    const dataUrl = qrPng(code);
+    if (window.DroplyAndroid && typeof window.DroplyAndroid.saveQrImage === 'function') return !!window.DroplyAndroid.saveQrImage(dataUrl, code);
+    saveQrPng(new Blob([pngBytes(dataUrl)], { type: 'image/png' }));
+    return true;
+  }
+  // Reused by the accepted-friend profile card and Add Friend dialog.
+  window.DroplyFriendQR = Object.freeze({ isValidCode: code => CODE.test(String(code || '').trim().toUpperCase()), svg: qrSvg, copy: copyQr, save: saveQr });
   function init() {
     const dialog = $('addFriend'), setup = $('setup');
     const show = $('showFriendQr'), scan = $('scanFriendQr');
@@ -12,8 +66,8 @@
     const video = $('friendQrVideo'), status = $('friendQrStatus');
     const camera = $('friendQrCamera'), stop = $('friendQrStop');
     const photo = $('friendQrPhoto'), file = $('friendQrFile');
-    const share = $('shareFriendQr'), shareStatus = $('friendQrShareStatus');
-    if (![dialog, show, scan, display, scanner, video, status, camera, stop, photo, file, share, shareStatus].every(Boolean)) return;
+    const copy = $('copyFriendQr'), save = $('saveFriendQr'), shareStatus = $('friendQrShareStatus');
+    if (![dialog, show, scan, display, scanner, video, status, camera, stop, photo, file, copy, save, shareStatus].every(Boolean)) return;
     video.classList.add('hidden');
     let stream = null, frame = 0, busy = false, lastScan = 0;
     const canvas = document.createElement('canvas');
@@ -105,100 +159,59 @@
       }
     }
     // Share a PNG containing ONLY the public device code. Build the image
-    // synchronously in the click handler: iOS Safari requires user activation
-    // to survive until navigator.share() opens the system share sheet.
-    function friendQrPng(code) {
-      if (typeof window.qrcode !== 'function') throw new Error('QR generator unavailable');
-      const qr = window.qrcode(0, 'M');
-      qr.addData(code);
-      qr.make();
-      const quiet = 4, cell = 12, modules = qr.getModuleCount();
-      const pixels = (modules + quiet * 2) * cell;
-      const output = document.createElement('canvas');
-      output.width = output.height = pixels;
-      const pen = output.getContext('2d');
-      if (!pen) throw new Error('Canvas unavailable');
-      pen.fillStyle = '#ffffff';
-      pen.fillRect(0, 0, pixels, pixels);
-      pen.fillStyle = '#000000';
-      for (let row = 0; row < modules; row++) {
-        for (let col = 0; col < modules; col++) {
-          if (qr.isDark(row, col)) pen.fillRect((col + quiet) * cell, (row + quiet) * cell, cell, cell);
-        }
-      }
-      return output.toDataURL('image/png');
+    // synchronously from the click handler so clipboard and save actions can
+    // use the browser's current user activation.
+    function setBusy(button, busy) {
+      button.disabled = busy;
+      copy.disabled = busy;
+      save.disabled = busy;
     }
-    function pngBytes(dataUrl) {
-      const prefix = 'data:image/png;base64,';
-      if (!dataUrl.startsWith(prefix)) throw new Error('QR image encoding failed');
-      const raw = atob(dataUrl.slice(prefix.length));
-      const bytes = new Uint8Array(raw.length);
-      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-      return bytes;
-    }
-    function saveQrPng(blob) {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'Droply-Friend-QR.png';
-      link.hidden = true;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 15000);
-    }
-    share.addEventListener('click', async () => {
+    function currentQr() {
       const code = codeFromQr($('shareCode').textContent);
       if (!code) {
         shareStatus.textContent = 'Your device code is still loading. Try again shortly.';
-        return;
+        return null;
       }
-      share.disabled = true;
+      try { return { code, dataUrl: qrPng(code) }; }
+      catch (_) { shareStatus.textContent = 'Could not create the QR image. Try again.'; return null; }
+    }
+    copy.addEventListener('click', async () => {
+      const qr = currentQr();
+      if (!qr) return;
+      setBusy(copy, true);
       shareStatus.textContent = '';
       try {
-        const dataUrl = friendQrPng(code);
-        // Android's native app has its own ACTION_SEND chooser. Most WebViews
-        // don't implement Web Share, so use its trusted bridge first.
-        if (window.DroplyAndroid && typeof window.DroplyAndroid.shareQrImage === 'function') {
-          const started = window.DroplyAndroid.shareQrImage(dataUrl, code);
-          if (started) {
-            shareStatus.textContent = 'Choose an app to share your QR image.';
-            return;
-          }
+        let copied = false;
+        if (window.DroplyAndroid && typeof window.DroplyAndroid.copyQrImage === 'function') {
+          copied = window.DroplyAndroid.copyQrImage(qr.dataUrl, qr.code);
+        } else if (window.api && typeof window.api.copyImage === 'function') {
+          copied = await window.api.copyImage(qr.dataUrl);
+        } else if (navigator.clipboard?.write && typeof ClipboardItem === 'function') {
+          const blob = new Blob([pngBytes(qr.dataUrl)], { type: 'image/png' });
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+          copied = true;
         }
-        const bytes = pngBytes(dataUrl);
-        const blob = new Blob([bytes], { type: 'image/png' });
-        const image = typeof File === 'function' ? new File([blob], 'Droply-Friend-QR.png', { type: 'image/png' }) : null;
-        // File sharing is preferred to plain text: the recipient should get
-        // the actual QR image they can scan, not just the DRP code.
-        let canShareImage = false;
-        if (image && typeof navigator.share === 'function') {
-          try {
-            canShareImage = typeof navigator.canShare !== 'function' ||
-              navigator.canShare({ files: [image] });
-          } catch (_) { canShareImage = false; }
-        }
-        if (canShareImage) {
-          try {
-            await navigator.share({
-              files: [image],
-              title: 'My Droply friend QR',
-              text: 'Add me on Droply: ' + code
-            });
-            shareStatus.textContent = 'QR code shared.';
-            return;
-          } catch (error) {
-            if (error && error.name === 'AbortError') return;
-            // Fall back to a PNG image if file sharing was not supported.
-          }
-        }
-        saveQrPng(blob);
-        shareStatus.textContent = 'QR image saved. You can send it from any app.';
+        shareStatus.textContent = copied ? 'QR image copied. Paste it into a message or document.' : 'Image clipboard is unavailable here. Use Save QR instead.';
       } catch (_) {
-        shareStatus.textContent = 'Sharing is unavailable here. You can still copy your device code.';
-      } finally {
-        share.disabled = false;
-      }
+        shareStatus.textContent = 'Could not copy the QR image. Use Save QR instead.';
+      } finally { setBusy(copy, false); }
+    });
+    save.addEventListener('click', () => {
+      const qr = currentQr();
+      if (!qr) return;
+      setBusy(save, true);
+      shareStatus.textContent = '';
+      try {
+        if (window.DroplyAndroid && typeof window.DroplyAndroid.saveQrImage === 'function') {
+          const saved = window.DroplyAndroid.saveQrImage(qr.dataUrl, qr.code);
+          shareStatus.textContent = saved ? 'QR image saved to Downloads.' : 'Could not save the QR image.';
+        } else {
+          saveQrPng(new Blob([pngBytes(qr.dataUrl)], { type: 'image/png' }));
+          shareStatus.textContent = 'QR image saved as Droply-Friend-QR.png.';
+        }
+      } catch (_) {
+        shareStatus.textContent = 'Could not save the QR image. Try again.';
+      } finally { setBusy(save, false); }
     });
     show.addEventListener('click', () => {
       const opening = display.classList.contains('hidden');
@@ -212,10 +225,7 @@
         return;
       }
       try {
-        const qr = window.qrcode(0, 'M');
-        qr.addData(code);
-        qr.make();
-        $('friendQrImage').innerHTML = qr.createSvgTag({ cellSize: 5, margin: 5, scalable: true });
+        $('friendQrImage').innerHTML = qrSvg(code);
       } catch (_) {
         $('friendQrImage').textContent = 'Could not generate your QR code. You can still copy your device code.';
       }

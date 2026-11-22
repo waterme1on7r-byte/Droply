@@ -143,7 +143,10 @@
         const title = drop.querySelector('#dropTitle');
         const hint = drop.querySelector(':scope > p');
         if (title) title.textContent = 'Drop a file to share';
-        if (hint) hint.firstChild.textContent = 'or pick one from your device ';
+        if (hint) {
+          hint.textContent = 'or pick one from your device';
+          hint.classList.add('web-upload-hint');
+        }
         const actions = document.createElement('div');
         actions.className = 'web-upload-actions';
         actions.setAttribute('role', 'group');
@@ -157,7 +160,9 @@
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
               '<path d="M6 2.5h8l4.5 4.5V21H6zM14 2.5V7h4.5"/>' +
             '</svg><span>Select File</span></button>';
-        drop.querySelector('.ico')?.after(actions);
+        if (hint) hint.after(actions);
+        else if (title) title.after(actions);
+        else drop.append(actions);
         actions.querySelector('.web-add-friend').addEventListener('click', event => {
           event.stopPropagation();
           document.querySelector('#addFriendBtn')?.click();

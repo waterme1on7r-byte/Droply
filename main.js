@@ -155,6 +155,19 @@ ipcMain.on('notify', (e, kind, body) => {
   if (fromUI(e) && key && desktop.settings[key] && typeof body === 'string' && Notification.isSupported()) new Notification({ title: 'DROPLY', body: body.slice(0, 240), silent: !desktop.settings.sounds }).show();
 });
 ipcMain.on('copy', (e, text) => { if (fromUI(e) && typeof text === 'string' && CODE_RE.test(text)) clipboard.writeText(text); });
+ipcMain.handle('copy-image', (e, dataUrl) => {
+  if (!fromUI(e) || typeof dataUrl !== 'string' || dataUrl.length > 1_500_000 ||
+      !/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(dataUrl)) return false;
+  const png = Buffer.from(dataUrl.slice('data:image/png;base64,'.length), 'base64');
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  if (png.length < 64 || png.length > 1_000_000 || !png.subarray(0, 8).equals(signature)) return false;
+  const width = png.readUInt32BE(16), height = png.readUInt32BE(20);
+  if (width < 100 || width > 2048 || height < 100 || height > 2048) return false;
+  const image = nativeImage.createFromBuffer(png);
+  if (image.isEmpty()) return false;
+  clipboard.writeImage(image);
+  return true;
+});
 
 ipcMain.on('save-open', (e, tid, name, size) => {
   if (!fromUI(e) || typeof tid !== 'string') return;

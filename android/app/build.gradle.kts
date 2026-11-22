@@ -93,7 +93,7 @@ val prepareDroplyWeb by tasks.registering(Sync::class) {
         page.writeText(html.replace("</head>", "$mobile\n</head>"))
         // Fail the APK build if QR UI or bundled libraries are missing.
         // This checks the exact files Gradle packages, not the web build.
-        check(html.contains("id=\"shareFriendQr\"")) { "Missing Share my QR code UI" }
+        check(html.contains("id=\"copyFriendQr\"") && html.contains("id=\"saveFriendQr\"")) { "Missing Copy QR / Save QR UI" }
         check(html.contains("src=\"assets/friend-qr.js\"")) { "Missing friend QR script" }
         val assets = webAssets.get().asFile
         val required = listOf(
@@ -107,8 +107,9 @@ val prepareDroplyWeb by tasks.registering(Sync::class) {
             check(assets.resolve(file).isFile) { "Missing APK QR asset: $file" }
         }
         check(assets.resolve("assets/friend-qr.js").readText()
-            .contains("DroplyAndroid.shareQrImage(dataUrl, code)")) {
-            "Native QR image-sharing bridge is not wired up"
+            .contains("DroplyAndroid.copyQrImage(qr.dataUrl, qr.code)") &&
+            assets.resolve("assets/friend-qr.js").readText().contains("DroplyAndroid.saveQrImage(qr.dataUrl, qr.code)")) {
+            "Native Copy QR / Save QR actions are not wired up"
         }
     }
 }
