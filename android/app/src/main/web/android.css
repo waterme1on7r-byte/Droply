@@ -119,6 +119,7 @@ html.droply-android-tablet .settings-nav{width:clamp(142px,21vw,220px);flex:0 0 
 html.droply-android-tablet .settings-content{padding:clamp(16px,3vw,32px)}
 html.droply-android-tablet h1{font-size:48px;line-height:1.08;height:auto}
 html.droply-android-tablet main{padding:clamp(28px,4vw,54px);gap:clamp(24px,3vw,38px)}
+html.droply-android-tablet .head>div:first-child{transform:translateY(clamp(-14px,-1.1vw,-8px))}
 html.droply-android-tablet .head p{font-size:18px;margin-top:10px}
 html.droply-android-tablet #status{font-size:16px;padding:10px 18px}
 html.droply-android-tablet .pcard{padding:16px 18px;gap:16px;border-radius:20px}
@@ -144,6 +145,7 @@ html.droply-android-tv #frList{gap:18px}
 html.droply-android-tv .rbtn{width:64px;height:64px;border-radius:18px}
 html.droply-android-tv #addFriendBtn{width:64px;height:64px}
 html.droply-android-tv main{padding:38px 48px 34px;gap:28px}
+html.droply-android-tv .head>div:first-child{transform:translateY(-14px)}
 html.droply-android-tv .head{align-items:center}
 html.droply-android-tv h1{font-size:56px;line-height:1.1;height:auto}
 html.droply-android-tv .head p{font-size:19px}
@@ -229,8 +231,6 @@ html.droply-android #settingsContent[data-section="Profile"]>.settings-actions{j
 html.droply-android #settingsContent[data-section="Profile"]>.settings-code{max-width:420px;margin:24px auto 0;text-align:left}
 html.droply-android-phone .strip-friend .strip-avatar{position:relative;display:inline-flex;width:48px;height:48px;margin:0 auto}
 html.droply-android-phone .strip-friend .strip-avatar .av{margin:0}
-html.droply-android-phone .strip-friend .strip-avatar .device-badge{width:22px;height:22px;top:-7px;left:-7px}
-html.droply-android-phone .strip-friend .strip-avatar .device-badge svg{width:12px;height:12px}
 html.droply-android-phone .strip-friend .strip-avatar{overflow:visible}
 html.droply-android-phone .strip-friends{padding:10px 8px}
 

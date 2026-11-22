@@ -21,7 +21,7 @@ The first Android release is a separate application (`com.droply.android`) and c
 
 In **Add friend**, choose **Show my QR code** to display your public device code, then **Share my QR code** to send a PNG through Android's system app chooser (for example, Messages or Mail). The native app shares the QR with a read-only scoped `FileProvider` URI; the private device credential is never included. A friend can scan a saved QR image, review the code, and press **Add** to request the connection. Friend request acceptance remains mandatory. Camera-based scanning can be unavailable in Android WebView, so choosing a saved QR image remains the supported fallback.
 
-The existing published `v2.8.15` debug APK **does not** include the later QR sharing changes. The optional, clearly labelled [QR-sharing preview APK](https://github.com/waterme1on7r-byte/Droply/releases/tag/android-qr-sharing-preview-2.8.15) builds all current QR assets into the APK and adds Android's native share sheet. The preview is deliberately `com.droply.android.qrpreview`, not `com.droply.android`; it installs **alongside** the original rather than replacing a debug-signed package with a potentially incompatible signing key. It has its own device code and keystore identity. Do not uninstall or clear the original app's data. This preview is not yet a production-signed Android update.
+The combined `v2.8.16` release includes a signed Android APK with the current renderer and QR sharing. It appears as **Droply (New)** and uses package `com.droply.android.release`, so Android installs it **alongside** the original `com.droply.android` app and creates a new device code. Keep the original app and its data until you have added your friends to the new installation. Android 10+ (API 29).
 
 To reproduce the separate preview build locally:
 
@@ -30,7 +30,7 @@ cd android
 ./gradlew :app:assembleDebug -PdroplyQrSharingPreview=true
 ```
 
-A normal `:app:assembleDebug` remains `com.droply.android` with version code 9 and version name 2.8.15, unchanged. The GitHub QR-preview workflow verifies both the packaged QR scripts and a signed debug APK before publishing the optional prerelease.
+A normal `:app:assembleDebug` remains `com.droply.android` for development. The versioned GitHub release uses `:app:assembleRelease -PdroplyNewInstall=true` and the signing key stored in GitHub Actions secrets. Future APKs under `com.droply.android.release` must use that same key and a higher version code.
 
 ## Release status
 

@@ -131,23 +131,22 @@ test('portrait browser layout follows the Android reference without hiding trans
   assert.doesNotThrow(() => new Script(bridge));
 });
 
-test('iPhone Web alone gets the approved mobile Add Friend and Select File panel', async () => {
+test('Web app provides the paired Add Friend and Select File panel at every size', async () => {
   const bridge = await readFile(root + '/docs/app/bridge.js', 'utf8');
   const css = await readFile(root + '/docs/app/web.css', 'utf8');
   const desktop = await readFile(root + '/index.html', 'utf8');
-  assert.match(bridge, /if \(document\.documentElement\.classList\.contains\('droply-iphone'\)\) \{/);
-  assert.match(bridge, /actions\.className = 'ios-upload-actions'/);
+  assert.match(bridge, /actions\.className = 'web-upload-actions'/);
   assert.match(bridge, /document\.querySelector\('#addFriendBtn'\)\?\.click\(\)/);
   assert.match(bridge, /document\.querySelector\('#fi'\)\?\.click\(\)/);
   assert.match(bridge, /event\.stopPropagation\(\)/);
-  assert.match(css, /html\.droply-web\.droply-iphone #drop > h2/);
-  assert.match(css, /html\.droply-web\.droply-iphone #drop > p \{ display: none; \}/);
-  assert.match(css, /html\.droply-web\.droply-iphone \.ios-upload-actions/);
+  assert.match(css, /html\.droply-web \.web-upload-actions/);
+  assert.match(css, /html\.droply-web #drop > h2/);
+  assert.match(css, /html\.droply-web #drop > p/);
   assert.match(css, /@media \(orientation: landscape\)/);
   assert.match(css, /@media \(orientation: portrait\)/);
-  const mobileRules = css.slice(css.indexOf('/* iPhone Web mobile transfer actions only.'));
-  assert.doesNotMatch(mobileRules, /html\.droply-web\.droply-ios[^\n]*(?:#drop|\.ios-upload-actions|\.ios-action-divider)/);
-  assert.doesNotMatch(desktop, /ios-upload-actions/);
+  const mobileRules = css.slice(css.indexOf('/* Web transfer actions follow the shared upload panel design'));
+  assert.doesNotMatch(mobileRules, /html\.droply-web\.droply-ios[^\n]*(?:#drop|\.web-upload-actions)/);
+  assert.doesNotMatch(desktop, /web-upload-actions/);
   assert.doesNotThrow(() => new Script(bridge));
 });
 

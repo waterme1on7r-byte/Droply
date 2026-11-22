@@ -82,22 +82,20 @@ html:not([data-theme=light]) .rail>.rbtn.active>svg{visibility:hidden}
 .profile-hero-name{font-size:28px;line-height:1.2;font-weight:700;color:var(--text);overflow-wrap:anywhere;max-width:100%}
 .profile-device{display:inline-flex;align-items:center;gap:9px;border-radius:24px;background:var(--card2);color:var(--text);padding:8px 16px;font-size:14px}
 .profile-device>span{display:flex;align-items:center}
+.profile-connection{display:inline-flex;align-items:center;justify-content:center;min-width:84px;border-radius:24px;padding:8px 16px;font-size:14px;font-weight:650}
+.profile-connection.online{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.32);color:#42d889}
+.profile-connection.offline{background:rgba(148,163,184,.1);border:1px solid var(--line);color:var(--mute)}
+html:not(.droply-android):not(.droply-web) .profile-hero{gap:20px;margin:28px auto 30px}
+html:not(.droply-android):not(.droply-web) .profile-hero .profile-hero-avatar{width:176px;height:176px;border-radius:38px;font-size:70px;box-shadow:0 0 0 6px rgba(59,130,246,.22)}
+html:not(.droply-android):not(.droply-web) .profile-hero-name{font-size:34px}
+html:not(.droply-android):not(.droply-web) .profile-device,html:not(.droply-android):not(.droply-web) .profile-connection{font-size:15px;padding:10px 18px}
 #settingsContent[data-section="Profile"]>.settings-actions{justify-content:center;margin:20px auto}
 #settingsContent[data-section="Profile"]>.settings-actions button{font-size:16px;padding:16px 24px;border:1px solid var(--line);border-radius:16px}
 #settingsContent[data-section="Profile"]>.settings-code{max-width:420px;margin:28px auto 0;text-align:left}
 #settingsContent[data-section="Profile"] .settings-code .codebox{max-width:none}
 @media(prefers-reduced-motion:reduce){.wordmark>span{animation:none;opacity:1}}
-.av-frame{position:relative;display:inline-flex;flex:none;vertical-align:middle;isolation:isolate}
-.device-badge{position:absolute;top:-7px;left:-7px;z-index:3;display:flex;align-items:center;justify-content:center;width:24px;height:24px;padding:3px;border-radius:8px;border:2px solid var(--win);background:var(--card2);color:var(--text);pointer-events:auto;box-sizing:border-box}
-.device-badge svg{display:block;flex:none}
-.peer .device-badge{width:21px;height:21px;top:-5px;left:-5px;border-radius:7px}
-.peer .device-badge svg{width:12px;height:12px}
-.rail .fr .device-badge{border-color:var(--rail,#0d1524)}
 .rail .fr .dot{left:auto;right:-1px}
-.pcard>.av-frame+div{min-width:0;flex:1}
 .friend-hover{position:fixed;z-index:100;display:flex;align-items:center;gap:14px;max-width:calc(100vw - 24px);padding:14px 18px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--text);box-shadow:0 10px 30px rgba(0,0,0,.22);pointer-events:none;text-align:left}
-.friend-hover-device{display:flex;align-items:center;flex:none;color:var(--text)}
-.friend-hover-device svg{width:18px;height:18px}
 .friend-hover-text{min-width:0}
 .friend-hover b{display:block;font-size:14px;font-weight:600;overflow-wrap:anywhere}
 .friend-hover small{display:block;font-size:12px;margin-top:4px;color:var(--mute);overflow-wrap:anywhere}
@@ -115,7 +113,7 @@ html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}
 /* Optional QR friend pairing — same components in Electron, Android and Web. */
 .friend-qr-actions{display:flex;flex-wrap:wrap;gap:8px;width:100%;justify-content:center}
 .friend-qr-actions button{flex:1 1 125px;min-width:0;padding:9px 11px;font-size:12px;border-radius:10px}
-.friend-qr-panel,.friend-qr-scanner{width:100%;min-width:0;border:1px solid var(--line);background:var(--card2);border-radius:14px;padding:12px;display:flex;align-items:center;flex-direction:column;gap:9px}
+.friend-qr-panel,.friend-qr-scanner{width:100%;min-width:0;border:1px solid var(--line);background:var(--card2);border-radius:14px;padding:16px;display:flex;align-items:center;flex-direction:column;gap:13px}
 .friend-qr-panel p,.friend-qr-scanner p{margin:0;color:var(--mute);font-size:12px;line-height:1.4;text-align:center}
 #friendQrImage{width:min(100%,210px);aspect-ratio:1;background:#fff;border-radius:10px;padding:8px;display:grid;place-items:center;overflow:hidden;color:#172b49;font-size:12px;text-align:center}
 #friendQrImage svg{width:100%;height:100%;display:block}
@@ -130,18 +128,18 @@ html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}
 #addFriend .field,#addFriend .friend-qr-actions,#addFriend .friend-qr-panel,#addFriend .friend-qr-scanner{flex-shrink:0;min-width:0}
 #addFriend .friend-qr-actions{gap:7px}
 #addFriend .friend-qr-actions button{flex:1 1 125px;min-height:36px;white-space:normal;line-height:1.25}
-#addFriend .friend-qr-panel,#addFriend .friend-qr-scanner{padding:9px;gap:6px}
+#addFriend .friend-qr-panel,#addFriend .friend-qr-scanner{padding:14px;gap:12px}
 #addFriend #friendQrImage{box-sizing:border-box;width:clamp(120px, min(45vw, 25dvh), 185px);max-width:100%;aspect-ratio:1;padding:7px;flex:none}
 #addFriend #friendQrImage svg{width:100%;height:100%}
 #addFriend #friendQrVideo{max-height:min(185px, 28dvh);min-height:0}
-#addFriend .friend-qr-panel p,#addFriend .friend-qr-scanner p{max-width:30ch;font-size:11px;line-height:1.3}
+#addFriend .friend-qr-panel p,#addFriend .friend-qr-scanner p{max-width:30ch;font-size:12px;line-height:1.45}
 #addFriend .pk-msg{overflow-wrap:anywhere}
 @media(max-width:600px), (max-height:540px){
   #addFriend .box{gap:8px;padding:36px 14px 12px}
   #addFriend h2{font-size:clamp(20px, 5.5vw, 25px);line-height:1.15}
   #addFriend .box>p{font-size:12px;line-height:1.3;margin-top:0}
   #addFriend .field small.hint{margin-top:4px;font-size:11px;line-height:1.3}
-  #addFriend .friend-qr-panel,#addFriend .friend-qr-scanner{padding:8px}
+  #addFriend .friend-qr-panel,#addFriend .friend-qr-scanner{padding:11px;gap:10px}
   #addFriend #friendQrImage{width:clamp(115px, min(43vw, 24dvh), 168px)}
   #addFriend .codebox{min-width:0}
   #addFriend .codebox code{min-width:0;overflow:hidden;text-overflow:ellipsis}

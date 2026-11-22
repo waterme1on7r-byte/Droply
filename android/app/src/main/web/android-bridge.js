@@ -99,7 +99,7 @@
     friendStrip.id = 'androidFriendsStrip'; friendStrip.setAttribute('aria-label', 'Friends');
     friendStrip.innerHTML = '<div class="strip-heading"><b>Friends</b><small></small></div><div class="strip-friends"></div>';
     document.querySelector('.pairwrap').before(friendStrip);
-    window.renderAndroidFriends = (friends, peers, selected, resolvePlatform) => {
+    window.renderAndroidFriends = (friends, peers, selected) => {
       const online = new Set(peers.map(peer => peer.id));
       const list = friendStrip.querySelector('.strip-friends'); list.replaceChildren();
       friendStrip.querySelector('.strip-heading small').textContent = `${friends.filter(f => online.has(f.id)).length} online · ${friends.filter(f => !online.has(f.id)).length} offline`;
@@ -112,11 +112,8 @@
         button.setAttribute('aria-pressed', String(friend.id === selected));
         button.setAttribute('aria-label', `${friend.name}, ${online.has(friend.id) ? 'online' : 'offline'}`);
         const image = avatar(friend.av, friend.name), dot = document.createElement('i'); dot.className = 'strip-dot';
-        const frame = withDeviceBadge(image, resolvePlatform?.(friend.id) || peers.find(peer => peer.id === friend.id)?.platform);
-        if (frame === image) {
-          const wrapper = document.createElement('span'); wrapper.className = 'av-frame strip-avatar'; wrapper.append(image, dot);
-          button.append(wrapper);
-        } else { frame.classList.add('strip-avatar'); frame.append(dot); button.append(frame); }
+        const frame = document.createElement('span'); frame.className = 'strip-avatar'; frame.append(image, dot);
+        button.append(frame);
         const name = document.createElement('span'); name.textContent = friend.name;
         const state = document.createElement('small'); state.textContent = online.has(friend.id) ? 'Online' : 'Offline';
         attachFriendHover(button.firstElementChild, friend.id);

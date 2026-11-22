@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 jobs:
-  build:
+  build-desktop:
     strategy:
       fail-fast: false
       matrix:
@@ -57,9 +57,71 @@ jobs:
             dist/*.zip
             dist/*.blockmap
             dist/latest*.yml
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Set up Java 17
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android command line tools
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+      - name: Install Android SDK
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Validate and prepare Android release signing key
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.DROPLY_ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.DROPLY_ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.DROPLY_ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.DROPLY_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_STORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/droply-release.jks"
+          echo "DROPLY_ANDROID_KEYSTORE=$RUNNER_TEMP/droply-release.jks" >> "$GITHUB_ENV"
+          echo "DROPLY_ANDROID_STORE_PASSWORD=$ANDROID_STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "DROPLY_ANDROID_KEY_ALIAS=$ANDROID_KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "DROPLY_ANDROID_KEY_PASSWORD=$ANDROID_KEY_PASSWORD" >> "$GITHUB_ENV"
+          unset ANDROID_KEYSTORE_BASE64 ANDROID_STORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD
+      - name: Build side-by-side Android release APK
+        working-directory: android
+        shell: bash
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          bash ./gradlew :app:assembleRelease -PdroplyNewInstall=true -PdroplyVersion="$version" --no-daemon
+      - name: Verify and stage Android APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=${GITHUB_REF_NAME#v}
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          test -s "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
+          badging=$("$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk")
+          grep -F "package: name='com.droply.android.release'" <<< "$badging"
+          grep -F "versionName='$version'" <<< "$badging"
+          mkdir -p release-assets
+          cp "$apk" "release-assets/Droply-Android-$version.apk"
+          cd release-assets
+          sha256sum "Droply-Android-$version.apk" > SHA256SUMS-Android.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: Droply-Android
+          if-no-files-found: error
+          path: release-assets/*
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: build
+    needs: [build-desktop, build-android]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -69,7 +131,7 @@ jobs:
           pattern: Droply-*
           merge-multiple: true
           path: release-assets
-      - name: Create draft release with all update assets
+      - name: Create draft release with all platform assets
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -82,8 +144,20 @@ jobs:
           done
           test -f release-assets/latest.yml
           test -f release-assets/latest-mac.yml
+          test -n "$(find release-assets -maxdepth 1 -name 'Droply-Android-*.apk' -print -quit)"
+          cat > release-notes.md <<'NOTES'
+          ## What's included
+
+          - Windows installer and in-app update metadata
+          - Universal macOS installer and in-app update metadata (macOS 12 or later)
+          - Android release APK for Android 10 and later
+
+          The Android APK appears as **Droply (New)**, installs alongside the older Android app, and has a separate device identity. Keep both apps installed until you have added your friends to the new installation. This preserves the existing app and its device data.
+
+          Web app and UI updates are available at https://waterme1on7r-byte.github.io/Droply/app/ .
+          NOTES
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" release-assets/* --clobber
           else
-            gh release create "$GITHUB_REF_NAME" release-assets/* --draft --title "DROPLY $GITHUB_REF_NAME" --notes "DROPLY desktop update. See release documentation for features and installation details."
+            gh release create "$GITHUB_REF_NAME" release-assets/* --draft --title "DROPLY $GITHUB_REF_NAME" --notes-file release-notes.md
           fi

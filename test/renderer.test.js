@@ -97,14 +97,6 @@ test('terminal transfer cards clear after 30 seconds while active transfers stay
   assert.strictEqual(t.transferCards.size, 1);
   assert(t.transferCards.has('active'));
 });
-test('device badges label known platforms and hide unknown device information', () => {
-  const { t } = loadRenderer();
-  assert.strictEqual(t.deviceBadge('win32').title, 'Using Windows');
-  assert.strictEqual(t.deviceBadge('darwin').title, 'Using macOS');
-  assert.strictEqual(t.deviceBadge('android-tablet').title, 'Using Android tablet');
-  assert.strictEqual(t.deviceBadge('android-tv').title, 'Using Android TV');
-  for (const platform of [undefined, '', 'constructor', 'invented', '<script>']) assert.strictEqual(t.deviceBadge(platform), null);
-});
 test('new transfer cards are brought into view once, without scrolling on every progress update', () => {
   const r = loadRenderer(), scheduled = [], calls = [];
   r.ctx.window.requestAnimationFrame = callback => scheduled.push(callback);

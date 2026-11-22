@@ -678,75 +678,74 @@ html.droply-web .web-note p { margin-top: 7px; }
   }
 }
 
-/* iPhone Web mobile transfer actions only. iPad retains its original
-   upload panel; desktop, Android, and other browsers are unchanged. */
+/* Web transfer actions follow the shared upload panel design on every screen. */
 html.droply-web.droply-iphone #drop.off { opacity: 1; }
-html.droply-web.droply-iphone #drop > h2,
-html.droply-web.droply-iphone #drop > p { display: none; }
-html.droply-web.droply-iphone #drop > .ico { margin: 0 0 8px; }
-html.droply-web.droply-iphone #drop > .ico svg {
+html.droply-web #drop > .ico { margin: 0 0 8px; }
+html.droply-web #drop > .ico svg {
   width: 34px; height: 34px; color: #8bbaff;
 }
-html.droply-web.droply-iphone .ios-upload-actions {
+html.droply-web .web-upload-actions {
   display: flex; flex: 0 1 auto; align-items: center; justify-content: center;
-  width: min(580px, 100%); max-width: 100%; gap: clamp(9px, 2vw, 18px);
+  width: min(620px, 100%); max-width: 100%; gap: 0; padding: 5px;
+  border: 1px solid rgba(126,174,240,.42); border-radius: 999px;
+  background: rgba(126,174,240,.12); box-shadow: 0 5px 14px rgba(2,12,35,.14);
 }
-html.droply-web.droply-iphone .ios-upload-actions button {
+html.droply-web .web-upload-actions button {
   display: flex; flex: 1 1 0; align-items: center; justify-content: center;
-  gap: clamp(6px, 1.2vw, 12px); min-width: 0; min-height: 46px;
-  padding: 9px clamp(9px, 2vw, 18px);
-  border-radius: 999px; border: 1px solid rgba(126, 174, 240, .5);
+  gap: clamp(6px, 1.2vw, 12px); min-width: 0; min-height: 52px;
+  padding: 10px clamp(9px, 2vw, 18px);
+  border-radius: 999px; border: 0;
   font-size: clamp(12px, 1.7vw, 15px); line-height: 1.2; font-weight: 650;
   white-space: nowrap; color: #f5f8ff;
-  box-shadow: 0 5px 14px rgba(2, 12, 35, .14);
   -webkit-tap-highlight-color: transparent; touch-action: manipulation;
 }
-html.droply-web.droply-iphone .ios-upload-actions button svg {
+html.droply-web .web-upload-actions button svg {
   flex: none; width: clamp(18px, 2.4vw, 24px);
   height: clamp(18px, 2.4vw, 24px);
 }
-html.droply-web.droply-iphone .ios-upload-actions .ios-add-friend {
-  background: linear-gradient(180deg, rgba(58, 99, 164, .24), rgba(22, 43, 80, .43));
+html.droply-web .web-upload-actions .web-add-friend {
+  background: transparent;
 }
-html.droply-web.droply-iphone .ios-upload-actions .ios-select-file {
+html.droply-web .web-upload-actions .web-select-file {
   background: linear-gradient(120deg, #2599f8 0%, #1554f4 100%);
-  border-color: rgba(53, 158, 255, .75);
   box-shadow: 0 6px 20px rgba(15, 84, 224, .19);
 }
-html.droply-web.droply-iphone .ios-action-divider {
-  flex: 0 0 1px; height: 31px; background: rgba(116, 158, 225, .26);
+html.droply-web .web-upload-actions .web-add-friend:hover {
+  background: rgba(126,174,240,.12);
 }
-html.droply-web.droply-iphone .ios-upload-actions button:focus-visible {
+html.droply-web .web-upload-actions button:focus-visible {
   outline: 2px solid #a6cdff; outline-offset: 3px;
 }
+html.droply-web #drop > p { margin-top: 0; }
+html.droply-web #drop > h2 { margin-top: 2px; }
+html.droply-web #pair { align-items: stretch; }
 @media (orientation: landscape) {
-  html.droply-web.droply-iphone #drop {
+  html.droply-web #drop {
     gap: 0; min-height: 148px; padding: 16px 14px;
   }
-  html.droply-web.droply-iphone .ios-upload-actions { width: min(580px, 85%); }
+  html.droply-web .web-upload-actions { width: min(620px, 90%); }
 }
 @media (orientation: landscape) and (max-height: 500px) {
-  html.droply-web.droply-iphone #drop {
+  html.droply-web #drop {
     flex: 1 0 145px; min-height: 145px; padding: 12px 10px;
   }
-  html.droply-web.droply-iphone #drop > .ico svg { width: 29px; height: 29px; }
-  html.droply-web.droply-iphone .ios-upload-actions button {
+  html.droply-web #drop > .ico svg { width: 29px; height: 29px; }
+  html.droply-web .web-upload-actions button {
     min-height: 44px; padding-block: 8px;
   }
 }
 @media (orientation: portrait) {
-  html.droply-web.droply-iphone #drop {
+  html.droply-web #drop {
     min-height: 160px; padding: 20px 10px; gap: 4px;
   }
-  html.droply-web.droply-iphone .ios-upload-actions { width: min(430px, 100%); gap: 9px; }
-  html.droply-web.droply-iphone .ios-upload-actions button { min-height: 46px; padding-inline: 10px; }
+  html.droply-web .web-upload-actions { width: min(560px, 100%); }
+  html.droply-web .web-upload-actions button { min-height: 46px; padding-inline: 10px; }
 }
 @media (orientation: portrait) and (max-width: 355px) {
-  html.droply-web.droply-iphone .ios-upload-actions { gap: 6px; }
-  html.droply-web.droply-iphone .ios-upload-actions button {
+  html.droply-web .web-upload-actions button {
     gap: 5px; font-size: 11.5px; padding-inline: 6px;
   }
-  html.droply-web.droply-iphone .ios-upload-actions button svg { width: 18px; height: 18px; }
+  html.droply-web .web-upload-actions button svg { width: 18px; height: 18px; }
 }
 
 /* Only the browser app on touch devices: iOS Safari focuses and zooms text

@@ -7,6 +7,14 @@ plugins {
 // distributed debug APK: CI debug signing keys can differ, and uninstalling
 // the existing APK would delete its locally protected device identity.
 val qrSharingPreview = project.findProperty("droplyQrSharingPreview") == "true"
+val droplyNewInstall = project.findProperty("droplyNewInstall") == "true"
+val repoRoot = rootProject.projectDir.parentFile
+val packageJson = groovy.json.JsonSlurper().parse(repoRoot.resolve("package.json")) as Map<*, *>
+val droplyVersion = project.findProperty("droplyVersion")?.toString() ?: packageJson["version"].toString()
+val versionParts = droplyVersion.substringBefore('-').split('.').map(String::toInt)
+require(versionParts.size == 3 && versionParts.all { it in 0..999 }) { "DROPLY version must use major.minor.patch" }
+val droplyVersionCode = versionParts[0] * 1_000_000 + versionParts[1] * 1_000 + versionParts[2]
+val releaseKeystorePath = System.getenv("DROPLY_ANDROID_KEYSTORE")
 
 android {
     namespace = "com.droply.android"
@@ -20,16 +28,41 @@ android {
     kotlinOptions { jvmTarget = "17" }
 
     defaultConfig {
-        applicationId = if (qrSharingPreview) "com.droply.android.qrpreview" else "com.droply.android"
+        applicationId = when {
+            qrSharingPreview -> "com.droply.android.qrpreview"
+            droplyNewInstall -> "com.droply.android.release"
+            else -> "com.droply.android"
+        }
         minSdk = 29
         targetSdk = 36
-        versionCode = if (qrSharingPreview) 10 else 9
-        versionName = if (qrSharingPreview) "2.8.15-qr-preview" else "2.8.15"
+        versionCode = if (qrSharingPreview) 10 else if (droplyNewInstall) droplyVersionCode else 9
+        versionName = if (qrSharingPreview) "2.8.15-qr-preview" else droplyVersion
         manifestPlaceholders["droplyAppLabel"] =
-            if (qrSharingPreview) "Droply QR Preview" else "Droply"
+            when {
+                qrSharingPreview -> "Droply QR Preview"
+                droplyNewInstall -> "Droply (New)"
+                else -> "Droply"
+            }
     }
 
-    buildFeatures { buildConfig = false }
+    signingConfigs {
+        create("droplyRelease") {
+            if (!releaseKeystorePath.isNullOrBlank()) {
+                storeFile = file(releaseKeystorePath)
+                storePassword = System.getenv("DROPLY_ANDROID_STORE_PASSWORD")
+                keyAlias = System.getenv("DROPLY_ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("DROPLY_ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("droplyRelease")
+        }
+    }
+
+    buildFeatures { buildConfig = true }
 
     sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/droply-web"))
 }
@@ -40,7 +73,6 @@ dependencies {
     implementation("androidx.core:core:1.13.1")
 }
 
-val repoRoot = rootProject.projectDir.parentFile
 val webAssets = layout.buildDirectory.dir("generated/droply-web/www")
 val prepareDroplyWeb by tasks.registering(Sync::class) {
     into(webAssets)

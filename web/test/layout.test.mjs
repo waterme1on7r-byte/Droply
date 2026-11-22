@@ -59,11 +59,11 @@ test('iPhone landscape uses the visible Safari viewport with a compact two-colum
   assert.match(css, /max-height: calc\(100dvh - var\(--iphone-landscape-nav\) - 12px\)/);
 });
 
-test('Add Friend does not automatically focus code entry on touch browsers or Android', async () => {
+test('Add Friend does not automatically focus code entry on Web or Android', async () => {
   const html = await readFile(new URL('../../index.html', import.meta.url), 'utf8');
   assert.match(html, /const mobileFriendDialog = !!window\.DroplyAndroid/);
   assert.match(html, /!!window\.DroplyWeb && \(navigator\.maxTouchPoints > 0/);
-  assert.match(html, /if \(!mobileFriendDialog\) \$\('#codeIn'\)\.focus\(\)/);
+  assert.match(html, /if \(!mobileFriendDialog && !window\.DroplyWeb\) \$\('#codeIn'\)\.focus\(\)/);
   assert.doesNotMatch(html, /\$\('#addFriend'\)\.classList\.remove\('hidden'\); \$\('#codeIn'\)\.focus\(\)/);
 });
 

@@ -51,7 +51,7 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 #status i{width:7px;height:7px;border-radius:50%;background:var(--err)}
 #status.on{color:var(--ok);border-color:rgba(126,232,193,.3);background:rgba(126,232,193,.08)}#status.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}
 .pairwrap{position:relative}
-#pair{display:flex;align-items:center}
+#pair{display:flex;align-items:stretch}
 .pcard{flex:1;display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:18px;cursor:pointer;transition:.15s;min-width:0}
 .pcard:hover{border-color:rgba(90,150,255,.5)}
 .pcard>div:last-child{min-width:0}
@@ -76,7 +76,7 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 #pair.flow-error .packet.in{display:none}
 @media(prefers-reduced-motion:reduce){#pair .packet.out,#pair.flow-in .packet.in{animation:none;opacity:1}#pair.flow-in:not(.flow-out) .packet.out{display:none}#pair.flow-in .packet.in{left:auto;right:8px}}
 #pair:not(.live) .link{color:var(--mute)}
-.peer{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;border:1px solid transparent;transition:.15s;font-weight:600;color:var(--gold)}
+.peer{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:12px;cursor:pointer;border:1px solid transparent;transition:.15s;font-weight:600;color:var(--gold)}
 .peer:hover{background:var(--card2)}.peer.sel{background:rgba(59,130,246,.14);border-color:rgba(90,150,255,.5)}
 .peer::after{content:'';margin-left:auto;width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.15)}
 .peer.off{color:var(--mute)}.peer.off::after{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.12)}
@@ -96,7 +96,7 @@ h1{font-family:var(--cond);font-size:38px;line-height:56px;height:56px;font-weig
 #picker{position:absolute;top:calc(100% + 8px);right:0;width:370px;max-width:100%;max-height:440px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px;z-index:5;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .empty{color:var(--mute);font-size:13px;padding:14px 12px;line-height:1.6;text-align:center;font-weight:400}
 .av{width:50px;height:50px;border-radius:14px;color:var(--gold);font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
-.peer .av{width:40px;height:40px;font-size:15px}
+.peer .av{width:40px;height:40px;font-size:15px;border:1px solid rgba(148,190,255,.42);box-shadow:0 0 0 2px rgba(59,130,246,.12)}
 .av img{width:100%;height:100%;object-fit:cover}.av.big{width:104px;height:104px;border-radius:24px;font-size:40px;cursor:pointer;box-shadow:0 0 0 4px rgba(59,130,246,.22)}
 #setupAvatarWrap{position:relative;flex:none}
 #removeAvatar{position:absolute;top:-8px;right:-8px;width:28px;height:28px;padding:0;border:2px solid var(--win);border-radius:50%;background:#26334d;color:#fff;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 4px 14px rgba(0,0,0,.32)}
@@ -360,19 +360,6 @@ function avatar(src, name, big, self) {
   if (src) { const i = new Image(); i.onload = () => { d.textContent = ''; d.appendChild(i); }; i.src = src; }
   return d;
 }
-function deviceBadge(platform) {
-  const labels = { win32: 'Windows', darwin: 'macOS', linux: 'Linux', 'android-phone': 'Android phone', 'android-tablet': 'Android tablet', 'android-tv': 'Android TV', web: 'Web' };
-  if (!Object.prototype.hasOwnProperty.call(labels, platform)) return null;
-  const badge = document.createElement('span'); badge.className = 'device-badge';
-  badge.title = 'Using ' + labels[platform]; badge.setAttribute('aria-label', badge.title); badge.setAttribute('role', 'img');
-  const shape = platform === 'android-phone' ? '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M10 18h4"/>'
-    : platform === 'android-tablet' ? '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M10 18h4"/>'
-    : platform === 'android-tv' ? '<rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 22h8m-4-4v4"/>'
-    : ['darwin', 'web'].includes(platform) ? '<rect x="4" y="3" width="16" height="13" rx="1"/><path d="M2 20h20l-2-4H4z"/>'
-    : '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/>';
-  badge.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + shape + '</svg>';
-  return badge;
-}
 const SUPPORTED_PLATFORMS = new Set(['win32', 'darwin', 'linux', 'android-phone', 'android-tablet', 'android-tv', 'web']);
 function platformLabel(platform) {
   return ({ win32: 'Windows', darwin: 'macOS', linux: 'Linux', 'android-phone': 'Android phone', 'android-tablet': 'Android tablet', 'android-tv': 'Android TV', web: 'Web' })[platform] || '';
@@ -380,11 +367,6 @@ function platformLabel(platform) {
 function peerPlatform(id) {
   const live = peers.find(p => p.id === id);
   return live?.platform || announcedPeerPlatforms.get(id) || (webPeerIds.has(id) ? 'web' : undefined);
-}
-function withDeviceBadge(image, platform) {
-  const badge = deviceBadge(platform);
-  if (!badge) return image;
-  const frame = document.createElement('span'); frame.className = 'av-frame'; frame.append(image, badge); return frame;
 }
 let friendHoverCard = null;
 function hideFriendHover() { if (friendHoverCard) friendHoverCard.classList.add('hidden'); }
@@ -399,11 +381,9 @@ function attachFriendHover(target, friendId) {
       document.body.append(friendHoverCard);
     }
     friendHoverCard.replaceChildren();
-    const icon = deviceBadge(online?.platform || peerPlatform(friendId));
-    if (icon) { icon.className = 'friend-hover-device'; friendHoverCard.append(icon); }
     const text = h('div', 'friend-hover-text'); text.append(h('b', null, online?.name || friend.name));
-    const device = icon ? ' · ' + icon.title : '';
-    text.append(h('small', null, (online ? 'Online' : 'Offline') + device)); friendHoverCard.append(text);
+    const device = platformLabel(online?.platform || peerPlatform(friendId));
+    text.append(h('small', null, (online ? 'Online' : 'Offline') + (device ? ' · Using ' + device : ''))); friendHoverCard.append(text);
     friendHoverCard.classList.remove('hidden');
     const anchor = target.getBoundingClientRect(), box = friendHoverCard.getBoundingClientRect();
     let left = anchor.right + 12; if (left + box.width > innerWidth - 12) left = anchor.left - box.width - 12;
@@ -454,7 +434,7 @@ function renderPeers() {
   l.appendChild(h('div', 'sect', 'Friends · ' + peers.length + ' online'));
   [...friends].sort((a, b) => (on.has(b.id) - on.has(a.id)) || byName(a, b)).forEach(f => {
     const el = document.createElement('div'); el.className = 'peer' + (f.id === sel ? ' sel' : '') + (on.has(f.id) ? '' : ' off');
-    const photo = withDeviceBadge(avatar(f.av, f.name), peerPlatform(f.id));
+    const photo = avatar(f.av, f.name);
     attachFriendHover(photo, f.id); el.appendChild(photo);
     const identity = h('div', 'peer-identity');
     identity.append(h('span', 'peer-name', f.name));
@@ -509,7 +489,6 @@ function renderRail() {
     const x = h('button', 'frx'); x.innerHTML = ICON.x; x.title = 'Remove friend'; x.setAttribute('aria-label', 'Remove ' + f.name);
     x.onclick = ev => { ev.stopPropagation(); confirmRemove(f); };
     el.append(a, h('i', 'dot'), x);
-    const badge = deviceBadge(on.has(f.id) ? peerPlatform(f.id) : undefined); if (badge) el.append(badge);
     el.onclick = () => { selectFriend(f.id); showProfile(f); };
     l.appendChild(el);
   });
@@ -525,10 +504,12 @@ function updateDrop() {
   const device = p ? peerPlatform(p.id) : undefined;
   const deviceName = platformLabel(device);
   $('#peerSub').textContent = p ? (deviceName ? 'Online · Using ' + deviceName : 'Online') : f ? 'Offline' : (peers.length ? peers.length + ' online' : friends.length ? 'No friends online' : 'No friends yet');
-  const n = withDeviceBadge(avatar(shown && (shown.av || f?.av), shown ? shown.name : '+'), device); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
+  const n = avatar(shown && (shown.av || f?.av), shown ? shown.name : '+'); n.id = 'peerAv'; $('#peerAv').replaceWith(n);
   if (shown) attachFriendHover(n, shown.id);
 }
 function setStatus(on, text) {
+  window.DroplyConnectionOnline = !!on;
+  window.updateProfileConnection?.(on);
   if (typeof connectionText !== 'undefined') { connectionText = on ? 'Connected to the signaling server. Friends appear when both devices are online.' : (text || 'Connecting to the signaling server...'); const detail = $('#connectionDetail'); if (detail) detail.textContent = connectionText; } $('#status').classList.toggle('on', on); $('#status span').textContent = text || (on ? 'Connected' : 'Connecting…'); }
 const transferCards = new Map();
 const activeCard = state => state === 'sending' || state === 'finishing';
@@ -867,7 +848,7 @@ function showProfile(f) {
   cp.onclick = () => copyCode(cp, f.code);
   box.append(h('code', null, f.code), cp);
   field.append(h('small', null, 'Unique code'), box, h('small', 'hint', 'Share this code so someone else can add ' + f.name + '.'));
-  openCard(x, withDeviceBadge(avatar(f.av, f.name, true), platform), h('h2', null, f.name), st, field);
+  openCard(x, avatar(f.av, f.name, true), h('h2', null, f.name), st, field);
 }
 function confirmRemove(f) {
   const btns = h('div', 'btns'), no = h('button', 'ghost', 'Cancel'), yes = h('button', 'danger', 'Remove');
@@ -1169,7 +1150,7 @@ function openSetup(edit) {
   $('#codeRow').classList.toggle('hidden', !edit); $('#setupX').classList.toggle('hidden', !edit); $('#saveBtn').textContent = edit ? 'Save' : 'Get started';
   if (edit) deviceCode(me.id).then(c => { $('#myCode').textContent = c; });
   $('#updateBtn').classList.toggle('hidden', !edit || !!window.DroplyWeb);
-  $('#nameInput').focus();
+  if (!window.DroplyWeb) $('#nameInput').focus();
 }
 const closeSetup = () => $('#setup').classList.add('hidden');
 $('#setupX').onclick = closeSetup;
@@ -1272,13 +1253,12 @@ function openAddFriend() {
   if (!window.DroplyAndroid && !$('#addFriend').classList.contains('hidden')) { closeAddFriend(); return; }
   $('#picker').classList.add('hidden'); closeFriendRequests(false); $('#addMsg').textContent = ''; $('#codeIn').value = '';
   $('#addFriend').classList.remove('hidden');
-  // On touch devices, focusing opens the software keyboard and can trigger
-  // browser viewport zoom. Keep focus on the Add Friend button until the
-  // person explicitly taps the code field. Desktop retains keyboard focus.
+  // Web keeps the page unobstructed until the user chooses the code field.
+  // Native desktop retains keyboard focus when its Add Friend panel opens.
   const mobileFriendDialog = !!window.DroplyAndroid ||
     (!!window.DroplyWeb && (navigator.maxTouchPoints > 0 ||
       window.matchMedia?.('(pointer: coarse)').matches));
-  if (!mobileFriendDialog) $('#codeIn').focus();
+  if (!mobileFriendDialog && !window.DroplyWeb) $('#codeIn').focus();
   if (!window.DroplyAndroid) {
     $('#addFriend').setAttribute('aria-modal', 'false');
     positionAddFriend();
@@ -1327,7 +1307,7 @@ $('#gearBtn').onclick = () => openSetup(true);
 const togglePicker = e => { e.stopPropagation(); $('#addMsg').textContent = ''; $('#picker').classList.toggle('hidden'); };
 $('#peerBox').onclick = togglePicker; $('#peopleBtn').onclick = openFriendRequests;
 document.addEventListener('click', e => { if (!e.composedPath().includes($('#picker'))) $('#picker').classList.add('hidden'); });
-window.addEventListener('focus', () => { if (!$('#setup').classList.contains('hidden')) $('#nameInput').focus(); });
+window.addEventListener('focus', () => { if (!window.DroplyWeb && !$('#setup').classList.contains('hidden')) $('#nameInput').focus(); });
 api.on('app-dialog', d => {
   if (!d || !Number.isSafeInteger(d.id)) return;
   const overlay = $('#appDialog'), title = $('#appDialogTitle'), text = $('#appDialogText'), buttons = $('#appDialogButtons');

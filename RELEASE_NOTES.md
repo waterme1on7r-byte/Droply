@@ -1,3 +1,12 @@
+# DROPLY 2.8.16
+
+- Align profile identity and connection status across Windows, macOS, Android, and Web.
+- Remove device badges from profile and friend photos; device names remain available in profile and friend details.
+- Improve friend photo spacing, sender/receiver card alignment, and QR-code instructions spacing.
+- Add the paired Add Friend / Select File panel to the Web app and prevent Web text fields from opening the keyboard automatically.
+- Align the Android tablet and TV wordmark with the app icon.
+- Include Windows, macOS, and a signed Android APK in one GitHub release. The Android APK installs side-by-side with the existing app and has a separate device code.
+
 # DROPLY 2.8.12
 
 - Restore the main window correctly from the system tray, including minimized and hidden windows.

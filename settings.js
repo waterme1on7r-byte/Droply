@@ -69,9 +69,10 @@ function renderSettings(section) {
       ? '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg>'
       : '<svg width="21" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="13" rx="1"/><path d="M1 20h22M8 16v4m8-4v4"/></svg>';
     device.prepend(icon);
+    const connected = h('span', 'profile-connection ' + (window.DroplyConnectionOnline ? 'online' : 'offline'), window.DroplyConnectionOnline ? 'Online' : 'Offline');
     const edit = window.DroplyWeb ? h('div', 'profile-edit-actions') : null;
     if (edit) settingAction(edit, 'Edit name & photo', () => openSetup(true));
-    hero.append(av, h('strong', 'profile-hero-name', me.name), device);
+    hero.append(av, h('strong', 'profile-hero-name', me.name), device, connected);
     if (edit) hero.append(edit);
     body.append(hero);
     if (!edit) settingAction(actions(), 'Edit name & photo', () => openSetup(true));
@@ -149,6 +150,13 @@ function renderSettings(section) {
     }
   }
 }
+window.updateProfileConnection = on => {
+  const status = document.querySelector('.profile-connection');
+  if (!status) return;
+  status.classList.toggle('online', !!on);
+  status.classList.toggle('offline', !on);
+  status.textContent = on ? 'Online' : 'Offline';
+};
 async function initSettings() {
   try { ownPlatform = (await api.getWindowChrome?.())?.platform || (window.DroplyWeb ? 'web' : 'desktop'); } catch {}
   const pane = h('section', 'hidden'); pane.id = 'settingsPane'; pane.setAttribute('aria-label', 'Settings');

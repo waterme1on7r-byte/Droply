@@ -93,7 +93,7 @@
   friendStrip.setAttribute('aria-label', 'Friends');
   friendStrip.innerHTML = '<div class="strip-heading"><b>Friends</b><small>0 online · 0 offline</small></div><div class="strip-friends"></div>';
   document.querySelector('.pairwrap').before(friendStrip);
-  window.renderAndroidFriends = (friends, peers, selected, resolvePlatform) => {
+  window.renderAndroidFriends = (friends, peers, selected) => {
     const online = new Set(peers.map(peer => peer.id));
     const list = friendStrip.querySelector('.strip-friends');
     list.replaceChildren();
@@ -119,10 +119,9 @@
       const frame = document.createElement('span');
       frame.className = 'strip-avatar';
       const image = avatar(friend.av, friend.name);
-      const badge = withDeviceBadge(image, resolvePlatform?.(friend.id));
       const dot = document.createElement('i');
       dot.className = 'strip-dot';
-      frame.append(badge, dot);
+      frame.append(image, dot);
       const name = document.createElement('span');
       name.className = 'strip-name';
       name.textContent = friend.name;
@@ -136,31 +135,34 @@
   };
   document.addEventListener('DOMContentLoaded', () => {
     const main = document.querySelector('main');
-    // iOS Web only: use the approved two-button mobile transfer panel.
-    // Reuse existing friend and file inputs instead of altering the renderer.
-    if (document.documentElement.classList.contains('droply-iphone')) {
+    // Keep Web's upload and friend actions visible together on every screen.
+    // Reuse the existing friend and file controls so transfer logic stays shared.
+    {
       const drop = document.querySelector('#drop');
       if (drop) {
+        const title = drop.querySelector('#dropTitle');
+        const hint = drop.querySelector(':scope > p');
+        if (title) title.textContent = 'Drop a file to share';
+        if (hint) hint.firstChild.textContent = 'or pick one from your device ';
         const actions = document.createElement('div');
-        actions.className = 'ios-upload-actions';
+        actions.className = 'web-upload-actions';
         actions.setAttribute('role', 'group');
         actions.setAttribute('aria-label', 'Transfer actions');
         actions.innerHTML =
-          '<button type="button" class="ios-add-friend">' +
+          '<button type="button" class="web-add-friend">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
               '<circle cx="9" cy="7" r="3.4"/><path d="M2.5 20v-2c0-3.2 2.6-5.2 6.5-5.2s6.5 2 6.5 5.2v2M19 9v8m-4-4h8"/>' +
             '</svg><span>Add Friend</span></button>' +
-          '<span class="ios-action-divider" aria-hidden="true"></span>' +
-          '<button type="button" class="ios-select-file">' +
+          '<button type="button" class="web-select-file">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
               '<path d="M6 2.5h8l4.5 4.5V21H6zM14 2.5V7h4.5"/>' +
             '</svg><span>Select File</span></button>';
         drop.querySelector('.ico')?.after(actions);
-        actions.querySelector('.ios-add-friend').addEventListener('click', event => {
+        actions.querySelector('.web-add-friend').addEventListener('click', event => {
           event.stopPropagation();
           document.querySelector('#addFriendBtn')?.click();
         });
-        actions.querySelector('.ios-select-file').addEventListener('click', event => {
+        actions.querySelector('.web-select-file').addEventListener('click', event => {
           event.stopPropagation();
           if (drop.classList.contains('off')) {
             // Avoid silently selecting a file that cannot yet be sent.

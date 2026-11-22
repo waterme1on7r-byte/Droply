@@ -140,7 +140,7 @@ function createPreviewServer(options = {}) {
       '<body><form method="post" action="' + PREFIX + 'login"><h1>Droply</h1>' +
       '<input type="hidden" name="csrf" value="' + formToken + '">' +
       '<p>Private browser testing. Only invited testers can enter this preview.</p>' +
-      notice + '<label for="password">Test access password</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus>' +
+      notice + '<label for="password">Test access password</label><input id="password" name="password" type="password" autocomplete="current-password" required>' +
       '<button type="submit">Enter Droply</button><p><small>Testing uses the existing Droply signaling service. Your browser gets its own device identity.</small></p></form></body></html>';
   }
   const validOrigin = req => {
