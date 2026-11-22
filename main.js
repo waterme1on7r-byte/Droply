@@ -6,6 +6,7 @@ function startupTrace(...values) {
   const line = `${new Date().toISOString()} ${values.map(x => x && x.stack || String(x)).join(' ')}\n`;
   try {
     const file = path.join(require('os').homedir(), 'Library', 'Logs', 'Droply-startup.log');
+    fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.appendFileSync(file, line);
   } catch {}
   console.error('[Droply startup]', ...values);
