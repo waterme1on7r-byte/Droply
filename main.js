@@ -247,7 +247,9 @@ ipcMain.handle('free-space', async (e, tid) => {
 ipcMain.on('show-file', (e, p) => { if (fromUI(e) && savedPaths.has(p)) shell.showItemInFolder(p); });
 
 function start() {
+  log('startup: app ready', JSON.stringify({ version: app.getVersion(), platform: process.platform, arch: process.arch, packaged: app.isPackaged }));
   desktop = require('./desktop').createDesktop({ app, ipcMain, dialog, shell, clipboard, fromUI, toUI, window: () => win, safeName, log });
+  log('startup: desktop services ready');
   // Eski 'Yolla' sürümünden profili taşı
   try {
     const prev = path.join(app.getPath('appData'), 'Yolla', 'profile.json');
@@ -280,6 +282,7 @@ function start() {
     // Electron otherwise throttles background renderer execution.
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false }
   });
+  log('startup: main window created');
   ipcMain.handle('get-window-chrome', e => fromUI(e) ? { platform: process.platform, custom: process.platform === 'win32', rightControls: process.platform !== 'darwin', maximized: win.isMaximized() } : null);
   ipcMain.handle('window-control', (e, action) => {
     if (!fromUI(e) || !['minimize', 'toggle-maximize', 'close'].includes(action)) return false;
@@ -293,6 +296,7 @@ function start() {
   const accessConfig = { window: {} };
   require('vm').runInNewContext(fs.readFileSync(path.join(__dirname, 'config.js'), 'utf8'), accessConfig, { timeout: 1000 });
   const nativeAccess = require('./access').createAccess({ app, ipcMain, safeStorage, fromUI, toUI, getProfile: () => profile, serverURL: accessConfig.window.CONFIG.SERVER_URL });
+  log('startup: device access initialized');
   // An OS sleep or network change may leave a WebSocket appearing connected.
   // Refresh signaling immediately on wake, and test it when the window returns.
   powerMonitor.on('resume', () => nativeAccess.resume());
@@ -316,7 +320,7 @@ function start() {
   // Show the window as soon as it has painted, but never stay invisible: also show on load failure / crash / after 4 s
   let shown = false;
   const show = () => { if (shown || !win || win.isDestroyed()) return; shown = true; win.show(); win.focus(); win.webContents.focus(); };
-  win.once('ready-to-show', show);
+  win.once('ready-to-show', () => { log('startup: renderer ready to show'); show(); });
   const t = setTimeout(show, 4000); if (t.unref) t.unref();
   win.webContents.on('did-fail-load', (_e, code, desc, url, isMain) => { if (isMain) { log('did-fail-load', code, desc, url); show(); } });
   win.webContents.on('render-process-gone', (_e, d) => { log('render-process-gone', JSON.stringify(d)); show(); });
@@ -330,11 +334,12 @@ function start() {
     }
   });
   ipcMain.handle('check-updates', e => fromUI(e) ? updates.check(true) : undefined);
-  win.webContents.once('did-finish-load', () => updates.start());
+  win.webContents.once('did-finish-load', () => { log('startup: renderer loaded'); updates.start(); });
   win.loadFile(path.join(__dirname, 'index.html')).catch(err => { log('loadFile failed', err); show(); });
   // Windows'ta klavye odağı pencereye geçmeyebiliyor (özellikle installer'dan otomatik açılınca)
   win.on('focus', () => { win.webContents.focus(); nativeAccess.checkConnection(); });
 }
+if (!gotLock) log('startup: another instance already owns the app lock');
 if (gotLock) app.whenReady().then(start).catch(err => {
   log('startup failed', err);
   try { dialog.showErrorBox('Droply could not start', String(err && err.stack || err)); } catch {}

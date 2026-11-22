@@ -1,9 +1,11 @@
-# DROPLY 2.8.17
+# DROPLY 2.8.18
 
 - Add Show QR, Copy QR, and Save QR actions to accepted friends profiles across Windows, macOS, Android, and Web.
 - Keep the three QR actions together in one compact row; the QR can be expanded inline from the friend profile.
 - Use the friends public device code in their QR image; friend request acceptance and transfer approval remain unchanged.
 - Include the latest shared renderer and Android clipboard/Downloads QR image support in the combined platform release.
+- Scale the macOS app icon to match the visual size of other Dock icons.
+- Add macOS startup checkpoints to the diagnostic log to help identify launch failures.
 # DROPLY 2.8.16
 
 - Align profile identity and connection status across Windows, macOS, Android, and Web.

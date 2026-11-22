@@ -49,7 +49,7 @@ Droply does not require a user account, email address, phone number, or administ
 
 Get the current installers from [GitHub Releases](https://github.com/waterme1on7r-byte/Droply/releases/latest).
 
-- **Android:** the combined 2.8.17 release includes a signed APK with QR sharing. It appears as **Droply (New)** and installs alongside the current app with a new device code. Keep the existing app installed until you have added your friends to the new one. Android 10+.
+- **Android:** the combined 2.8.18 release includes a signed APK with QR sharing. It appears as **Droply (New)** and installs alongside the current app with a new device code. Keep the existing app installed until you have added your friends to the new one. Android 10+.
 - **Windows:** installer (`.exe`). Uninstalling preserves the app profile, settings, friends, and encrypted device credential so a reinstall can continue with the same identity.
 - **macOS:** universal `.dmg` and `.zip`; macOS 12 Monterey or later is required. Builds are unsigned until Developer ID signing is configured, so macOS automatic installation is not available for unsigned builds.
 
@@ -147,7 +147,7 @@ Enter the affected device code and the private server `ADMIN_TOKEN` in the local
 
 Installed builds check for stable updates after launch and every four hours. You can also check from **Settings → Updates & About**. Droply asks before downloading and restarting; an active or pending transfer postpones a restart.
 
-To prepare a release, update `package.json` and `package-lock.json` to the same new version, commit and push `main`, then push a matching tag such as `v2.8.17`. The [build workflow](.github/workflows/build.yml) validates the version, runs desktop tests, builds Windows and universal macOS installers plus a signed Android APK, and creates a **draft** GitHub release containing all three platforms and desktop update metadata. The Android release signing key is stored only in GitHub Actions secrets. Review and test the draft assets before publishing; never reuse a published version.
+To prepare a release, update `package.json` and `package-lock.json` to the same new version, commit and push `main`, then push a matching tag such as `v2.8.18`. The [build workflow](.github/workflows/build.yml) validates the version, runs desktop tests, builds Windows and universal macOS installers plus a signed Android APK, and creates a **draft** GitHub release containing all three platforms and desktop update metadata. The Android release signing key is stored only in GitHub Actions secrets. Review and test the draft assets before publishing; never reuse a published version.
 
 More details: [UPDATES.md](UPDATES.md) and [release notes](RELEASE_NOTES.md).
 
