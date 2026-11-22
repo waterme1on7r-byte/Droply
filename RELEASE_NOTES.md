@@ -6,6 +6,7 @@
 - Include the latest shared renderer and Android clipboard/Downloads QR image support in the combined platform release.
 - Scale the macOS app icon to match the visual size of other Dock icons.
 - Add macOS startup checkpoints to the diagnostic log to help identify launch failures.
+
 # DROPLY 2.8.16
 
 - Align profile identity and connection status across Windows, macOS, Android, and Web.

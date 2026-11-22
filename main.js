@@ -247,7 +247,7 @@ ipcMain.handle('free-space', async (e, tid) => {
 ipcMain.on('show-file', (e, p) => { if (fromUI(e) && savedPaths.has(p)) shell.showItemInFolder(p); });
 
 function start() {
-  log('startup: app ready', JSON.stringify({ version: app.getVersion(), platform: process.platform, arch: process.arch, packaged: app.isPackaged }));
+  log('startup: app ready', JSON.stringify({ version: app.getVersion?.() || 'unknown', platform: process.platform, arch: process.arch, packaged: app.isPackaged }));
   desktop = require('./desktop').createDesktop({ app, ipcMain, dialog, shell, clipboard, fromUI, toUI, window: () => win, safeName, log });
   log('startup: desktop services ready');
   // Eski 'Yolla' sürümünden profili taşı
