@@ -21,7 +21,7 @@ The first Android release is a separate application (`com.droply.android`) and c
 
 In **Add friend**, choose **Show my QR code** to display your public device code. **Copy QR** places the QR image on Android's clipboard so it can be pasted into another app; **Save QR** saves a PNG in Downloads. The clipboard image uses a read-only scoped `FileProvider` URI; the private device credential is never included. A friend can scan a saved QR image, review the code, and press **Add** to request the connection. Friend request acceptance remains mandatory. Camera-based scanning can be unavailable in Android WebView, so choosing a saved QR image remains the supported fallback.
 
-The combined `v2.8.16` release includes a signed Android APK with the current renderer and QR sharing. It appears as **Droply (New)** and uses package `com.droply.android.release`, so Android installs it **alongside** the original `com.droply.android` app and creates a new device code. Keep the original app and its data until you have added your friends to the new installation. Android 10+ (API 29).
+The combined `v2.8.17` release includes a signed Android APK with the current renderer and QR sharing. It appears as **Droply (New)** and uses package `com.droply.android.release`, so Android installs it **alongside** the original `com.droply.android` app and creates a new device code. Keep the original app and its data until you have added your friends to the new installation. Android 10+ (API 29).
 
 To reproduce the separate preview build locally:
 
