@@ -18,15 +18,15 @@
     qr.addData(String(code).trim().toUpperCase());
     qr.make();
     const quiet = 4, cell = 12, modules = qr.getModuleCount(), pixels = (modules + quiet * 2) * cell;
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = pixels;
-    const pen = canvas.getContext('2d');
+    const output = document.createElement('canvas');
+    output.width = output.height = pixels;
+    const pen = output.getContext('2d');
     if (!pen) throw new Error('Canvas unavailable');
     pen.fillStyle = '#fff'; pen.fillRect(0, 0, pixels, pixels); pen.fillStyle = '#000';
     for (let row = 0; row < modules; row++) for (let col = 0; col < modules; col++) {
       if (qr.isDark(row, col)) pen.fillRect((col + quiet) * cell, (row + quiet) * cell, cell, cell);
     }
-    return canvas.toDataURL('image/png');
+    return output.toDataURL('image/png');
   }
   function pngBytes(dataUrl) {
     const prefix = 'data:image/png;base64,';
