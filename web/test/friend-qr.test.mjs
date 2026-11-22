@@ -111,9 +111,10 @@ test('Android QR preview is opt-in and cannot silently overwrite the installed A
     '.github/workflows/android-qr-preview.yml'
   ].map(path => readFile(root + '/' + path, 'utf8')));
   assert.match(gradle, /findProperty\("droplyQrSharingPreview"\) == "true"/);
-  assert.match(gradle, /applicationId = if \(qrSharingPreview\) "com\.droply\.android\.qrpreview" else "com\.droply\.android"/);
-  assert.match(gradle, /versionCode = if \(qrSharingPreview\) 10 else 9/);
-  assert.match(gradle, /"Droply QR Preview" else "Droply"/);
+  assert.match(gradle, /applicationId = when \{[\s\S]*qrSharingPreview -> "com\.droply\.android\.qrpreview"[\s\S]*droplyNewInstall -> "com\.droply\.android\.release"[\s\S]*else -> "com\.droply\.android"/);
+  assert.match(gradle, /versionCode = if \(qrSharingPreview\) 10 else if \(droplyNewInstall\) droplyVersionCode else 9/);
+  assert.match(gradle, /qrSharingPreview -> "Droply QR Preview"[\s\S]*droplyNewInstall -> "Droply \(New\)"[\s\S]*else -> "Droply"/);
+  assert.match(gradle, /create\("droplyRelease"\)/);
   assert.match(manifest, /android:label="\$\{droplyAppLabel\}"/);
   assert.match(native, /FileProvider\.getUriForFile\(this, "\$packageName\.friendqr", image\)/);
   assert.match(gradle, /"assets\/vendor\/qrcode\.js"/);
