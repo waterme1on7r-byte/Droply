@@ -64,10 +64,10 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
   assert.match(css, /grid-column: 1 \/ -1/);
   assert.doesNotMatch(html, /class="btn btn-primary nav-cta"/);
   assert.match(html, /<a href="#download">Download<\/a>/);
-  // The published native downloads are still the exact same releases.
-  assert.match(html, /id="hero-mac"[^>]*v2\.8\.15\/Droply-2\.8\.15-universal\.dmg/);
-  assert.match(html, /id="hero-win"[^>]*v2\.8\.15\/Droply-Setup-2\.8\.15\.exe/);
-  assert.match(html, /id="hero-android"[^>]*v2\.8\.15\/Droply-Android-2\.8\.15-debug-preview\.apk/);
+  // The published native downloads point at the current unified release.
+  assert.match(html, /id="hero-mac"[^>]*v2\.8\.16\/Droply-2\.8\.16-universal\.dmg/);
+  assert.match(html, /id="hero-win"[^>]*v2\.8\.16\/Droply-Setup-2\.8\.16\.exe/);
+  assert.match(html, /id="hero-android"[^>]*v2\.8\.16\/Droply-Android-2\.8\.16\.apk/);
 });
 
 
