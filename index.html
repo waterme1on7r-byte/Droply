@@ -849,7 +849,7 @@ function showProfile(f) {
   box.append(h('code', null, f.code), cp);
   field.append(h('small', null, 'Unique code'), box, h('small', 'hint', 'Share this code so someone else can add ' + f.name + '.'));
   const actions = h('div', 'friend-profile-qr-actions');
-  const showQr = h('button', 'primary', 'Show QR'), copyQr = h('button', 'ghost', 'Copy QR'), saveQr = h('button', 'ghost', 'Save QR');
+  const showQr = h('button', 'ghost', 'Show QR'), copyQr = h('button', 'ghost', 'Copy QR'), saveQr = h('button', 'ghost', 'Save QR');
   showQr.type = copyQr.type = saveQr.type = 'button';
   showQr.setAttribute('aria-expanded', 'false');
   const qrPanel = h('div', 'friend-profile-qr-panel'); qrPanel.hidden = true;

@@ -112,7 +112,6 @@ html[data-theme=light] .closeX{background:var(--card2);color:var(--mute)}
 /* QR actions on accepted-friend profile cards. Keep the three controls in one row. */
 .friend-profile-qr-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:100%;min-width:0}
 .friend-profile-qr-actions button{min-width:0;min-height:42px;padding:8px 5px;border:1px solid var(--line);border-radius:10px;font-size:11px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.friend-profile-qr-actions button.primary{background:linear-gradient(135deg,#278df4,#145cf2);color:#fff;border-color:transparent}
 .friend-profile-qr-actions button:disabled{opacity:.6;cursor:progress}
 .friend-profile-qr-panel{width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--card2)}
 .friend-profile-qr-panel[hidden]{display:none!important}
