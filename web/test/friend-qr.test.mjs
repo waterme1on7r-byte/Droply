@@ -77,7 +77,7 @@ test('Copy QR writes a PNG image and Save QR downloads the generated image', asy
   assert.match(qr, /window\.DroplyAndroid\.saveQrImage\(qr\.dataUrl, qr\.code\)/);
   assert.match(qr, /window\.api\.copyImage\(qr\.dataUrl\)/);
   assert.match(qr, /new ClipboardItem\(\{ 'image\/png': blob \}\)/);
-  assert.match(qr, /link\.download = 'Droply-Friend-QR\.png'/);
+  assert.match(qr, /link\.href = url; link\.download = 'Droply-Friend-QR\.png'/);
   // Never allow QR actions to contain a secret, server admin token, or a remote QR service.
   assert.doesNotMatch(qr, /ADMIN_TOKEN|privateKey|fetch\(/);
   assert.match(css, /#addFriend \.friend-qr-share-status:empty\{display:none\}/);
