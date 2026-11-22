@@ -1,8 +1,20 @@
 const { app, BrowserWindow, ipcMain, Notification, shell, session, dialog, clipboard, Tray, Menu, nativeImage, safeStorage, powerMonitor } = require('electron');
 const path = require('path'), fs = require('fs'), crypto = require('crypto');
+const startupDiagnostics = process.argv.includes('--diagnose-startup');
+function startupTrace(...values) {
+  if (!startupDiagnostics) return;
+  const line = `${new Date().toISOString()} ${values.map(x => x && x.stack || String(x)).join(' ')}\n`;
+  try {
+    const file = path.join(require('os').homedir(), 'Library', 'Logs', 'Droply-startup.log');
+    fs.appendFileSync(file, line);
+  } catch {}
+  console.error('[Droply startup]', ...values);
+}
+startupTrace('main module entered', `pid=${process.pid}`, `platform=${process.platform}`, `arch=${process.arch}`);
 
 // Second instance: quit right away and don't run any of the setup below
 const gotLock = app.requestSingleInstanceLock();
+startupTrace('single-instance lock', gotLock);
 if (!gotLock) app.quit();
 
 // Diagnostics: errors go to <userData>/droply.log (Windows: %APPDATA%\Droply\droply.log)
@@ -19,8 +31,9 @@ function log(...a) {
     fs.appendFileSync(file, line);
   } catch {}
 }
-process.on('unhandledRejection', e => log('unhandledRejection', e));
-process.on('uncaughtException', e => { log('uncaughtException', e); try { dialog.showErrorBox('Droply error', String(e && e.stack || e)); } catch {} });
+process.on('unhandledRejection', e => { startupTrace('unhandled rejection', e); log('unhandledRejection', e); });
+process.on('uncaughtException', e => { startupTrace('uncaught exception', e); log('uncaughtException', e); try { dialog.showErrorBox('Droply error', String(e && e.stack || e)); } catch {} });
+process.on('exit', code => startupTrace('process exit', code));
 
 // Windows: tie the taskbar button/pins to this app (must match build.appId in package.json)
 if (process.platform === 'win32') app.setAppUserModelId('com.droply.app');
@@ -247,8 +260,10 @@ ipcMain.handle('free-space', async (e, tid) => {
 ipcMain.on('show-file', (e, p) => { if (fromUI(e) && savedPaths.has(p)) shell.showItemInFolder(p); });
 
 function start() {
+  startupTrace('start() entered');
   log('startup: app ready', JSON.stringify({ version: app.getVersion?.() || 'unknown', platform: process.platform, arch: process.arch, packaged: app.isPackaged }));
   desktop = require('./desktop').createDesktop({ app, ipcMain, dialog, shell, clipboard, fromUI, toUI, window: () => win, safeName, log });
+  startupTrace('desktop services initialized');
   log('startup: desktop services ready');
   // Eski 'Yolla' sürümünden profili taşı
   try {
@@ -282,6 +297,7 @@ function start() {
     // Electron otherwise throttles background renderer execution.
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false }
   });
+  startupTrace('main window created');
   log('startup: main window created');
   ipcMain.handle('get-window-chrome', e => fromUI(e) ? { platform: process.platform, custom: process.platform === 'win32', rightControls: process.platform !== 'darwin', maximized: win.isMaximized() } : null);
   ipcMain.handle('window-control', (e, action) => {
@@ -320,7 +336,7 @@ function start() {
   // Show the window as soon as it has painted, but never stay invisible: also show on load failure / crash / after 4 s
   let shown = false;
   const show = () => { if (shown || !win || win.isDestroyed()) return; shown = true; win.show(); win.focus(); win.webContents.focus(); };
-  win.once('ready-to-show', () => { log('startup: renderer ready to show'); show(); });
+  win.once('ready-to-show', () => { startupTrace('renderer ready-to-show event'); log('startup: renderer ready to show'); show(); });
   const t = setTimeout(show, 4000); if (t.unref) t.unref();
   win.webContents.on('did-fail-load', (_e, code, desc, url, isMain) => { if (isMain) { log('did-fail-load', code, desc, url); show(); } });
   win.webContents.on('render-process-gone', (_e, d) => { log('render-process-gone', JSON.stringify(d)); show(); });
@@ -334,13 +350,14 @@ function start() {
     }
   });
   ipcMain.handle('check-updates', e => fromUI(e) ? updates.check(true) : undefined);
-  win.webContents.once('did-finish-load', () => { log('startup: renderer loaded'); updates.start(); });
-  win.loadFile(path.join(__dirname, 'index.html')).catch(err => { log('loadFile failed', err); show(); });
+  win.webContents.once('did-finish-load', () => { startupTrace('renderer did-finish-load'); log('startup: renderer loaded'); updates.start(); });
+  win.loadFile(path.join(__dirname, 'index.html')).catch(err => { startupTrace('loadFile failed', err); log('loadFile failed', err); show(); });
   // Windows'ta klavye odağı pencereye geçmeyebiliyor (özellikle installer'dan otomatik açılınca)
   win.on('focus', () => { win.webContents.focus(); nativeAccess.checkConnection(); });
 }
-if (!gotLock) log('startup: another instance already owns the app lock');
-if (gotLock) app.whenReady().then(start).catch(err => {
+if (!gotLock) { startupTrace('another instance already owns the app lock'); log('startup: another instance already owns the app lock'); }
+if (gotLock) app.whenReady().then(() => { startupTrace('app.whenReady resolved'); start(); }).catch(err => {
+  startupTrace('startup failed', err);
   log('startup failed', err);
   try { dialog.showErrorBox('Droply could not start', String(err && err.stack || err)); } catch {}
   app.quit();

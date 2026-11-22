@@ -5,7 +5,7 @@
 - Use the friends public device code in their QR image; friend request acceptance and transfer approval remain unchanged.
 - Include the latest shared renderer and Android clipboard/Downloads QR image support in the combined platform release.
 - Scale the macOS app icon to match the visual size of other Dock icons.
-- Add macOS startup checkpoints to the diagnostic log to help identify launch failures.
+- Add opt-in macOS startup tracing (`--diagnose-startup`) to help identify launch failures.
 
 # DROPLY 2.8.16
 
