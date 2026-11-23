@@ -32,7 +32,8 @@ function element(href = '') {
 
 async function simulate(navigator, response = { ok: false }) {
   const elements = {
-    'hero-mac': element('#download'),
+    'hero-mac': element(intelFallback),
+    'download-mac-auto': element(intelFallback),
     'download-mac': element(armFallback),
     'download-mac-intel': element(intelFallback),
     'mac-download-status': element(),
@@ -57,8 +58,9 @@ test('Safari-style MacIntel is never assumed to be an Intel CPU', async () => {
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Version/17.0 Safari/605.1.15',
     platform: 'MacIntel', maxTouchPoints: 0
   });
-  assert.equal(e['hero-mac'].href, '#download');
-  assert.match(e['mac-download-status'].textContent, /does not reveal its processor reliably/);
+  assert.equal(e['hero-mac'].href, intelFallback);
+  assert.equal(e['download-mac-auto'].href, intelFallback);
+  assert.match(e['mac-download-status'].textContent, /Intel installer works on Apple Silicon with Rosetta/);
   for (const id of ['download-mac', 'download-mac-intel']) {
     assert.ok(e[id].classList.contains('btn-outline'));
     assert.equal(e[id].recommended.hidden, true);
@@ -75,6 +77,7 @@ test('Apple Silicon browser architecture makes arm64 the recommendation', async 
     }
   });
   assert.equal(e['hero-mac'].href, armFallback);
+  assert.equal(e['download-mac-auto'].href, armFallback);
   assert.ok(e['download-mac'].classList.contains('btn-primary'));
   assert.ok(e['download-mac-intel'].classList.contains('btn-outline'));
   assert.equal(e['download-mac'].recommended.hidden, false);
@@ -91,6 +94,7 @@ test('Intel architecture makes x64 the recommendation, preserving Apple Silicon 
     }
   });
   assert.equal(e['hero-mac'].href, intelFallback);
+  assert.equal(e['download-mac-auto'].href, intelFallback);
   assert.ok(e['download-mac-intel'].classList.contains('btn-primary'));
   assert.ok(e['download-mac'].classList.contains('btn-outline'));
   assert.equal(e['download-mac-intel'].recommended.hidden, false);
@@ -110,7 +114,8 @@ test('iPad desktop user agent and Windows never receive a Mac processor recommen
     }
   ]) {
     const { elements: e } = await simulate(navigator);
-    assert.equal(e['hero-mac'].href, '#download');
+    assert.equal(e['hero-mac'].href, intelFallback);
+    assert.equal(e['download-mac-auto'].href, intelFallback);
     assert.ok(e['download-mac'].classList.contains('btn-outline'));
     assert.ok(e['download-mac-intel'].classList.contains('btn-outline'));
   }
@@ -122,7 +127,8 @@ test('unavailable processor hints stay manual and missing release metadata keeps
     platform: 'MacIntel', maxTouchPoints: 0,
     userAgentData: { platform: 'macOS', getHighEntropyValues: async () => { throw new Error('blocked'); } }
   }, { ok: false });
-  assert.equal(e['hero-mac'].href, '#download');
+  assert.equal(e['hero-mac'].href, intelFallback);
+  assert.equal(e['download-mac-auto'].href, intelFallback);
   assert.equal(e['download-mac'].href, armFallback);
   assert.equal(e['download-mac-intel'].href, intelFallback);
 });
@@ -149,6 +155,7 @@ test('latest release metadata refreshes both links without changing the architec
   assert.equal(e['download-mac'].href, armLatest);
   assert.equal(e['download-mac-intel'].href, intelLatest);
   assert.equal(e['hero-mac'].href, armLatest);
+  assert.equal(e['download-mac-auto'].href, armLatest);
   assert.equal(e['mac-release-version'].textContent, 'v2.9.0');
   assert.equal(e['hero-mac-version'].textContent, 'Free · Version 2.9.0');
   assert.equal(e['mac-arm-size'].textContent, '125 MB');
@@ -166,4 +173,22 @@ test('incomplete release assets never replace the known matching architecture li
   });
   assert.equal(e['download-mac'].href, armFallback);
   assert.equal(e['download-mac-intel'].href, intelFallback);
+});
+
+test('Safari automatically uses a Universal Mac installer when one is published', async () => {
+  const universal = 'https://github.com/waterme1on7r-byte/Droply/releases/download/v2.9.0/Droply-2.9.0-universal.dmg';
+  const { elements: e } = await simulate({
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Version/18.0 Safari/605.1.15',
+    platform: 'MacIntel', maxTouchPoints: 0
+  }, {
+    ok: true,
+    json: async () => ({ tag_name: 'v2.9.0', assets: [
+      { name: 'Droply-2.9.0-arm64.dmg', browser_download_url: 'https://github.com/waterme1on7r-byte/Droply/releases/download/v2.9.0/Droply-2.9.0-arm64.dmg' },
+      { name: 'Droply-2.9.0.dmg', browser_download_url: 'https://github.com/waterme1on7r-byte/Droply/releases/download/v2.9.0/Droply-2.9.0.dmg' },
+      { name: 'Droply-2.9.0-universal.dmg', browser_download_url: universal }
+    ] })
+  });
+  assert.equal(e['hero-mac'].href, universal);
+  assert.equal(e['download-mac-auto'].href, universal);
+  assert.match(e['mac-download-status'].textContent, /Universal installer/);
 });
