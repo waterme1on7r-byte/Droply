@@ -1,4 +1,16 @@
-/* Mac downloads: equally visible manual choices; emphasize only a detected recommendation. */
+/* A single primary Mac download; optional architecture-specific links remain accessible. */
+.mac-download-alternatives { margin-top: 12px; }
+.mac-download-alternatives summary {
+  cursor: pointer;
+  text-align: center;
+  color: #b7daff;
+  font-weight: 650;
+  font-size: .78rem;
+  text-underline-offset: 3px;
+}
+.mac-download-alternatives summary:hover { text-decoration: underline; }
+html[data-theme="light"] .mac-download-alternatives summary { color: #265688; }
+
 .mac-download-choices { display: grid; gap: 10px; margin-top: 20px; }
 .download-card .mac-download-choices .btn {
   width: 100%;
