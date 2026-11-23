@@ -3,10 +3,11 @@
   'use strict';
 
   const hero = document.getElementById('hero-mac');
+  const auto = document.getElementById('download-mac-auto');
   const armLink = document.getElementById('download-mac');
   const intelLink = document.getElementById('download-mac-intel');
   const status = document.getElementById('mac-download-status');
-  if (!hero || !armLink || !intelLink || !status) return;
+  if (!hero || !auto || !armLink || !intelLink || !status) return;
 
   const options = { arm64: armLink, x64: intelLink };
   const ua = navigator.userAgent || '';
@@ -17,6 +18,7 @@
   const isMac = !isIPad && !/Android/i.test(ua) &&
     (/Mac/i.test(platform) || /Macintosh|Mac OS X/i.test(ua));
   let detectedArchitecture = null;
+  let universalUrl = null;
 
   function applyRecommendation() {
     for (const [architecture, link] of Object.entries(options)) {
@@ -27,18 +29,27 @@
       if (label) label.hidden = !recommended;
     }
 
+    // Every main Mac button is always a direct .dmg link, never an in-page chooser.
+    // When architecture cannot be read, prefer a Universal build if published; until
+    // then use the Intel build, which can run on Apple Silicon using macOS Rosetta.
+    const selectedUrl = detectedArchitecture
+      ? options[detectedArchitecture].href
+      : (universalUrl || intelLink.href);
+    hero.href = selectedUrl;
+    auto.href = selectedUrl;
+
     if (detectedArchitecture) {
       const name = detectedArchitecture === 'arm64' ? 'Apple Silicon' : 'Intel';
-      hero.href = options[detectedArchitecture].href;
       hero.setAttribute('aria-label', `Download Droply for ${name} Mac`);
-      status.textContent = `Your browser reports ${name} architecture. The matching installer is recommended; both options remain available if this is incorrect (for example, when using Rosetta).`;
+      auto.setAttribute('aria-label', `Download Droply for ${name} Mac`);
+      status.textContent = `Mac download ready: ${name} installer. Click Download to start; other versions are optional below.`;
     } else {
-      // Never assume "MacIntel" from navigator.platform means an Intel CPU.
-      hero.href = '#download';
-      hero.setAttribute('aria-label', 'Choose an Apple Silicon or Intel Mac download');
-      status.textContent = isMac
-        ? 'Mac detected. This browser does not reveal its processor reliably. Choose Apple Silicon or Intel below; check Apple menu → About This Mac if unsure.'
-        : 'Downloading for a Mac? Choose Apple Silicon or Intel below.';
+      // Never treat "MacIntel" as Intel CPU proof: Safari uses it on Apple Silicon too.
+      hero.setAttribute('aria-label', 'Download Droply for Mac');
+      auto.setAttribute('aria-label', 'Download Droply for Mac');
+      status.textContent = universalUrl
+        ? 'Mac download ready: Universal installer works on Apple Silicon and Intel. Click Download to start.'
+        : 'Mac download ready. If this browser hides the chip type, the Intel installer works on Apple Silicon with Rosetta. Click Download to start.';
     }
   }
 
@@ -50,7 +61,7 @@
       if (/^(arm|arm64|aarch64)$/.test(architecture)) return 'arm64';
       if (/^(x86|x86_64|amd64)$/.test(architecture)) return 'x64';
     } catch (_) {
-      // Safari, privacy settings and unsupported browsers use the manual choice.
+      // Safari, privacy settings and unsupported browsers use the compatible fallback.
     }
     return null;
   }
@@ -74,10 +85,13 @@
       const intelAsset = release.assets.find(asset => /^Droply-[0-9][0-9A-Za-z.\-]*\.dmg$/i.test(asset.name) && !/-arm64\.dmg$/i.test(asset.name));
       const armUrl = downloadUrl(armAsset);
       const intelUrl = downloadUrl(intelAsset);
+      const universalAsset = release.assets.find(asset => /^Droply-[0-9][0-9A-Za-z.\-]*-universal\.dmg$/i.test(asset.name));
+      const nextUniversalUrl = downloadUrl(universalAsset);
       // Only replace known-good fallback URLs if both architecture-specific files exist.
       if (!armUrl || !intelUrl) return;
       armLink.href = armUrl;
       intelLink.href = intelUrl;
+      universalUrl = nextUniversalUrl;
       if (/^v?[0-9]+(?:\.[0-9]+){1,3}$/.test(release.tag_name || '')) {
         const version = release.tag_name.replace(/^v/, '');
         const versionLabel = document.getElementById('mac-release-version');
