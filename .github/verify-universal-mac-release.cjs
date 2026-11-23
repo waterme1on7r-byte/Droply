@@ -48,8 +48,8 @@ assert.ok(html.length > 30000 && html.includes('DROPLY'),
   'Production user interface is missing or incomplete');
 const metadata = JSON.parse(asar.extractFile(archive, 'package.json').toString('utf8'));
 assert.equal(metadata.name, 'droply', 'Must preserve existing app data directory');
-assert.equal(metadata.productName, 'Droply', 'Must preserve existing production app name');
-assert.equal(metadata.build.appId, 'com.droply.app', 'Must preserve original app identity');
+// electron-builder strips build/productName from the embedded package.json.
+// Use Info.plist (checked above) for the installed app identity and visible name.
 const version = metadata.version;
 const name = 'Droply-' + version + '-universal.dmg';
 assert.ok(/^\d+\.\d+\.\d+$/.test(version));
