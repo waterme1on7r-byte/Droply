@@ -16,6 +16,8 @@ module.exports = {
   mac: {
     ...production.mac,
     target: [{ target: 'dmg', arch: ['universal'] }],
+    // The app source is architecture-neutral JS; retain its complete ASAR when combining CPU slices.
+    mergeASARs: false,
     artifactName: 'Droply-Universal-Test-${version}-${arch}.${ext}',
     identity: null
   },
