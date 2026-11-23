@@ -65,7 +65,9 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
   assert.doesNotMatch(html, /class="btn btn-primary nav-cta"/);
   assert.match(html, /<a href="#download">Download<\/a>/);
   // The published native downloads point at the current release and its separate Mac architectures.
-  assert.match(html, /id="hero-mac"[^>]*href="#download"/);
+  assert.match(html, /id="hero-mac"[^>]*v2\.8\.19\/Droply-2\.8\.19\.dmg/);
+  assert.match(html, /id="download-mac-auto"[^>]*v2\.8\.19\/Droply-2\.8\.19\.dmg/);
+  assert.match(html, /<details class="mac-download-alternatives">/);
   assert.match(html, /<script defer src="mac-downloads\.js"><\/script>/);
   assert.match(html, /<link rel="stylesheet" href="mac-downloads\.css">/);
   assert.match(html, /connect-src [^";]*https:\/\/api\.github\.com/);
