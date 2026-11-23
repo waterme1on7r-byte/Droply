@@ -1,26 +1,14 @@
-/* A single primary Mac download; optional architecture-specific links remain accessible. */
-.mac-download-alternatives { margin-top: 12px; }
-.mac-download-alternatives summary {
-  cursor: pointer;
-  text-align: center;
-  color: #b7daff;
-  font-weight: 650;
-  font-size: .78rem;
-  text-underline-offset: 3px;
-}
-.mac-download-alternatives summary:hover { text-decoration: underline; }
-html[data-theme="light"] .mac-download-alternatives summary { color: #265688; }
-
-.mac-download-choices { display: grid; gap: 10px; margin-top: 20px; }
+/* Two direct Mac downloads displayed prominently. */
+.mac-download-choices { display: grid; gap: 10px; margin-top: 27px; }
 .download-card .mac-download-choices .btn {
   width: 100%;
   margin-top: 0;
   justify-content: center;
-  min-height: 48px;
+  min-height: 50px;
   text-align: center;
 }
 .mac-download-status {
-  min-height: 3.6em;
+  min-height: 2.8em;
   margin: 14px 0 0;
   color: var(--muted-2);
   font-size: .76rem;
