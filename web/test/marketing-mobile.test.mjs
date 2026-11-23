@@ -64,21 +64,22 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
   assert.match(css, /grid-column: 1 \/ -1/);
   assert.doesNotMatch(html, /class="btn btn-primary nav-cta"/);
   assert.match(html, /<a href="#download">Download<\/a>/);
-  // The published native downloads point at the current release and its separate Mac architectures.
-  assert.match(html, /id="hero-mac"[^>]*v2\.8\.19\/Droply-2\.8\.19\.dmg/);
+  // One native universal DMG is a direct click from the hero and the Mac card.
+  assert.match(html, /id="hero-mac"[^>]*v2\.8\.19\/Droply-2\.8\.19-universal\.dmg/);
   assert.doesNotMatch(html, /id="download-mac-auto"/);
   assert.doesNotMatch(html, /<details class="mac-download-alternatives">/);
   const macCard = html.slice(html.indexOf('<div class="download-card"><div class="download-card-title">'), html.indexOf('<div class="download-card"><div class="download-card-title">', html.indexOf('<div class="download-card"><div class="download-card-title">') + 1));
   assert.match(macCard, /<div class="mac-download-choices">/);
   assert.match(macCard, /id="download-mac"/);
-  assert.match(macCard, /id="download-mac-intel"/);
+  assert.doesNotMatch(macCard, /id="download-mac-intel"/);
+  assert.match(macCard, /Apple Silicon \+ Intel/);
   assert.match(html, /<script defer src="mac-downloads\.js"><\/script>/);
   assert.match(html, /<link rel="stylesheet" href="mac-downloads\.css">/);
   assert.match(html, /connect-src [^";]*https:\/\/api\.github\.com/);
   assert.match(html, /id="hero-win"[^>]*v2\.8\.19\/Droply-Setup-2\.8\.19\.exe/);
   assert.match(html, /id="hero-android"[^>]*v2\.8\.19\/Droply-Android-2\.8\.19\.apk/);
-  assert.match(html, /id="download-mac"[^>]*v2\.8\.19\/Droply-2\.8\.19-arm64\.dmg/);
-  assert.match(html, /id="download-mac-intel"[^>]*v2\.8\.19\/Droply-2\.8\.19\.dmg/);
+  assert.match(html, /id="download-mac"[^>]*v2\.8\.19\/Droply-2\.8\.19-universal\.dmg/);
+  assert.doesNotMatch(html, /id="download-mac-intel"/);
   assert.match(html, /id="mac-download-status"[^>]*aria-live="polite"/);
 });
 
