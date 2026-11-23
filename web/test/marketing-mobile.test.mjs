@@ -33,7 +33,7 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
     ['hero-android', 'Android 10+'],
     ['hero-web', 'No installation']
   ]) {
-    const item = actions.match(new RegExp('<a id="' + id + '"[^\\n]*<\\/a>\\s*<p class="hero-requirements">([^<]*<span>[^<]*<\\/span>){2}<\\/p>'));
+    const item = actions.match(new RegExp('<a id="' + id + '"[^\\n]*<\\/a>\\s*<p class="hero-requirements">([^<]*<span(?:\\s+[^>]*)?>[^<]*<\\/span>){2}<\\/p>'));
     assert.ok(item, 'Requirements must appear directly below ' + id);
     assert.ok(item[0].includes(os), 'Expected the correct requirement below ' + id);
   }
