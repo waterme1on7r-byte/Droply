@@ -1853,9 +1853,9 @@ html[data-theme="light"] .droply-chat-status.error {
           <div class="mini-float privacy" aria-hidden="true"><svg class="icon-stroke" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><div><strong>End-to-end encrypted</strong><span>Just between you two</span></div></div>
         </div>
           <div class="hero-actions" aria-label="Choose how to use Droply">
-            <!-- Recommend a Mac installer when the browser reports its architecture; otherwise scroll to the choices. -->
+            <!-- One click downloads the best available Mac installer; browser detection refines its target. -->
             <div class="hero-choice">
-              <a id="hero-mac" class="btn btn-lg btn-primary" href="#download" aria-label="Choose an Apple Silicon or Intel Mac download"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#apple-logo"/></svg><span><small>Download for</small>macOS</span></a>
+              <a id="hero-mac" class="btn btn-lg btn-primary" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.19/Droply-2.8.19.dmg" aria-label="Download Droply for Mac"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#apple-logo"/></svg><span><small>Download for</small>macOS</span></a>
               <p class="hero-requirements"><span id="hero-mac-version">Free · Version 2.8.19</span><span>macOS 12+</span></p>
             </div>
             <!-- Current published Windows installer. -->
@@ -1937,12 +1937,16 @@ html[data-theme="light"] .droply-chat-status.error {
           <div class="download-panel-head"><svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#droply-mark"/></svg><span class="eyebrow">Make your move</span><h2 id="download-title">Ready to <span class="gradient-text">drop in?</span></h2><p>Choose your device. We'll handle the rest.</p></div>
           <div class="download-grid">
             <div class="download-card"><div class="download-card-title"><span class="os-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#apple-logo"/></svg></span><div><h3>macOS</h3><p>macOS 12 or newer</p></div></div>
-              <!-- Detect supported browser architecture signals; never infer Intel from "MacIntel". -->
-              <p id="mac-download-status" class="mac-download-status" role="status" aria-live="polite">Choose Apple Silicon or Intel for your Mac.</p>
-              <div class="mac-download-choices">
-                <a id="download-mac" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.19/Droply-2.8.19-arm64.dmg" class="btn btn-outline">Apple Silicon · .dmg <span data-mac-recommended hidden>· Recommended</span></a>
-                <a id="download-mac-intel" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.19/Droply-2.8.19.dmg" class="btn btn-outline">Intel Mac · .dmg <span data-mac-recommended hidden>· Recommended</span></a>
-              </div>
+              <!-- The primary button always downloads immediately; advanced choices are optional. -->
+              <a id="download-mac-auto" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.19/Droply-2.8.19.dmg" class="btn btn-primary" aria-label="Download Droply for Mac">Download for my Mac · .dmg</a>
+              <p id="mac-download-status" class="mac-download-status" role="status" aria-live="polite">One click downloads the Mac installer. Apple Silicon and Intel are supported.</p>
+              <details class="mac-download-alternatives">
+                <summary>Other Mac installers</summary>
+                <div class="mac-download-choices">
+                  <a id="download-mac" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.19/Droply-2.8.19-arm64.dmg" class="btn btn-outline">Apple Silicon · .dmg <span data-mac-recommended hidden>· Recommended</span></a>
+                  <a id="download-mac-intel" href="https://github.com/waterme1on7r-byte/Droply/releases/download/v2.8.19/Droply-2.8.19.dmg" class="btn btn-outline">Intel Mac · .dmg <span data-mac-recommended hidden>· Recommended</span></a>
+                </div>
+              </details>
               <div class="download-specs"><span>Apple Silicon: <span id="mac-arm-size">124 MB</span></span><span>Intel: <span id="mac-intel-size">128 MB</span> · <span id="mac-release-version">v2.8.19</span></span></div>
             </div>
             <div class="download-card"><div class="download-card-title"><span class="os-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#windows-logo"/></svg></span><div><h3>Windows</h3><p>Windows 10 or newer</p></div></div>
