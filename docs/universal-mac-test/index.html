@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#111622">
+<meta name="description" content="An isolated universal macOS Droply test page, not the stable website.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self'; style-src 'self'; connect-src https://api.github.com; img-src 'self' data:; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests">
+<title>Droply Universal Mac — TEST CLONE</title>
+<link rel="stylesheet" href="./style.css">
+<script defer src="./preview.js"></script>
+</head>
+<body>
+<div class="test-stripe">● &nbsp; ISOLATED UNIVERSAL MAC TEST &nbsp; • &nbsp; NOT THE LIVE DOWNLOAD PAGE</div>
+<header class="nav">
+  <a class="brand" href="../"><span class="brand-icon">D</span> DROPLY</a>
+  <span class="test-mark">UNIVERSAL MAC • TEST BUILD</span>
+  <a class="live-link" href="../">Back to live Droply</a>
+</header>
+<main>
+<section class="hero">
+  <div class="eyebrow">ISOLATED DOWNLOAD EXPERIMENT</div>
+  <h1>One Mac download.<br><span class="gradient">Both processors.</span></h1>
+  <p>Try a single installer that contains native Intel (x86_64) and Apple Silicon (ARM64) code. An M4 Mac should run the Apple Silicon portion natively.</p>
+</section>
+<section class="download-card" aria-labelledby="download-heading">
+  <div class="card-header">
+    <span class="apple-icon" aria-hidden="true">⌘</span>
+    <div><h2 id="download-heading">Droply Universal Test</h2><p>macOS 12 or newer</p></div>
+    <span class="test-pill">TEST ONLY</span>
+  </div>
+  <div class="compatibility">
+    <span>✓ Apple Silicon • M1–M5</span><span>✓ Intel Mac • x86_64</span>
+  </div>
+  <a id="universal-test-download" class="download-button is-disabled" aria-disabled="true" tabindex="-1">Checking for a verified test build…</a>
+  <p id="test-download-status" class="download-status" role="status" aria-live="polite">Checking GitHub for the separate Universal Mac test pre-release.</p>
+  <div class="release-row"><span id="build-version">Test version not yet available</span><button id="retry" type="button">Check again</button></div>
+  <div class="safe-note">This installer creates <strong>Droply Universal Test.app</strong>, not Droply.app. It has a different macOS bundle ID and local data folder. Your installed Droply stays untouched.</div>
+</section>
+<section class="features">
+  <article><h3>1. Separate app</h3><p>Different app identity, name and local profile so the stable installation is not replaced.</p></article>
+  <article><h3>2. One download</h3><p>Both Intel and Apple Silicon users download the same Universal Test DMG.</p></article>
+  <article><h3>3. Verify first</h3><p>Test launch, connections and transfers before considering changes to the production site.</p></article>
+</section>
+<div class="warning" role="note"><strong>Experimental build.</strong> This preview may be unsigned and require manual approval in macOS. It can create a new Droply device code and connects to the normal Droply service. Keep your current app installed; avoid important transfers while testing.</div>
+<nav class="bottom-links" aria-label="Test and production links">
+  <a href="../">Live website</a>
+  <a href="https://github.com/waterme1on7r-byte/Droply/actions/workflows/universal-mac-test.yml">Universal test build status</a>
+  <a href="https://github.com/waterme1on7r-byte/Droply/tree/main/docs/universal-mac-test">Separate test page source</a>
+</nav>
+</main>
+<footer>DROPLY · UNIVERSAL MAC TEST CLONE · NOT A STABLE RELEASE</footer>
+</body>
+</html>
