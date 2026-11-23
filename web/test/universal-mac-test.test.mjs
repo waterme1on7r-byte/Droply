@@ -51,15 +51,16 @@ function fakeElement() {
   const classes = new Set(['download-button', 'is-disabled']);
   const attrs = {};
   const listeners = {};
-  return {
+  const el = {
     textContent: '', href: undefined, disabled: false,
     classList: { add: c => classes.add(c), remove: c => classes.delete(c), contains: c => classes.has(c) },
     setAttribute: (key, value) => { attrs[key] = value; },
-    removeAttribute: key => { delete attrs[key]; if (key === 'href') this.href = undefined; },
     addEventListener: (key, value) => { listeners[key] = value; },
     get attributes() { return attrs; },
     listeners
   };
+  el.removeAttribute = key => { delete attrs[key]; if (key === 'href') el.href = undefined; };
+  return el;
 }
 async function simulate(releases, ok = true) {
   const elements = {
