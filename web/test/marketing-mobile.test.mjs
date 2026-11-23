@@ -33,7 +33,7 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
     ['hero-android', 'Android 10+'],
     ['hero-web', 'No installation']
   ]) {
-    const item = actions.match(new RegExp('<a id="' + id + '"[^\\n]*<\\/a>\\s*<p class="hero-requirements">([^<]*<span>[^<]*<\\/span>){2}<\\/p>'));
+    const item = actions.match(new RegExp('<a id="' + id + '"[^\\n]*<\\/a>\\s*<p class="hero-requirements">([^<]*<span(?:\\s+[^>]*)?>[^<]*<\\/span>){2}<\\/p>'));
     assert.ok(item, 'Requirements must appear directly below ' + id);
     assert.ok(item[0].includes(os), 'Expected the correct requirement below ' + id);
   }
@@ -65,11 +65,15 @@ test('four equally sized hero choices remain in one row on desktop and phones', 
   assert.doesNotMatch(html, /class="btn btn-primary nav-cta"/);
   assert.match(html, /<a href="#download">Download<\/a>/);
   // The published native downloads point at the current release and its separate Mac architectures.
-  assert.match(html, /id="hero-mac"[^>]*releases\/tag\/v2\.8\.19/);
+  assert.match(html, /id="hero-mac"[^>]*href="#download"/);
+  assert.match(html, /<script defer src="mac-downloads\.js"><\/script>/);
+  assert.match(html, /<link rel="stylesheet" href="mac-downloads\.css">/);
+  assert.match(html, /connect-src [^";]*https:\/\/api\.github\.com/);
   assert.match(html, /id="hero-win"[^>]*v2\.8\.19\/Droply-Setup-2\.8\.19\.exe/);
   assert.match(html, /id="hero-android"[^>]*v2\.8\.19\/Droply-Android-2\.8\.19\.apk/);
   assert.match(html, /id="download-mac"[^>]*v2\.8\.19\/Droply-2\.8\.19-arm64\.dmg/);
-  assert.match(html, /v2\.8\.19\/Droply-2\.8\.19\.dmg/);
+  assert.match(html, /id="download-mac-intel"[^>]*v2\.8\.19\/Droply-2\.8\.19\.dmg/);
+  assert.match(html, /id="mac-download-status"[^>]*aria-live="polite"/);
 });
 
 
