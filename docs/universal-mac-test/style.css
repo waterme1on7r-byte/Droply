@@ -1,0 +1,43 @@
+:root { color-scheme:dark; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; color:#edf5ff; --muted:#b5c5da; --blue:#85c5ff; }
+*{box-sizing:border-box}body{margin:0;min-width:320px;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#1a437a 0%,#11151d 59%);color:#edf5ff}
+a{color:inherit}button{font:inherit}
+.test-stripe{text-align:center;padding:11px 12px;background:#34271f;color:#ffe0b1;font-size:11px;letter-spacing:.12em;font-weight:800}
+.nav{max-width:1150px;margin:0 auto;padding:25px;display:flex;justify-content:space-between;align-items:center;gap:17px}
+.brand{display:flex;align-items:center;gap:11px;font-size:22px;font-weight:900;text-decoration:none;letter-spacing:-.06em}
+.brand-icon{display:grid;place-items:center;width:43px;height:43px;border-radius:12px;background:linear-gradient(145deg,#97daff,#4180ef);color:white;font-size:26px}
+.test-mark{border:1px solid #79b9ff84;color:#b6d6ff;border-radius:50px;padding:9px 14px;font-size:10px;font-weight:750;letter-spacing:.12em}
+.live-link,.bottom-links a{color:#b2d9ff;font-size:13px;text-underline-offset:4px}
+main{max-width:1080px;margin:0 auto;padding:15px 26px 75px}
+.hero{text-align:center;padding:44px 10px 37px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.2em;color:#a3d1ff}
+h1{font-size:clamp(39px,6.6vw,72px);line-height:1.05;letter-spacing:-.06em;margin:17px 0}
+.gradient{background:linear-gradient(130deg,#abddff,#6c9aff);color:transparent;background-clip:text}
+.hero p{max-width:610px;margin:0 auto;color:#c6d5e6;line-height:1.65;font-size:16px}
+.download-card{max-width:680px;margin:0 auto;padding:34px;border:1px solid #6699d776;border-radius:26px;background:linear-gradient(140deg,#213857,#131c2b);box-shadow:0 28px 84px #0007,0 0 70px #3265a43d}
+.card-header{display:flex;align-items:center;gap:14px}
+.apple-icon{display:grid;place-items:center;width:60px;height:60px;border-radius:16px;background:#8ac7ff1e;border:1px solid #add9ff60;color:#b2daff;font-size:37px}
+h2{font-size:22px;letter-spacing:-.035em;margin:0}
+.card-header p{font-size:13px;margin:5px 0 0;color:var(--muted)}
+.test-pill{margin-left:auto;white-space:nowrap;font-size:10px;font-weight:800;padding:8px 10px;border-radius:9px;color:#ffdfaa;border:1px solid #bd9450;background:#684923}
+.compatibility{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:27px 0}
+.compatibility span{padding:13px;background:#0b1528aa;border:1px solid #527fac65;border-radius:12px;font-size:13px}
+.download-button{min-height:57px;display:flex;align-items:center;justify-content:center;text-align:center;padding:13px 19px;font-weight:800;font-size:16px;color:#091b35;text-decoration:none;background:linear-gradient(125deg,#85d0ff,#4b8af1);border-radius:13px;box-shadow:0 12px 29px #337ecc30}
+.download-button:not(.is-disabled):hover{filter:brightness(1.1)}
+.download-button.is-disabled{background:#3b4b61;color:#bac7d8;box-shadow:none;pointer-events:none}
+.download-status{text-align:center;min-height:35px;color:#c9d6e4;font-size:12px;line-height:1.6;margin:14px 0}
+.release-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #ffffff21;padding-top:16px;color:#aebed4;font-size:12px}
+.release-row button{color:#a8d5ff;text-decoration:underline;text-underline-offset:3px;background:none;border:0;cursor:pointer;font-size:12px}
+.safe-note{margin-top:20px;background:#0a162aaa;padding:16px;border-radius:12px;color:#aec1d9;font-size:12px;line-height:1.7}
+.safe-note strong{color:#e5efff}
+.features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:35px 0 23px}
+.features article{padding:20px;background:#1b2c4661;border:1px solid #3b628c67;border-radius:17px}
+h3{font-size:15px;margin:0 0 9px}.features p{font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.warning{border:1px solid #9f7950;background:#6d491425;padding:18px 21px;border-radius:13px;color:#ffddb0;font-size:12px;line-height:1.65}
+.bottom-links{display:flex;justify-content:center;gap:19px;flex-wrap:wrap;margin-top:30px}
+footer{border-top:1px solid #44618456;text-align:center;padding:24px;color:#8eabc5;letter-spacing:.11em;font-size:10px}
+:focus-visible{outline:3px solid white;outline-offset:4px}
+@media(max-width:700px){
+.nav{flex-wrap:wrap;padding:18px}.test-mark{order:3;flex-basis:100%;text-align:center}
+main{padding:0 17px 45px}.hero{padding:35px 0}.download-card{padding:21px;border-radius:21px}
+.card-header{flex-wrap:wrap}.test-pill{margin:0}.compatibility,.features{grid-template-columns:1fr}
+}
