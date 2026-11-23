@@ -1,0 +1,107 @@
+name: Universal Mac test build (isolated)
+
+# Only the isolated test files can trigger this workflow. No production release tag.
+on:
+  pull_request:
+    paths:
+      - 'docs/universal-mac-test/**'
+      - '.github/universal-mac-test.build.cjs'
+      - '.github/verify-universal-mac-test.cjs'
+      - '.github/workflows/universal-mac-test.yml'
+      - 'web/test/universal-mac-test.test.mjs'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/universal-mac-test/**'
+      - '.github/universal-mac-test.build.cjs'
+      - '.github/verify-universal-mac-test.cjs'
+      - '.github/workflows/universal-mac-test.yml'
+      - 'web/test/universal-mac-test.test.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-universal-test:
+    name: Build and verify separate universal test app
+    runs-on: macos-latest
+    steps:
+      - name: Check out preview source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run native app and preview tests
+        run: |
+          npm test
+          node --test web/test/universal-mac-test.test.mjs
+      - name: Validate app configuration
+        run: npm run check-config
+      - name: Build universal test installer, not stable Droply
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --config .github/universal-mac-test.build.cjs --mac --universal --publish never
+      - name: Verify both architectures, preview identity, startup files and disk image
+        run: node .github/verify-universal-mac-test.cjs dist-universal-test
+      - name: Record SHA-256 checksum
+        working-directory: dist-universal-test
+        run: shasum -a 256 Droply-Universal-Test-*-universal.dmg > SHA256SUMS-Universal-Test.txt
+      - name: Upload test artifacts (no stable release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Droply-Universal-Mac-TEST
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            dist-universal-test/Droply-Universal-Test-*-universal.dmg
+            dist-universal-test/SHA256SUMS-Universal-Test.txt
+
+  publish-test-prerelease:
+    name: Publish explicitly labelled test prerelease
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-universal-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified Universal TEST artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Droply-Universal-Mac-TEST
+          path: test-artifacts
+      - name: Publish isolated GitHub prerelease (never latest stable)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test -n "$(find test-artifacts -maxdepth 1 -name 'Droply-Universal-Test-*-universal.dmg' -print -quit)"
+          test -s test-artifacts/SHA256SUMS-Universal-Test.txt
+          version=$(sed -n 's/^.*Droply-Universal-Test-\([0-9][0-9.]*\)-universal\.dmg$/\1/p' test-artifacts/SHA256SUMS-Universal-Test.txt | head -n 1)
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Could not identify test installer version from checksum file" >&2
+            exit 1
+          fi
+          tag="universal-mac-test-v${version}-run${GITHUB_RUN_NUMBER}"
+          cat > notes.md <<'NOTES'
+          # DROPLY UNIVERSAL MAC — TEST ONLY
+          - **This is a test prerelease, NOT the production Droply installer.**
+          - Bundled as **Droply Universal Test.app**, ID **com.droply.universaltest**
+            and separate local profile; never overwrite Droply.app.
+          - Contains **x86_64 + arm64** macOS architectures; validated before release.
+          - Unsigned; macOS may require you to explicitly approve opening it.
+          - The normal website and existing stable installers remain untouched.
+          - Test page: https://waterme1on7r-byte.github.io/Droply/universal-mac-test/
+          NOTES
+          gh release create "$tag" test-artifacts/Droply-Universal-Test-*-universal.dmg \
+            test-artifacts/SHA256SUMS-Universal-Test.txt \
+            --prerelease --title "DROPLY UNIVERSAL MAC TEST v${version} (run ${GITHUB_RUN_NUMBER})" \
+            --notes-file notes.md --target "$GITHUB_SHA"
