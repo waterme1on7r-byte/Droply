@@ -182,5 +182,5 @@ test('Hero Mac button uses a Universal installer when one is published', async (
     ] })
   });
   assert.equal(e['hero-mac'].href, universal);
-  assert.match(e['mac-download-status'].textContent, /Universal installer/);
+  assert.match(e['mac-download-status'].textContent, /Choose Apple Silicon or Intel above/);
 });
