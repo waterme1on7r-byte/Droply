@@ -3,11 +3,10 @@
   'use strict';
 
   const hero = document.getElementById('hero-mac');
-  const auto = document.getElementById('download-mac-auto');
   const armLink = document.getElementById('download-mac');
   const intelLink = document.getElementById('download-mac-intel');
   const status = document.getElementById('mac-download-status');
-  if (!hero || !auto || !armLink || !intelLink || !status) return;
+  if (!hero || !armLink || !intelLink || !status) return;
 
   const options = { arm64: armLink, x64: intelLink };
   const ua = navigator.userAgent || '';
@@ -29,27 +28,24 @@
       if (label) label.hidden = !recommended;
     }
 
-    // Every main Mac button is always a direct .dmg link, never an in-page chooser.
+    // Keep the hero download direct; the Mac card now exposes both direct installers.
     // When architecture cannot be read, prefer a Universal build if published; until
     // then use the Intel build, which can run on Apple Silicon using macOS Rosetta.
     const selectedUrl = detectedArchitecture
       ? options[detectedArchitecture].href
       : (universalUrl || intelLink.href);
     hero.href = selectedUrl;
-    auto.href = selectedUrl;
 
     if (detectedArchitecture) {
       const name = detectedArchitecture === 'arm64' ? 'Apple Silicon' : 'Intel';
       hero.setAttribute('aria-label', `Download Droply for ${name} Mac`);
-      auto.setAttribute('aria-label', `Download Droply for ${name} Mac`);
-      status.textContent = `Mac download ready: ${name} installer. Click Download to start; other versions are optional below.`;
+      status.textContent = `Your browser reports ${name}. The matching installer is highlighted above; both buttons download directly.`;
     } else {
       // Never treat "MacIntel" as Intel CPU proof: Safari uses it on Apple Silicon too.
       hero.setAttribute('aria-label', 'Download Droply for Mac');
-      auto.setAttribute('aria-label', 'Download Droply for Mac');
-      status.textContent = universalUrl
-        ? 'Mac download ready: Universal installer works on Apple Silicon and Intel. Click Download to start.'
-        : 'Mac download ready. If this browser hides the chip type, the Intel installer works on Apple Silicon with Rosetta. Click Download to start.';
+      status.textContent = isMac
+        ? 'Choose Apple Silicon or Intel above. Not sure? Check Apple menu → About This Mac. Each button starts a download.'
+        : 'Downloading for a Mac? Choose Apple Silicon or Intel above. Each button starts a download.';
     }
   }
 
