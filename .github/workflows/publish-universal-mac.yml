@@ -1,0 +1,116 @@
+name: Publish production Universal Mac DMG (existing stable release)
+
+# Add a verified Universal .dmg to the CURRENT stable release without changing
+# Windows/Android binaries, existing Mac installers, package.json or update feeds.
+on:
+  pull_request:
+    paths:
+      - '.github/universal-mac-release.build.cjs'
+      - '.github/verify-universal-mac-release.cjs'
+      - '.github/workflows/publish-universal-mac.yml'
+      - 'web/test/universal-mac-release.test.mjs'
+  push:
+    branches: [main]
+    paths:
+      - '.github/universal-mac-release.build.cjs'
+      - '.github/verify-universal-mac-release.cjs'
+      - '.github/workflows/publish-universal-mac.yml'
+      - 'web/test/universal-mac-release.test.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Verify native universal production app and DMG
+    runs-on: macos-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run production regression and universal release tests
+        run: |
+          npm test
+          node --test web/test/universal-mac-release.test.mjs
+          npm run check-config
+      - name: Build production identity, Intel + Apple Silicon, one DMG
+        shell: bash
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CSC_LINK" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
+          if [ -z "$APPLE_ID" ]; then unset APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; fi
+          npx electron-builder --config .github/universal-mac-release.build.cjs --mac --universal --publish never
+      - name: Verify production identity, CPU slices, startup files and disk image
+        run: node .github/verify-universal-mac-release.cjs dist-universal-release
+      - name: Record checksum
+        working-directory: dist-universal-release
+        shell: bash
+        run: |
+          set -euo pipefail
+          shasum -a 256 Droply-*-universal.dmg > SHA256SUMS-Universal-Mac.txt
+          test -s SHA256SUMS-Universal-Mac.txt
+      - name: Upload verified production DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: Droply-Universal-Mac-PRODUCTION
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            dist-universal-release/Droply-*-universal.dmg
+            dist-universal-release/SHA256SUMS-Universal-Mac.txt
+
+  publish:
+    name: Attach Universal DMG to existing published stable release
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout stable release metadata
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download validated DMG
+        uses: actions/download-artifact@v4
+        with:
+          name: Droply-Universal-Mac-PRODUCTION
+          path: universal-release-assets
+      - name: Confirm stable release and attach only the new Mac asset
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag=$(node -p "'v' + require('./package.json').version")
+          latest=$(gh release view --json tagName --jq '.tagName')
+          test "$tag" = "$latest" || { echo "Latest stable tag changed from $tag to $latest; refusing publication"; exit 1; }
+          test "$(gh release view "$tag" --json isDraft --jq .isDraft)" = "false"
+          test "$(gh release view "$tag" --json isPrerelease --jq .isPrerelease)" = "false"
+          version=$(node -p "require('./package.json').version")
+          file="Droply-$version-universal.dmg"
+          test -s "universal-release-assets/$file"
+          test -s "universal-release-assets/SHA256SUMS-Universal-Mac.txt"
+          cd universal-release-assets
+          sha256sum -c SHA256SUMS-Universal-Mac.txt
+          if gh release view "$tag" --json assets --jq '.assets[].name' | grep -Fxq "$file"; then
+            echo "$file already exists on $tag; refusing to replace published binaries."
+            exit 1
+          fi
+          gh release upload "$tag" "$file" SHA256SUMS-Universal-Mac.txt
+          echo "Published production $file alongside existing stable assets in $tag"
