@@ -33,11 +33,19 @@ for (const binary of [executable, framework]) {
   console.log('Verified universal architectures:', binary, architectures.join(' + '));
 }
 const archive = path.join(app, 'Contents', 'Resources', 'app.asar');
-assert.ok(fs.statSync(archive).size > 100_000, 'Application archive is missing or too small');
+const archiveBytes = fs.statSync(archive).size;
+console.log('Universal preview app.asar size:', archiveBytes);
+assert.ok(archiveBytes > 4096, 'Application archive is unexpectedly small: ' + archiveBytes);
 const filenames = new Set(asar.listPackage(archive).map(file => file.replace(/^\//, '')));
 for (const required of ['main.js', 'preload.js', 'index.html', 'config.js', 'package.json']) {
   assert.ok(filenames.has(required), `Missing ${required} in preview app archive`);
 }
+const startup = asar.extractFile(archive, 'main.js').toString('utf8');
+const html = asar.extractFile(archive, 'index.html').toString('utf8');
+assert.ok(startup.includes("process.argv.includes('--diagnose-startup')") && startup.length > 10000,
+  'Startup code missing or incomplete in universal preview');
+assert.ok(html.includes('DROPLY') && html.length > 30000,
+  'App UI is missing or incomplete in universal preview');
 const metadata = JSON.parse(asar.extractFile(archive, 'package.json').toString('utf8'));
 assert.equal(metadata.name, 'droply-universal-test', 'Preview app name must be isolated');
 assert.equal(metadata.productName, 'Droply Universal Test', 'Preview data folder must be isolated');
